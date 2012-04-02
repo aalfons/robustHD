@@ -1,0 +1,156 @@
+\name{diagnosticPlot}
+\alias{diagnosticPlot}
+\alias{diagnosticPlot.sparseLTS}
+\alias{diagnosticPlot.sparseLTSGrid}
+\alias{plot.sparseLTS}
+\title{Diagnostic plots for sparse LTS regression models}
+\usage{
+  diagnosticPlot(x, ...)
+
+  \method{diagnosticPlot}{sparseLTS} (x,
+    fit = c("reweighted", "raw", "both"),
+    which = c("all", "rqq", "rindex", "rfit", "rdiag"),
+    ask = (which == "all"), id.n = NULL, ...)
+
+  \method{diagnosticPlot}{sparseLTSGrid} (x, ...)
+
+  \method{plot}{sparseLTS} (x, ...)
+}
+\arguments{
+  \item{x}{the model fit for which to produce diagnostic
+  plots.}
+
+  \item{fit}{a character string specifying for which fit to
+  produce diagnostic plots.  Possible values are
+  \code{"reweighted"} (the default) for diagnostic plots
+  for the reweighted fit, \code{"raw"} for diagnostic plots
+  for the raw fit, or \code{"both"} for diagnostic plots
+  for both fits.}
+
+  \item{which}{a character string indicating which plot to
+  show.  Possible values are \code{"all"} (the default) for
+  all of the following, \code{"rqq"} for a normal Q-Q plot
+  of the standardized residuals, \code{"rindex"} for a plot
+  of the standardized residuals versus their index,
+  \code{"rfit"} for a plot of the standardized residuals
+  versus the fitted values, or \code{"rdiag"} for a
+  regression diagnostic plot (standardized residuals versus
+  robust Mahalanobis distances of the predictor
+  variables).}
+
+  \item{ask}{a logical indicating whether the user should
+  be asked before each plot (see
+  \code{\link[grDevices]{devAskNewPage}}). The default is
+  to ask if all plots are requested and not ask otherwise.}
+
+  \item{id.n}{an integer giving the number of the most
+  extreme observations to be identified by a label.  The
+  default is to use the number of identified outliers,
+  which can be different for the different plots.  See
+  \dQuote{Details} for more information.}
+
+  \item{\dots}{for the generic function
+  \code{diagnosticPlot}, additional arguments to be passed
+  down to methods.  For the \code{"sparseLTSGrid"} method
+  of \code{diagnosticPlot}, additional arguments to be
+  passed down to the \code{"sparseLTS"} method.  For the
+  \code{"sparseLTS"} method of \code{diagnosticPlot},
+  additional arguments to be passed down to
+  \code{\link[lattice]{xyplot}}.  For the
+  \code{"sparseLTS"} method of \code{plot}, additional
+  arguments to be passed down to \code{diagnosticPlot}.}
+}
+\value{
+  If only one plot is requested, an object of class
+  \code{"trellis"} (see \code{\link[lattice]{xyplot}}),
+  otherwise a list of such objects.
+}
+\description{
+  Produce diagnostic plots for sparse least trimmed squares
+  regression models.  Four plots are currently implemented.
+}
+\details{
+  In the normal Q-Q plot of the standardized residuals, a
+  reference line is drawn through the first and third
+  quartile.  The \code{id.n} observations with the largest
+  distances from that line are identified by a label (the
+  observation number).  The default for \code{id.n} is the
+  number of regression outliers, i.e., the number of
+  observations with outlier weight equal to 0 (see
+  \code{\link[=weights.sparseLTS]{weights}}).
+
+  In the plots of the standardized residuals versus their
+  index or the fitted values, horizontal reference lines
+  are drawn at 0 and +/-2.5.  The \code{id.n} observations
+  with the largest absolute values of the standardized
+  residuals are identified by a label (the observation
+  number).  The default for \code{id.n} is the number of
+  regression outliers, i.e., the number of observations
+  with outlier weight equal to 0 (see
+  \code{\link[=weights.sparseLTS]{weights}}).
+
+  For the regression diagnostic plot, the robust
+  Mahalanobis distances of the predictor variables are
+  computed via the MCD based on only those predictors with
+  non-zero coefficients.  Horizontal reference lines are
+  drawn at +/-2.5 and a vertical reference line is drawn at
+  the upper 97.5\% quantile of the
+  \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
+  degrees of freedom, where \eqn{p} denotes the number of
+  predictors with non-zero coefficients.  The \code{id.n}
+  observations with the largest absolute values of the
+  standardized residuals and/or largest robust Mahalanobis
+  distances are identified by a label (the observation
+  number).  The default for \code{id.n} is the number of
+  all outliers: regression outliers (i.e., observations
+  with outlier weight equal to 0, see
+  \code{\link[=weights.sparseLTS]{weights}}) and leverage
+  points (i.e., observations with robust Mahalanobis
+  distance larger than the 97.5\% quantile of the
+  \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
+  degrees of freedom).
+}
+\examples{
+## C++ back end package 'sparseLTSEigen' is required
+
+## generate data
+library("mvtnorm")
+set.seed(1234)  # for reproducibility
+n <- 100  # number of observations
+p <- 200  # number of variables
+beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
+sigma <- 0.5      # controls signal-to-noise ratio
+epsilon <- 0.1    # contamination level
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
+e <- rnorm(n)                   # error terms
+i <- 1:ceiling(epsilon*n)       # observations to be contaminated
+e[i] <- e[i] + 5                # vertical outliers
+y <- c(x \%*\% beta + sigma * e)  # response
+x[i,] <- x[i,] + 5              # bad leverage points
+
+## sparse LTS
+# fit model
+fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
+# create plot
+plot(fit)
+plot(fit, fit = "both")
+
+## sparse LTS over a grid of values for lambda
+# fit model
+frac <- seq(0.25, 0.05, by = -0.05)
+fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+# create plot
+diagnosticPlot(fitGrid)
+diagnosticPlot(fitGrid, fit = "both")
+}
+\author{
+  Andreas Alfons, partly based on code by Valentin Todorov
+}
+\seealso{
+  \code{\link[graphics]{plot}},
+  \code{\link[robustbase:ltsPlot]{plot.lts}},
+  \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
+}
+\keyword{hplot}
+

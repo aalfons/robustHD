@@ -1,0 +1,235 @@
+# -------------------------------------------------------------------
+# Author: Andreas Alfons
+#         KU Leuven
+#
+# based on code by Jafar A. Khan, Stefan Van Aelst and Ruben H. Zamar
+# -------------------------------------------------------------------
+
+#' Robust least angle regression
+#' 
+#' Robustly sequence candidate predictors according to their predictive content 
+#' and find the optimal model along the sequence.
+#' 
+#' @aliases print.rlars
+#' 
+#' @param formula  a formula describing the full model.
+#' @param data  an optional data frame, list or environment (or object coercible 
+#' to a data frame by \code{\link{as.data.frame}}) containing the variables in 
+#' the model.  If not found in data, the variables are taken from 
+#' \code{environment(formula)}, typically the environment from which 
+#' \code{rlars} is called.
+#' @param x  a matrix or data frame containing the candidate predictors.
+#' @param y  a numeric vector containing the response.
+#' @param sMax  an integer vector of length two.  If a single integer is 
+#' supplied, it is recycled.  The first element gives the number of predictors 
+#' to be sequenced.  If it is \code{NA} (the default), predictors are sequenced 
+#' as long as there are no singularity issues.  The second element gives the 
+#' maximum number of predictors to be included in the final model.  If it is 
+#' \code{NA} (the default), predictors may be added to the model as long as 
+#' there are twice as many observations as predictors.
+#' @param centerFun  a function to compute a robust estimate for the center 
+#' (defaults to \code{\link[stats]{median}}).
+#' @param scaleFun  a function to compute a robust estimate for the scale 
+#' (defaults to \code{\link[stats]{mad}}).
+#' @param const numeric; tuning constant to be used in the initial corralation 
+#' estimates based on adjusted univariate winsorization (defaults to 2).
+#' @param prob  numeric; probability for the quantile of the 
+#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate 
+#' winsorization (defaults to 0.95).
+#' @param fit  a logical indicating whether to fit submodels along the sequence 
+#' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
+#' @param regFun  a function to compute robust linear regressions along the 
+#' sequence (defaults to \code{\link[robustbase]{lmrob}}).
+#' @param regArgs  a list of arguments to be passed to \code{regFun}.
+#' @param crit  a character string specifying the optimality criterion to be 
+#' used for selecting the final model.  Currently, only \code{"BIC"} for the 
+#' Bayes information criterion is implemented.
+#' @param model  a logical indicating whether the model data should be included 
+#' in the returned object.
+#' @param \dots  additional arguments to be passed down.  For the default 
+#' method, additional arguments to be passed down to 
+#' \code{\link[=standardize]{robStandardize}}.
+#' 
+#' @return 
+#' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
+#' the sequenced predictors.
+#'  
+#' Otherwise an object of class \code{"rlars"} (inheriting from class 
+#' \code{"seqModel"}) with the following components:
+#' @returnItem active  an integer vector containing the indices of the 
+#' sequenced predictors.
+#' @returnItem coefficients  a numeric matrix in which each column contains the 
+#' regression coefficients of the corresponding submodel along the sequence.
+#' @returnItem fitted.values  a numeric matrix in which each column contains the 
+#' fitted values of the corresponding submodel along the sequence.
+#' @returnItem residuals  a numeric matrix in which each column contains the 
+#' residuals of the corresponding submodel along the sequence.
+#' @returnItem crit  a character string specifying the optimality criterion used 
+#' for selecting the final model.
+#' @returnItem critValues  a numeric vector containing the values of the 
+#' optimality criterion from the submodels along the sequence.
+#' @returnItem df  an integer vector containing the degrees of freedom of the 
+#' submodels along the sequence (i.e., the number of estimated coefficients).
+#' @returnItem sOpt  an integer giving the optimal submodel.
+#' @returnItem muY  numeric; the mean of the cleaned response.
+#' @returnItem sigmaY  numeric; the standard deviation of the cleaned response.
+#' @returnItem muX  a numeric vector containing the means of the cleaned 
+#' predictors.
+#' @returnItem sigmaX  a numeric vector containing the standard deviations of 
+#' the cleaned predictors.
+#' @returnItem x  the matrix of candidate predictors (if \code{model} is 
+#' \code{TRUE}).
+#' @returnItem y  the response (if \code{model} is \code{TRUE}).
+#' @returnItem call  the matched function call.
+#' 
+#' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and 
+#' Ruben H. Zamar
+#' 
+#' @references 
+#' Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model 
+#' selection based on least angle regression. \emph{Journal of the American 
+#' Statistical Association}, \bold{102}(480), 1289--1299.
+#' 
+#' @seealso \code{\link{coef.seqModel}}, \code{\link{fitted.seqModel}}, 
+#' \code{\link{residuals.seqModel}}, \code{\link{predict.seqModel}}, 
+#' \code{\link{plot.seqModel}}
+#' 
+#' @example inst/doc/examples/example-rlars.R
+#' 
+#' @keywords regression robust
+#' 
+#' @export
+
+rlars <- function(x, ...) UseMethod("rlars")
+
+
+#' @rdname rlars
+#' @method rlars formula
+#' @export
+
+rlars.formula <- function(formula, data, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("rlars")
+    # prepare model frame
+    mf <- match.call(expand.dots = FALSE)
+    m <- match(c("formula", "data"), names(mf), 0)
+    mf <- mf[c(1, m)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+    mt <- attr(mf, "terms")
+    if(is.empty.model(mt)) stop("empty model")
+    # extract response and candidate predictors from model frame
+    y <- model.response(mf, "numeric")
+    x <- model.matrix(mt, mf)
+    # remove first column for intercept, if existing
+    if(attr(mt, "intercept")) x <- x[, -1, drop=FALSE]
+    ## call default method
+    out <- rlars.default(x, y, ...)
+    out$call <- call  # add call to return object
+    out$terms <- mt   # add model terms to return object
+    out
+}
+
+
+#' @rdname rlars
+#' @method rlars default
+#' @export
+
+rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
+        const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
+        crit = "BIC", model = TRUE, ...) {
+    ## STEP 1: initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("rlars")
+    n <- length(y)
+    x <- addColnames(as.matrix(x))
+    p <- ncol(x)
+#    if(!is.finite(sMax) || !isTRUE(sMax <= min(p, n-1))) sMax <- min(p, n-1)
+    sMax <- checkSMax(sMax, n, p)
+    # robustly standardize data
+    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
+    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+    # check regression function
+    regControl <- getRegControl(regFun)
+    regFun <- regControl$fun  # if possible, do not use formula interface
+#    callRegFun <- getCallFun(regArgs)
+    crit <- match.arg(crit)
+    
+    ## STEP 2: find first ranked block
+    r.z <- unname(apply(xs, 2, corHuberBi, z, const=const, prob=prob))
+    A <- which.max(abs(r.z))  # active set
+    Ac <- seq_len(p)[-A]       # not yet sequenced blocks
+    
+    ## STEP 3: update active set
+    R <- matrix(1, p, sMax[1])  # correlation matrix of predictors with active set
+    sign <- c(sign(r.z[A]), rep.int(NA, sMax[1]-1))
+    r <- c(sign[1]*r.z[A], rep.int(NA, sMax[1]-1))
+    # start iterative computations
+    for(k in seq_len(sMax[1]-1)) {
+        R[Ac, k] <- apply(xs[, Ac, drop=FALSE], 2, corHuberBi, xs[, A[k]], 
+            const=const, prob=prob)
+        seqK <- seq_len(k)
+        R[A[-k], k] <- R[A[k], seqK[-k]]
+        if(k == 1) {
+            a <- 1
+            w.k <- 1
+        } else {
+            G <- (sign[seqK] %*% t(sign[seqK])) * R[A, seqK, drop=FALSE]
+            # check if correlation matrix is positive definite and 
+            # perform corrections if necessary
+            eig <- eigen(G, symmetric=TRUE)
+            if(eig$values[k] < 0) {  # last eigenvalue is the smallest
+                Q <- eig$vectors  # matrix of eigenvectors
+                lambda <- apply(xs[, A] %*% Q, 2, scaleFun)^2
+                G <- Q %*% diag(lambda) %*% t(Q)
+            }
+            invG <- solve(G)
+            ones <- rep.int(1, k)
+            a <- c(t(ones) %*% invG %*% ones)^(-1/2)
+            w.k <- c(a * invG %*% ones)
+        }
+        # compute step size in equiangular direction
+        a.kj <- sapply(Ac, 
+            function(j) {
+                r.j <- R[j, seqK]
+                sum(sign[seqK] * r.j * w.k)
+            })
+        gamma <- cbind((r[k] - r.z[Ac]) / (a - a.kj), 
+            (r[k] + r.z[Ac]) / (a + a.kj))
+        gamma[gamma <= 0] <- Inf
+        whichMin <- arrayInd(which.min(gamma), .dim=dim(gamma))
+        gamma.k <- gamma[whichMin[, 1], whichMin[, 2]]
+        sign[k+1] <- c(1, -1)[whichMin[, 2]]
+        # update correlations
+        r[k+1] <- r[k] - gamma.k * a
+        r.z[Ac] <- r.z[Ac] - gamma.k * a.kj
+        # update active set and not yet sequenced blocks
+        A <- c(A, Ac[whichMin[, 1]])  # update active set
+        Ac <- Ac[-whichMin[, 1]]      # update not yet sequenced blocks
+    }
+    
+    ## STEP 4: choose optimal model according to specified criterion
+    if(isTRUE(fit)) {
+        # add ones to matrix of predictors to account for intercept
+        x <- addIntercept(x)
+        # call function to fit models along the sequence
+        s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
+        out <- fitModels(x, y, s=s, robust=TRUE, regFun=regFun, 
+            useFormula=regControl$useFormula, regArgs=regArgs, 
+            active=A, crit=crit, class="rlars")
+        # add center and scale estimates
+        out$muY <- attr(z, "center")
+        out$sigmaY <- attr(z, "scale")
+        out$muX <- attr(xs, "center")
+        out$sigmaX <- attr(xs, "scale")
+        if(isTRUE(model)) {
+            # add model data to result
+            out$x <- x
+            out$y <- y
+        }
+        out$call <- call  # add call to return object
+        out
+    } else A
+}

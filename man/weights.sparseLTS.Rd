@@ -1,0 +1,98 @@
+\name{weights.sparseLTS}
+\alias{weights.sparseLTS}
+\alias{weights.sparseLTSGrid}
+\title{Extract outlier weights from sparse LTS regression models}
+\usage{
+  \method{weights}{sparseLTS} (object,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{weights}{sparseLTSGrid} (object, s,
+    fit = c("reweighted", "raw", "both"), ...)
+}
+\arguments{
+  \item{object}{the model fit from which to extract outlier
+  weights.}
+
+  \item{s}{an integer vector giving the indices of the
+  models for which to extract outlier weights.  If
+  \code{fit} is \code{"both"}, this can be a list with two
+  components, with the first component giving the indices
+  of the reweighted fits and the second the indices of the
+  raw fits.  The default is to use the optimal model for
+  each of the requested estimators.  Note that the optimal
+  models may not correspond to the same value of the
+  penalty parameter for the reweighted and the raw
+  estimator.}
+
+  \item{fit}{a character string specifying for which
+  estimator to extract outlier weights.  Possible values
+  are \code{"reweighted"} (the default) for weights
+  indicating outliers from the reweighted fit, \code{"raw"}
+  for weights indicating outliers from the raw fit, or
+  \code{"both"} for the outlier weights from both
+  estimators.}
+
+  \item{\dots}{currently ignored.}
+}
+\value{
+  If weights indicating outliers are requested for only one
+  model, they are returned in the form of a numeric vector.
+
+  Otherwise a numeric matrix is returned in which each
+  column contains weights indicating outliers from the
+  corresponding model.
+}
+\description{
+  Extract binary weights that indicate outliers from sparse
+  least trimmed squares regression models.
+}
+\note{
+  The weights are \eqn{1} for observations with reasonably
+  small residuals and \eqn{0} for observations with large
+  residuals.
+}
+\examples{
+## C++ back end package 'sparseLTSEigen' is required
+
+## generate data
+library("mvtnorm")
+set.seed(1234)  # for reproducibility
+n <- 100  # number of observations
+p <- 200  # number of variables
+beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
+sigma <- 0.5      # controls signal-to-noise ratio
+epsilon <- 0.1    # contamination level
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
+e <- rnorm(n)                   # error terms
+i <- 1:ceiling(epsilon*n)       # observations to be contaminated
+e[i] <- e[i] + 5                # vertical outliers
+y <- c(x \%*\% beta + sigma * e)  # response
+x[i,] <- x[i,] + 5              # bad leverage points
+
+## sparse LTS
+# fit model
+fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
+# extract outlier weights
+weights(fit)
+weights(fit, fit = "both")
+
+## sparse LTS over a grid of values for lambda
+# fit model
+frac <- seq(0.25, 0.05, by = -0.05)
+fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+# extract outlier weights
+weights(fitGrid)
+weights(fitGrid, fit = "both")
+weights(fitGrid, s = NULL)
+weights(fitGrid, fit = "both", s = NULL)
+}
+\author{
+  Andreas Alfons
+}
+\seealso{
+  \code{\link[stats]{weights}}, \code{\link{sparseLTS}},
+  \code{\link{sparseLTSGrid}}
+}
+\keyword{regression}
+

@@ -1,0 +1,177 @@
+\name{rlars}
+\alias{print.rlars}
+\alias{rlars}
+\alias{rlars.default}
+\alias{rlars.formula}
+\title{Robust least angle regression}
+\usage{
+  rlars(x, ...)
+
+  \method{rlars}{formula} (formula, data, ...)
+
+  \method{rlars}{default} (x, y, sMax = NA,
+    centerFun = median, scaleFun = mad, const = 2,
+    prob = 0.95, fit = TRUE, regFun = lmrob,
+    regArgs = list(), crit = "BIC", model = TRUE, ...)
+}
+\arguments{
+  \item{formula}{a formula describing the full model.}
+
+  \item{data}{an optional data frame, list or environment
+  (or object coercible to a data frame by
+  \code{\link{as.data.frame}}) containing the variables in
+  the model.  If not found in data, the variables are taken
+  from \code{environment(formula)}, typically the
+  environment from which \code{rlars} is called.}
+
+  \item{x}{a matrix or data frame containing the candidate
+  predictors.}
+
+  \item{y}{a numeric vector containing the response.}
+
+  \item{sMax}{an integer vector of length two.  If a single
+  integer is supplied, it is recycled.  The first element
+  gives the number of predictors to be sequenced.  If it is
+  \code{NA} (the default), predictors are sequenced as long
+  as there are no singularity issues.  The second element
+  gives the maximum number of predictors to be included in
+  the final model.  If it is \code{NA} (the default),
+  predictors may be added to the model as long as there are
+  twice as many observations as predictors.}
+
+  \item{centerFun}{a function to compute a robust estimate
+  for the center (defaults to
+  \code{\link[stats]{median}}).}
+
+  \item{scaleFun}{a function to compute a robust estimate
+  for the scale (defaults to \code{\link[stats]{mad}}).}
+
+  \item{const}{numeric; tuning constant to be used in the
+  initial corralation estimates based on adjusted
+  univariate winsorization (defaults to 2).}
+
+  \item{prob}{numeric; probability for the quantile of the
+  \eqn{\chi^{2}}{chi-squared} distribution to be used in
+  bivariate winsorization (defaults to 0.95).}
+
+  \item{fit}{a logical indicating whether to fit submodels
+  along the sequence (\code{TRUE}, the default) or to
+  simply return the sequence (\code{FALSE}).}
+
+  \item{regFun}{a function to compute robust linear
+  regressions along the sequence (defaults to
+  \code{\link[robustbase]{lmrob}}).}
+
+  \item{regArgs}{a list of arguments to be passed to
+  \code{regFun}.}
+
+  \item{crit}{a character string specifying the optimality
+  criterion to be used for selecting the final model.
+  Currently, only \code{"BIC"} for the Bayes information
+  criterion is implemented.}
+
+  \item{model}{a logical indicating whether the model data
+  should be included in the returned object.}
+
+  \item{\dots}{additional arguments to be passed down.  For
+  the default method, additional arguments to be passed
+  down to \code{\link[=standardize]{robStandardize}}.}
+}
+\value{
+  If \code{fit} is \code{FALSE}, an integer vector
+  containing the indices of the sequenced predictors.
+
+  Otherwise an object of class \code{"rlars"} (inheriting
+  from class \code{"seqModel"}) with the following
+  components:
+
+  \item{active}{an integer vector containing the indices of
+  the sequenced predictors.}
+
+  \item{coefficients}{a numeric matrix in which each column
+  contains the regression coefficients of the corresponding
+  submodel along the sequence.}
+
+  \item{fitted.values}{a numeric matrix in which each
+  column contains the fitted values of the corresponding
+  submodel along the sequence.}
+
+  \item{residuals}{a numeric matrix in which each column
+  contains the residuals of the corresponding submodel
+  along the sequence.}
+
+  \item{crit}{a character string specifying the optimality
+  criterion used for selecting the final model.}
+
+  \item{critValues}{a numeric vector containing the values
+  of the optimality criterion from the submodels along the
+  sequence.}
+
+  \item{df}{an integer vector containing the degrees of
+  freedom of the submodels along the sequence (i.e., the
+  number of estimated coefficients).}
+
+  \item{sOpt}{an integer giving the optimal submodel.}
+
+  \item{muY}{numeric; the mean of the cleaned response.}
+
+  \item{sigmaY}{numeric; the standard deviation of the
+  cleaned response.}
+
+  \item{muX}{a numeric vector containing the means of the
+  cleaned predictors.}
+
+  \item{sigmaX}{a numeric vector containing the standard
+  deviations of the cleaned predictors.}
+
+  \item{x}{the matrix of candidate predictors (if
+  \code{model} is \code{TRUE}).}
+
+  \item{y}{the response (if \code{model} is \code{TRUE}).}
+
+  \item{call}{the matched function call.}
+}
+\description{
+  Robustly sequence candidate predictors according to their
+  predictive content and find the optimal model along the
+  sequence.
+}
+\examples{
+## generate data
+set.seed(1234)  # for reproducibility
+n <- 100  # number of observations
+p <- 200  # number of variables
+beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
+sigma <- 0.5      # controls signal-to-noise ratio
+epsilon <- 0.1    # contamination level
+x <- replicate(p, rnorm(n))     # predictor matrix
+e <- rnorm(n)                   # error terms
+i <- 1:ceiling(epsilon*n)       # observations to be contaminated
+e[i] <- e[i] + 5                # vertical outliers
+y <- c(x \%*\% beta + sigma * e)  # response
+x[i,] <- x[i,] + 5              # bad leverage points
+
+## fit robust LARS model
+fit <- rlars(x, y, sMax = 25)
+coef(fit, zeros = FALSE)
+}
+\author{
+  Andreas Alfons, based on code by Jafar A. Khan, Stefan
+  Van Aelst and Ruben H. Zamar
+}
+\references{
+  Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust
+  linear model selection based on least angle regression.
+  \emph{Journal of the American Statistical Association},
+  \bold{102}(480), 1289--1299.
+}
+\seealso{
+  \code{\link{coef.seqModel}},
+  \code{\link{fitted.seqModel}},
+  \code{\link{residuals.seqModel}},
+  \code{\link{predict.seqModel}},
+  \code{\link{plot.seqModel}}
+}
+\keyword{regression}
+\keyword{robust}
+
