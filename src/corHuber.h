@@ -3,8 +3,8 @@
  *         KU Leuven
  */
 
-#ifndef _robustHD_COR_H
-#define _robustHD_COR_H
+#ifndef _robustHD_CORHUBER_H
+#define _robustHD_CORHUBER_H
 
 #include <RcppEigen.h>
 

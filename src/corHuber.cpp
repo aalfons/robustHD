@@ -4,7 +4,7 @@
  */
 
 #include <R.h>
-#include "cor.h"
+#include "corHuber.h"
 
 using namespace Rcpp;
 using namespace Eigen;
@@ -149,7 +149,9 @@ double corHuberBi(const VectorXd& x, const VectorXd& y, const double& c,
 		const double& prob, const double& tol) {
 	// compute the initial correlation matrix with adjusted winsorization
 	double r0 = corHuberAdj(x, y, c);
-	if(isnan(r0) || (1 - abs(r0) < tol)) {
+	// C++ isnan() is not portable and gives error on Windows systems
+	// use R macro ISNAN() instead
+	if(ISNAN(r0) || (1 - abs(r0) < tol)) {
 		// points almost on a line, leads to computationally singular system
 		return r0;
 	}

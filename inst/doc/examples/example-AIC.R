@@ -1,5 +1,3 @@
-## C++ back end package 'sparseLTSEigen' is required
-
 ## generate data
 library("mvtnorm")
 set.seed(1234)  # for reproducibility
