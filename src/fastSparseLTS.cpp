@@ -17,7 +17,7 @@ using namespace std;
 class Subset {
 public:
 	// information on the subset
-	VectorXd subset;
+	VectorXi indices;
 	double intercept;
 	VectorXd coefficients;
 	VectorXd residuals;
@@ -26,112 +26,102 @@ public:
 
 	// constructors
 	Subset();
-	Subset(VectorXi&);
+	Subset(const int&, const int&, const int&);
+	Subset(const VectorXi&);
 	// compute lasso solution and residuals
-	void lasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
-			const bool& useIntercept, const double& eps, const bool& useGram);
+	void lasso(const MatrixXd&, const VectorXd&, const double&, const bool&,
+			const double&, const bool&);
 	// compute objective function
-	void objective(const double& lambda);
+	void objective(const double&);
 	// perform C-Step
-	void cStep(const MatrixXd& x, const VectorXd& y, const double& lambda,
-			const bool& useIntercept, const double& eps, const bool& useGram);
+	void cStep(const MatrixXd&, const VectorXd&, const double&, const bool&,
+			const double&, const double&, const bool&);
+//	// overloaded < (is less) operator for sorting and ordering
+//	bool operator< (const Subset&);
 };
 
 // constructors
 inline Subset::Subset() {
+	crit = R_PosInf;
 	continueCSteps = true;
 }
-inline Subset::Subset(VectorXi& subset) {
-	// TODO
+inline Subset::Subset(const int&n, const int&p, const int& h) {
+	indices = VectorXi(h);
+	coefficients = VectorXd(p);
+	residuals = VectorXd(n);
+	crit = R_PosInf;
+	continueCSteps = true;
 }
-
-// compute lasso solution and residuals
-void Subset::lasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		const bool& useIntercept, const double& eps, const bool& useGram) {
-	// TODO
-}
-
-// compute objective function
-void objective(const double& lambda) {
-	// TODO
-}
-
-// perform C-Step
-void Subset::cStep(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		const bool& useIntercept, const double& eps, const bool& useGram) {
-	// TODO
-}
-
-
-// ****************************
-// sparse least trimmed squares
-// ****************************
-
-// sparse LTS objective function (L1 penalized trimmed sum of squared residuals)
-double objective(const VectorXd& residuals, const VectorXi& subset,
-		const double& lambda, const VectorXd& coefficients) {
-	// compute sum of squared residuals for subset
-	const int h = subset.size();
-	double crit = 0;
+inline Subset::Subset(const VectorXi& initial) {
+	const int h = initial.size();
+	indices = VectorXi(h);
 	for(int i = 0; i < h; i++) {
-		crit += pow(residuals(subset(i)), 2);
+		indices(i) = initial(i);	// data are copied
+	}
+	crit = R_PosInf;
+	continueCSteps = true;
+}
+
+// compute sparse LTS objective function
+// (L1 penalized trimmed sum of squared residuals)
+void Subset::objective(const double& lambda) {
+	// compute sum of squared residuals for subset
+	const int h = indices.size();
+	crit = 0;
+	for(int i = 0; i < h; i++) {
+		crit += pow(residuals(indices(i)), 2);
 	}
 	// add L1 penalty on coefficients
 	crit += h * lambda * coefficients.lpNorm<1>();
-	return crit;
 }
 
-// wrapper function used internally by fastSparseLTS(), which returns residuals
-// and value of objective function through corresponding parameters
-VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		const VectorXi& subset, const bool& useIntercept, const double& eps,
-		const bool& useGram, double& intercept, VectorXd& residuals,
-		double& crit) {
+// compute lasso solution, residuals and value of objective function
+void Subset::lasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
+		const bool& useIntercept, const double& eps, const bool& useGram) {
 	// compute coefficients
-	VectorXd coefficients = fastLasso(x, y, lambda, true, subset,
+	coefficients = fastLasso(x, y, lambda, true, indices,
 			useIntercept, eps, useGram, intercept);
 	// compute residuals
 	residuals.noalias() = y - x * coefficients;
 	if(useIntercept) {
-		for(int i = 0; i < residuals.size(); i++) {
+		const int n = residuals.size();
+		for(int i = 0; i < n; i++) {
 			residuals(i) -= intercept;
 		}
 	}
 	// compute value of objective function
-	crit = objective(residuals, subset, lambda, coefficients);
-	return coefficients;
+	objective(lambda);
 }
 
-// C-step for sparse LTS for k-th subset
-// Eigen library is used for linear algebra
-// ATTENTION: residuals, subset, intercept and value of objective function are
-//            returned through corresponding parameters
-// x .............. predictor matrix
-// y .............. response
-// lambda ......... penalty parameter
-// residuals ...... current residuals (updated through this parameter)
-// h .............. subset size
-// subset ......... current subset (updated through this parameter)
-// useIntercept ... logical indicating whether intercept should be included
-// eps ............ small numerical value (effective zero)
-// useGram ........ logical indicating whether Gram matrix should be computed
-//                  in advance
-// intercept ...... intercept is returned through this parameter
-// crit ........... value of objective function is returned through this parameter
-VectorXd fastCStep(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		VectorXd& residuals, const int& h, VectorXi& subset,
-		const bool& useIntercept, const double& eps, const bool& useGram,
-		double& intercept, double& crit) {
+// perform C-Step
+void Subset::cStep(const MatrixXd& x, const VectorXd& y, const double& lambda,
+		const bool& useIntercept, const double& tol, const double& eps,
+		const bool& useGram) {
 	// update subset
-	subset = findSmallest(residuals.cwiseAbs(), h);
+	const int h = indices.size();
+	indices = findSmallest(residuals.cwiseAbs(), h);
 	// compute lasso solution for new subset
-	return fastLasso(x, y, lambda, subset, useIntercept,
-			eps, useGram, intercept, residuals, crit);
+	// (also updated residuals and value of objective function)
+	double previousCrit = crit;
+	lasso(x, y, lambda, useIntercept, eps, useGram);
+	// check for convergence
+	continueCSteps = ((previousCrit - crit) > tol);
 }
 
-// R interface to fastCStep() (for testing purposes)
-SEXP R_fastCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_residuals,
-		SEXP R_h, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
+//// overloaded < (is less) operator for sorting and ordering
+//bool Subset::operator< (const Subset& other) {
+//      return (this->value < other.value);
+//}
+
+// compare two objects with < (is less) operator for sorting and ordering
+bool subsetIsLess(const Subset& left, const Subset& right) {
+	return left.crit < right.crit;
+}
+
+
+// R interface for object-based lasso (for testing purposes)
+SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
+		SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);	// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -139,58 +129,108 @@ SEXP R_fastCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_residuals,
 	NumericVector Rcpp_y(R_y);	// response
 	Map<VectorXd> y(Rcpp_y.begin(), n);		// reuse memory
 	double lambda = as<double>(R_lambda);
-	NumericVector Rcpp_residuals(R_residuals);
-	VectorXd residuals(n);
-	for(int i = 0; i < n; i++) {
-		residuals(i) = Rcpp_residuals[i];	// do not reuse memory
+	IntegerVector Rcpp_initial(R_initial);
+	const int h = Rcpp_initial.size();
+	VectorXi initial(h);
+	for(int i = 0; i < h; i++) {
+		initial(i) = Rcpp_initial[i];	// do not reuse memory
 	}
-	int h = as<int>(R_h);
 	bool useIntercept = as<bool>(R_intercept);
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
-	// call native C++ function and return results as list
-	VectorXi subset;
-	double intercept;
-	double crit;
-	VectorXd coefficients = fastCStep(x, y, lambda, residuals, h, subset,
-			useIntercept, eps, useGram, intercept, crit);
-	NumericVector R_coefficients = wrap(coefficients);
+	// initialize object for subset and call native C++ function
+	Subset subset(initial);
+	subset.lasso(x, y, lambda, useIntercept, eps, useGram);
+	// return results as list
+	NumericVector Rcpp_coefficients = wrap(subset.coefficients);
 	if(useIntercept) {
-		R_coefficients.push_front(intercept);	// prepend intercept
+		Rcpp_coefficients.push_front(subset.intercept);	// prepend intercept
 	}
 	return List::create(
-			Named("coefficients") = R_coefficients,
-			Named("subset") = subset,
-			Named("residuals") = residuals,
-			Named("crit") = crit
+			Named("indices") = subset.indices,
+			Named("coefficients") = Rcpp_coefficients,
+			Named("residuals") = subset.residuals,
+			Named("crit") = subset.crit,
+			Named("continueCSteps") = subset.continueCSteps
+			);
+}
+
+// R interface for object-based C-Step (for testing purposes)
+SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
+		SEXP R_intercept, SEXP R_tol, SEXP R_eps, SEXP R_useGram) {
+    // data initializations
+	NumericMatrix Rcpp_x(R_x);	// predictor matrix
+	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
+	Map<MatrixXd> x(Rcpp_x.begin(), n, p);	// reuse memory
+	NumericVector Rcpp_y(R_y);	// response
+	Map<VectorXd> y(Rcpp_y.begin(), n);		// reuse memory
+	double lambda = as<double>(R_lambda);
+	List Rcpp_subset(R_subset);
+	bool useIntercept = as<bool>(R_intercept);
+	double tol = as<double>(R_tol);
+	double eps = as<double>(R_eps);
+	bool useGram = as<bool>(R_useGram);
+	// initialize object for subset
+	NumericVector Rcpp_indices = Rcpp_subset["indices"];
+	const int h = Rcpp_indices.size();
+	NumericVector Rcpp_coefficients = Rcpp_subset["coefficients"];
+	NumericVector Rcpp_residuals = Rcpp_subset["residuals"];
+	NumericVector Rcpp_crit = Rcpp_subset["crit"];
+	Subset subset(n, p, h);
+	for(int i = 0; i < h; i++) {
+		subset.indices(i) = Rcpp_indices[i];
+	}
+	if(useIntercept) {
+		subset.intercept = Rcpp_coefficients[0];
+		Rcpp_coefficients.erase(0);
+	}
+	for(int j = 0; j < p; j++) {
+		subset.coefficients(j) = Rcpp_coefficients[j];
+	}
+	for(int i = 0; i < n; i++) {
+		subset.residuals(i) = Rcpp_residuals[i];
+	}
+	subset.crit = Rcpp_crit[0];
+	// call native C++ function
+	subset.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+	// return results as list
+	Rcpp_coefficients = wrap(subset.coefficients);
+	if(useIntercept) {
+		Rcpp_coefficients.push_front(subset.intercept);	// prepend intercept
+	}
+	return List::create(
+			Named("indices") = subset.indices,
+			Named("coefficients") = Rcpp_coefficients,
+			Named("residuals") = subset.residuals,
+			Named("crit") = subset.crit,
+			Named("continueCSteps") = subset.continueCSteps
 			);
 }
 
 
+// ****************************
+// sparse least trimmed squares
+// ****************************
 
-
-
-// obtain the indices of the nkeep best subsets among a matrix of subsets
-VectorXi bestSubsets(const VectorXd& x, const MatrixXi& subsets, int& nkeep) {
-	// initializations
-	int n = x.size(), h = subsets.rows();
-	VectorXi orderX = order(x), keep(nkeep);
-	keep(0) = orderX(0);	// subset with lowest value of objective function
+// keep best subsets
+void keepBest(vector<Subset>& subsets, int& nkeep) {
+	// sort subsets
+	sort(subsets.begin(), subsets.end(), subsetIsLess);
 	// loop over subsets until nkeep unique subsets are found
-	int j = 1, k = 1;
-	while((k < nkeep) && (j < n)) {
-		if(x(keep(k-1)) < x(orderX(j))) {
+	int k = 1, n = subsets.size();
+	while((k < nkeep) && (k < n)) {
+		if(subsetIsLess(subsets[k-1], subsets[k])) {
 			// keep the current subset if its value for objective function is
 			// larger than for the previous subset
-			keep(k) = orderX(j);
 			k++;
 		} else {
 			// equal value for objective function as for the previous subset
 			// sort indices of previous and current subsets and check if they
 			// are equal
-			VectorXi previous = subsets.col(keep(k-1));
+			VectorXi previous = (subsets[k-1]).indices;
+			VectorXi current = (subsets[k]).indices;
+			int h = previous.size();
 			sort(&previous.coeffRef(0), &previous.coeffRef(0)+h);
-			VectorXi current = subsets.col(orderX(j));
 			sort(&current.coeffRef(0), &current.coeffRef(0)+h);
 			// loop over indices to see if they are all equal
 			bool equal = true;
@@ -199,29 +239,30 @@ VectorXi bestSubsets(const VectorXd& x, const MatrixXi& subsets, int& nkeep) {
 				equal = (previous(i) == current(i));
 				i++;
 			}
-			// keep the current subset if it is not equal to the previous one
-			if(!equal) {
-				keep(k) = orderX(j);
+			// remove the current subset if it is equal to the previous one,
+			// otherwise keep it
+			if(equal) {
+				subsets.erase(subsets.begin()+k);
+				n--;
+			} else {
 				k++;
 			}
 		}
-		j++;
 	}
 	// adjust nkeep if there are not enough unique subsets
 	if(k < nkeep) {
-		keep.conservativeResize(k);
 		nkeep = k;
 	}
-	// return indices of best subsets
-	return keep;
+	// resize vector to keep the best subsets
+	subsets.resize(nkeep);
 }
 
 // compute the mean of a subset of the data
-double subsetMean(const VectorXd& x, const VectorXi& subset) {
-	const int h = subset.size();
+double subsetMean(const VectorXd& x, const VectorXi& indices) {
+	const int h = indices.size();
 	double mean = 0;
 	for(int i = 0; i < h; i++) {
-		mean += x(subset(i));
+		mean += x(indices(i));
 	}
 	mean /= h;
 	return mean;
@@ -255,7 +296,7 @@ double partialScale(const VectorXd& x, const double& center, const int& h) {
 // x .............. predictor matrix
 // y .............. response
 // lambda ......... penalty parameter
-// subsets ........ matrix of initial subsets
+// initial ........ matrix of initial subsets
 // useIntercept ... logical indicating whether intercept should be included
 // ncstep ......... number of initial C-steps
 // nkeep .......... number of subsets to keep after initial C-steps
@@ -263,109 +304,63 @@ double partialScale(const VectorXd& x, const double& center, const int& h) {
 // eps ............ small numerical value (effective zero)
 // useGram ........ logical indicating whether Gram matrix should be computed
 //                  in advance
-// intercept ...... intercept is returned through this parameter
-// coefficients ... coefficients are returned through this parameter
-// residuals ...... residuals are returned through this parameter
-// crit ........... value of objective function is returned through this parameter
 // center ......... residual center estimate is returned through this parameter
 // scale .......... residual scale estimate is returned through this parameter
-VectorXi fastSparseLTS(const MatrixXd& x, const VectorXd& y,
-		const double& lambda, Map<MatrixXi>& subsets, const bool& useIntercept,
+Subset fastSparseLTS(const MatrixXd& x, const VectorXd& y,
+		const double& lambda, const MatrixXi& initial, const bool& useIntercept,
 		const int& ncstep, int& nkeep, const double& tol, const double& eps,
-		const bool& useGram, double& intercept, VectorXd& coefficients,
-		VectorXd& residuals, double& crit, double& center, double& scale) {
+		const bool& useGram, double& center, double& scale) {
 	// initializations
 	const int n = x.rows(), p = x.cols();
-	const int h = subsets.rows(), nsamp = subsets.cols();
-	// compute lasso fits for initial subsets
-	MatrixXd coefMat(p, nsamp);
-	VectorXd intercepts;
-	MatrixXd residMat(n, nsamp);
-	VectorXd crits = VectorXd::Zero(nsamp);	// values of objective function
-	if(useIntercept) {
-		intercepts.resize(nsamp);
-	}
+	const int h = initial.rows(), nsamp = initial.cols();
+	// define STL vector of initial subsets and compute lasso fits
+	vector<Subset> subsets(nsamp);
 	for(int k = 0; k < nsamp; k++) {
-		// compute lasso fits
-		coefMat.col(k) = fastLasso(x, y, lambda, subsets.col(k), useIntercept,
-				eps, useGram, intercept, residuals, crit);
-		residMat.col(k) = residuals;
-		crits(k) = crit;
+		Subset subsetK(initial.col(k));
+		subsetK.lasso(x, y, lambda, useIntercept, eps, useGram);
+		subsets[k] = subsetK;
 	}
 	// perform initial c-steps on all subsets
-	Array<bool, Dynamic, 1> continueCSteps(nsamp);
 	for(int k = 0; k < nsamp; k++) {
-		continueCSteps(k) = true;
-	}
-	for(int k = 0; k < nsamp; k++) {
+		Subset subsetK = subsets[k];
 		int i = 0;
-		VectorXi subset = subsets.col(k);
-		residuals = residMat.col(k);
-		crit = crits(k);
-		double previousCrit;
-		while(continueCSteps(k) && (i < ncstep)) {
-			previousCrit = crit;
-			coefMat.col(k) = fastCStep(x, y, lambda, residuals, h, subset,
-					useIntercept, eps, useGram, intercept, crit);
-			continueCSteps(k) = ((previousCrit - crit) > tol);
+		while(subsetK.continueCSteps && (i < ncstep)) {
+			subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
 			i++;
 		}
-		subsets.col(k) = subset;
-		if(useIntercept) {
-			intercepts(k) = intercept;
-		}
-		residMat.col(k) = residuals;
-		crits(k) = crit;
+		subsets[k] = subsetK;
 	}
 
 	// perform additional c-steps on best subsets until convergence and
 	// keep track of optimal subset
-	const VectorXi keep = bestSubsets(crits, subsets, nkeep);
-	int which = keep(0);	// initial optimal subset
+	if(nkeep < nsamp) {
+		keepBest(subsets, nkeep);	// keep best subsets
+	}
+	int which = 0;					// initial optimal subset
+	double minCrit = R_PosInf;		// initial minimum of objective function
 	for(int k = 0; k < nkeep; k++) {
-		int keepK = keep(k);
-		VectorXi subset = subsets.col(keepK);
-		if(useIntercept) {
-			intercept = intercepts(keepK);
-		}
-		residuals = residMat.col(keepK);
-		crit = crits(keepK);
-		double previousCrit;
-		int i = ncstep;
-		while(continueCSteps(keepK)) {
-			previousCrit = crit;
-			coefMat.col(keepK) = fastCStep(x, y, lambda, residuals, h, subset,
-					useIntercept, eps, useGram, intercept, crit);
-			continueCSteps(keepK) = ((previousCrit - crit) > tol);
+		Subset subsetK = subsets[k];
+		int i = 0;
+		while(subsetK.continueCSteps) {
+			subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
 			i++;
 		}
-		subsets.col(keepK) = subset;
-		if(useIntercept) {
-			intercepts(keepK) = intercept;
+		if(subsetK.crit < minCrit) {
+			which = k;	// update optimal subset
 		}
-		residMat.col(keepK) = residuals;
-		crits(keepK) = crit;
-		if(crit < crits(which)) {
-			which = keepK;	// update optimal subset
-		}
+		subsets[k] = subsetK;
 	}
 
 	// return results
-	VectorXi best = subsets.col(which);
-	if(useIntercept) {
-		intercept = intercepts(which);
-	}
-	coefficients = coefMat.col(which);
-	residuals = residMat.col(which);
-	crit = crits(which);
-	center = subsetMean(residuals, best);  		// residual center
-	scale = partialScale(residuals, center, h);	// uncorrected residual scale
+	Subset best = subsets[which];
+	center = subsetMean(best.residuals, best.indices);  // residual center
+	scale = partialScale(best.residuals, center, h);	// uncorrected residual scale
 	return best;
 }
 
 // R interface to fastSparseLTS()
 // initial subsets are constructed in R and passed down to C++
-SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subsets,
+SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 		SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep, SEXP R_tol, SEXP R_eps,
 		SEXP R_useGram) {
 	// data initializations
@@ -375,9 +370,9 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subsets,
 	NumericVector Rcpp_y(R_y);	// response
 	Map<VectorXd> y(Rcpp_y.begin(), n);		// reuse memory
 	double lambda = as<double>(R_lambda);
-	IntegerMatrix Rcpp_subsets(R_subsets);	// matrix of initial subsets
-	const int h = Rcpp_subsets.nrow(), nsamp = Rcpp_subsets.ncol();
-	Map<MatrixXi> subsets(Rcpp_subsets.begin(), h, nsamp);	// reuse memory
+	IntegerMatrix Rcpp_initial(R_initial);	// matrix of initial subsets
+	const int h = Rcpp_initial.nrow(), nsamp = Rcpp_initial.ncol();
+	Map<MatrixXi> initial(Rcpp_initial.begin(), h, nsamp);	// reuse memory
 	bool useIntercept = as<bool>(R_intercept);
 	int ncstep = as<int>(R_ncstep);
 	int nkeep = as<int>(R_nkeep);
@@ -385,21 +380,19 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subsets,
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// call native C++ function
-	double intercept, crit, center, scale;
-	VectorXd coefficients, residuals;
-	VectorXi best = fastSparseLTS(x, y, lambda, subsets, useIntercept, ncstep,
-			nkeep, tol, eps, useGram, intercept, coefficients, residuals,
-			crit, center, scale);
-	// currently only regression coefficients are returned
-	NumericVector R_coefficients = wrap(coefficients);
+	double center, scale;
+	Subset best = fastSparseLTS(x, y, lambda, initial, useIntercept, ncstep,
+			nkeep, tol, eps, useGram, center, scale);
+	// return results as list
+	NumericVector Rcpp_coefficients = wrap(best.coefficients);
 	if(useIntercept) {
-		R_coefficients.push_front(intercept);	// prepend intercept
+		Rcpp_coefficients.push_front(best.intercept);	// prepend intercept
 	}
 	return List::create(
-			Named("best") = best,
-			Named("coefficients") = R_coefficients,
-			Named("residuals") = residuals,
-			Named("crit") = crit,
+			Named("best") = best.indices,
+			Named("coefficients") = Rcpp_coefficients,
+			Named("residuals") = best.residuals,
+			Named("crit") = best.crit,
 			Named("center") = center,
 			Named("scale") = scale
 			);
