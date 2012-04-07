@@ -199,12 +199,12 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
     length(which(abs(beta) > tol))
 }
 
-## find indices of h smallest observations
-#partialOrder <- function(x, h) {
-#    # call C++ function
-#    .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h), 
-#        PACKAGE="robustHD") + 1
-#}
+# find indices of h smallest observations
+partialOrder <- function(x, h) {
+    # call C++ function
+    .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h), 
+        PACKAGE="robustHD") + 1
+}
 
 ## find indices of h smallest observations
 #partialSort <- function(x, h) {

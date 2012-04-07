@@ -6,6 +6,8 @@
 #ifndef _robustHD_CORHUBER_H
 #define _robustHD_CORHUBER_H
 
+#define EIGEN_NO_DEBUG
+
 #include <RcppEigen.h>
 
 using namespace Rcpp;

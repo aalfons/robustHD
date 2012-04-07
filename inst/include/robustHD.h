@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         K.U.Leuven
+ *         KU Leuven
  */
 
 #ifndef _robustHD_ROBUSTHD_H

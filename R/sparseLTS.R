@@ -255,7 +255,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     ## call C++ function
     fit <- .Call("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
         R_subsets=subsets, R_intercept=intercept, 
-        R_nkeep=as.integer(nsamp[2]), R_ncstep=as.integer(ncstep), 
+        R_ncstep=as.integer(ncstep), R_nkeep=as.integer(nsamp[2]), 
         R_tol=tol, R_eps=eps, R_useGram=use.Gram, PACKAGE="robustHD")
     best <- sort.int(fit$best + 1)
     objective <- fit$crit
