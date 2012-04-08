@@ -136,7 +136,7 @@
 #' 
 #' @export 
 #' @import Rcpp 
-#' @import RcppEigen
+#' @import RcppArmadillo
 #' @useDynLib robustHD
 
 sparseLTS <- function(x, ...) UseMethod("sparseLTS")
@@ -437,7 +437,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' 
 #' @export 
 #' @import Rcpp 
-#' @import RcppEigen
+#' @import RcppArmadillo
 #' @useDynLib robustHD
 
 sparseLTSGrid <- function(x, ...) UseMethod("sparseLTSGrid")

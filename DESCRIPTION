@@ -13,9 +13,9 @@ Depends:
     robustbase (>= 0.6-0)
 Imports:
     Rcpp (>= 0.9.10),
-    RcppEigen (>= 0.2.0),
+    RcppArmadillo (>= 0.2.36),
     stats
-LinkingTo: Rcpp, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo
 Suggests:
     mvtnorm
 Description: Robust methods for high-dimensional data, in particular linear

@@ -6,9 +6,9 @@
 #ifndef _robustHD_FASTSPARSELTS_H
 #define _robustHD_FASTSPARSELTS_H
 
-#define EIGEN_NO_DEBUG
+#define ARMA_NO_DEBUG
 
-#include <robustHD.h>
+#include <RcppArmadillo.h>
 #include "fastLasso.h"
 #include "utils.h"
 

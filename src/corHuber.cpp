@@ -7,33 +7,37 @@
 #include "corHuber.h"
 
 using namespace Rcpp;
-using namespace Eigen;
+using namespace arma;
 
 
 // -------------------
 // Pearson correlation
 // -------------------
 
-double corPearson(const VectorXd& x, const VectorXd& y) {
-	const int n = x.size();
-	// compute means
-	double meanX = 0, meanY = 0;
-	for(int i = 0; i < n; i++) {
-		meanX += x(i);
-		meanY += y(i);
-	}
-	meanX /= n;
-	meanY /= n;
-	// compute Pearson correlation
-	// covariance and variances are computed up to scaling factor (n-1)
-	double covXY = 0, varX = 0, varY = 0;
-	for(int i = 0; i < n; i++) {
-		double tmpX = x(i) - meanX, tmpY = y(i) - meanY;  // centered values
-		covXY += tmpX * tmpY;
-		varX += tmpX * tmpX;
-		varY += tmpY * tmpY;
-	}
-	return covXY / (sqrt(varX) * sqrt(varY));
+//double corPearson(const vec& x, const vec& y) {
+//	const uword n = x.n_elem;
+//	// compute means
+//	double meanX = 0, meanY = 0;
+//	for(uword i = 0; i < n; i++) {
+//		meanX += x(i);
+//		meanY += y(i);
+//	}
+//	meanX /= n;
+//	meanY /= n;
+//	// compute Pearson correlation
+//	// covariance and variances are computed up to scaling factor (n-1)
+//	double covXY = 0, varX = 0, varY = 0;
+//	for(uword i = 0; i < n; i++) {
+//		double tmpX = x(i) - meanX, tmpY = y(i) - meanY;  // centered values
+//		covXY += tmpX * tmpY;
+//		varX += tmpX * tmpX;
+//		varY += tmpY * tmpY;
+//	}
+//	return covXY / (sqrt(varX) * sqrt(varY));
+//}
+double corPearson(const vec& x, const vec& y) {
+	mat corXY = cor(x, y);	// arma function cor() always returns matrix
+	return corXY(0, 0);
 }
 
 
@@ -56,11 +60,11 @@ double winsorize(const double& x, const double& cm, const double& cp) {
 }
 
 // robust correlation based on univariate winsorization
-double corHuberUni(const VectorXd& x, const VectorXd& y, const double& c) {
+double corHuberUni(const vec& x, const vec& y, const double& c) {
 	const double cm = -c;		// negative winsorization constant
-	const int n = x.size();
-	VectorXd wx(n), wy(n);
-	for(int i = 0; i < n; i++) {
+	const uword n = x.n_elem;
+	vec wx(n), wy(n);
+	for(uword i = 0; i < n; i++) {
 		wx(i) = winsorize(x(i), cm, c);
 		wy(i) = winsorize(y(i), cm, c);
 	}
@@ -72,19 +76,19 @@ double corHuberUni(const VectorXd& x, const VectorXd& y, const double& c) {
 SEXP R_corHuberUni(SEXP R_x, SEXP R_y, SEXP R_c) {
 	// convert data to arma types
 	NumericVector Rcpp_x(R_x), Rcpp_y(R_y);
-	Map<VectorXd> x(Rcpp_x.begin(), Rcpp_x.size());	// reuse memory
-	Map<VectorXd> y(Rcpp_y.begin(), Rcpp_y.size());	// reuse memory
+	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
+	vec y(Rcpp_y.begin(), Rcpp_y.size(), false);	// reuse memory
 	double c = as<double>(R_c);
-	// call Eigen version and wrap result
+	// call arma version and wrap result
 	return wrap(corHuberUni(x, y, c));
 }
 
 // robust correlation based on adjusted univariate winsorization
-double corHuberAdj(const VectorXd& x, const VectorXd& y, const double& c) {
-	const int n = x.size();
-	VectorXi sign(n);
-	int n1 = 0, n2 = 0;
-	for(int i = 0; i < n; i++) {
+double corHuberAdj(const vec& x, const vec& y, const double& c) {
+	const int n = x.n_elem;
+	ivec sign(n);
+	uword n1 = 0, n2 = 0;
+	for(uword i = 0; i < n; i++) {
 		double xy = x(i) * y(i);
 		if(xy > 0) {
 			sign(i) = 1;
@@ -116,8 +120,8 @@ double corHuberAdj(const VectorXd& x, const VectorXd& y, const double& c) {
 	}
 	// winsorize data
 	const double cm = -c, cm1 = -c1, cm2 = -c2;
-	VectorXd wx(n), wy(n);
-	for(int i = 0; i < n; i++) {
+	vec wx(n), wy(n);
+	for(uword i = 0; i < n; i++) {
 		if(sign(i) == 1) {
 			wx(i) = winsorize(x(i), cm1, c1);
 			wy(i) = winsorize(y(i), cm1, c1);
@@ -137,39 +141,37 @@ double corHuberAdj(const VectorXd& x, const VectorXd& y, const double& c) {
 SEXP R_corHuberAdj(SEXP R_x, SEXP R_y, SEXP R_c) {
 	// convert data to Rcpp types
 	NumericVector Rcpp_x(R_x), Rcpp_y(R_y);
-	Map<VectorXd> x(Rcpp_x.begin(), Rcpp_x.size());	// reuse memory
-	Map<VectorXd> y(Rcpp_y.begin(), Rcpp_y.size());	// reuse memory
+	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
+	vec y(Rcpp_y.begin(), Rcpp_y.size(), false);	// reuse memory
 	double c = as<double>(R_c);
-	// call Eigen version and wrap result
+	// call arma version and wrap result
 	return wrap(corHuberAdj(x, y, c));
 }
 
 // robust correlation based on bivariate winsorization
-double corHuberBi(const VectorXd& x, const VectorXd& y, const double& c,
+double corHuberBi(const vec& x, const vec& y, const double& c,
 		const double& prob, const double& tol) {
 	// compute the initial correlation matrix with adjusted winsorization
 	double r0 = corHuberAdj(x, y, c);
-	// C++ isnan() is not portable and gives error on Windows systems
-	// use R macro ISNAN() instead
-	if(ISNAN(r0) || (1 - abs(r0) < tol)) {
+	if(isnan(r0) || (1 - abs(r0) < tol)) {
 		// points almost on a line, leads to computationally singular system
 		return r0;
 	}
 	// construct correlation matrix
-	MatrixXd R0 = MatrixXd::Identity(2, 2);	// initialize identity matrix
-	R0(1,0) = r0;							// set off-diagonal elements to
-	R0(0,1) = r0;							// initial correlation estimate
+	mat R0 = eye<mat>(2, 2);	// initialize identity matrix
+	R0(1,0) = r0;				// set off-diagonal elements to
+	R0(0,1) = r0;				// initial correlation estimate
 	// compute Mahalanobis distances
-	MatrixXd xy(x.size(), 2);
-	xy.col(0) = x; xy.col(1) = y;	// put x and y in a matrix
-	VectorXd md = (xy * R0.inverse()).cwiseProduct(xy).rowwise().sum();	// squared Mahalanobis distances
+	mat xy = join_rows(x, y);			// put x and y in a matrix
+	mat invR0 = inv(R0);				// inverse correlation matrix
+	vec md = sum((xy * invR0) % xy, 1);	// squared Mahalanobis distances
 	// shrink observations with too large distances
 	// compute the quantile of the chi-squared distribution with 2 degrees of
 	// freedom corresponding to probability 'prob'
 	// note that (1 - prob) needs to be used in the call to Rf_qchisq()
 	double d = Rf_qchisq(1 - prob, 2, 0, 0);
 	// shrink observations with too large distances
-	for(int i = 0; i < xy.rows(); i++) {
+	for(uword i = 0; i < xy.n_rows; i++) {
 		if(md(i) > d){
 			xy.row(i) *= sqrt(d / md(i));
 		}
@@ -182,25 +184,25 @@ double corHuberBi(const VectorXd& x, const VectorXd& y, const double& c,
 SEXP R_corHuberBi(SEXP R_x, SEXP R_y, SEXP R_c, SEXP R_prob, SEXP R_tol) {
 	// convert data to Rcpp types
 	NumericVector Rcpp_x(R_x), Rcpp_y(R_y);
-	Map<VectorXd> x(Rcpp_x.begin(), Rcpp_x.size());	// reuse memory
-	Map<VectorXd> y(Rcpp_y.begin(), Rcpp_y.size());	// reuse memory
+	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
+	vec y(Rcpp_y.begin(), Rcpp_y.size(), false);	// reuse memory
 	double c = as<double>(R_c);
 	double prob = as<double>(R_prob);
 	double tol = as<double>(R_tol);
-	// call Eigen version and wrap result
+	// call arma version and wrap result
 	return wrap(corHuberBi(x, y, c, prob, tol));
 }
 
 // robust correlation matrix based on bivariate winsorization
-MatrixXd corMatHuber(const MatrixXd& x, const double& c,
+mat corMatHuber(const mat& x, const double& c,
 		const double& prob, const double& tol) {
-	const int p = x.cols();
-	MatrixXd R = MatrixXd::Identity(p, p);	// initialize identity matrix
+	const uword p = x.n_cols;
+	mat R = eye<mat>(p, p);	// initialize identity matrix
 	// compute off-diagonal elements
-	for(int j = 0; j < p; j++) {
-		VectorXd xj = x.col(j);
-		for(int i = j+1; i < p; i++) {
-			R(i, j) = corHuberBi(x.col(i), xj, c, prob, tol);
+	for(uword j = 0; j < p; j++) {
+		vec xj = x.unsafe_col(j);
+		for(uword i = j+1; i < p; i++) {
+			R(i, j) = corHuberBi(x.unsafe_col(i), xj, c, prob, tol);
 			R(j, i) = R(i, j);
 		}
 	}
@@ -212,10 +214,10 @@ MatrixXd corMatHuber(const MatrixXd& x, const double& c,
 SEXP R_corMatHuber(SEXP R_x, SEXP R_c, SEXP R_prob, SEXP R_tol) {
 	// convert data to Rcpp types
 	NumericMatrix Rcpp_x(R_x);
-	Map<MatrixXd> x(Rcpp_x.begin(), Rcpp_x.rows(), Rcpp_x.cols());	// reuse memory
+	mat x(Rcpp_x.begin(), Rcpp_x.rows(), Rcpp_x.cols(), false);	// reuse memory
 	double c = as<double>(R_c);
 	double prob = as<double>(R_prob);
 	double tol = as<double>(R_tol);
-	// call Eigen version and wrap result
+	// call arma version and wrap result
 	return wrap(corMatHuber(x, c, prob, tol));
 }

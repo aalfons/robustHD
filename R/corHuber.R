@@ -88,7 +88,7 @@
 #' 
 #' @export
 #' @import Rcpp 
-#' @import RcppEigen
+#' @import RcppArmadillo
 #' @useDynLib robustHD
 
 
