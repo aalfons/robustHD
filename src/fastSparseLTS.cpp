@@ -118,6 +118,28 @@ bool subsetIsLess(const Subset& left, const Subset& right) {
 	return left.crit < right.crit;
 }
 
+// compare two objects with == (is equal) operator
+bool subsetIsEqual(const Subset& left, const Subset& right) {
+	bool equal = (left.crit == right.crit);
+	if(equal) {
+		// values of the objective function are equal
+		// check if indices are equal too
+		VectorXi leftIndices = left.indices;
+		VectorXi rightIndices = right.indices;
+		int h = leftIndices.size();
+		// sort indices
+		sort(&leftIndices.coeffRef(0), &leftIndices.coeffRef(0)+h);
+		sort(&rightIndices.coeffRef(0), &rightIndices.coeffRef(0)+h);
+		// loop over indices to see if they are all equal
+		int i = 0;
+		while(equal && (i < h)) {
+			equal = (leftIndices(i) == rightIndices(i));
+			i++;
+		}
+	}
+	return equal;
+}
+
 
 // R interface for object-based lasso (for testing purposes)
 SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
@@ -217,36 +239,14 @@ void keepBest(vector<Subset>& subsets, int& nkeep) {
 	// sort subsets
 	sort(subsets.begin(), subsets.end(), subsetIsLess);
 	// loop over subsets until nkeep unique subsets are found
+	// k counts the number of unique subsets found
 	int k = 1, n = subsets.size();
 	while((k < nkeep) && (k < n)) {
-		if(subsetIsLess(subsets[k-1], subsets[k])) {
-			// keep the current subset if its value for objective function is
-			// larger than for the previous subset
-			k++;
+		if(subsetIsEqual(subsets[k-1], subsets[k])) {
+			subsets.erase(subsets.begin()+k);
+			n--;
 		} else {
-			// equal value for objective function as for the previous subset
-			// sort indices of previous and current subsets and check if they
-			// are equal
-			VectorXi previous = (subsets[k-1]).indices;
-			VectorXi current = (subsets[k]).indices;
-			int h = previous.size();
-			sort(&previous.coeffRef(0), &previous.coeffRef(0)+h);
-			sort(&current.coeffRef(0), &current.coeffRef(0)+h);
-			// loop over indices to see if they are all equal
-			bool equal = true;
-			int i = 0;
-			while(equal && (i < h)) {
-				equal = (previous(i) == current(i));
-				i++;
-			}
-			// remove the current subset if it is equal to the previous one,
-			// otherwise keep it
-			if(equal) {
-				subsets.erase(subsets.begin()+k);
-				n--;
-			} else {
-				k++;
-			}
+			k++;
 		}
 	}
 	// adjust nkeep if there are not enough unique subsets
@@ -255,6 +255,38 @@ void keepBest(vector<Subset>& subsets, int& nkeep) {
 	}
 	// resize vector to keep the best subsets
 	subsets.resize(nkeep);
+}
+
+// R interface for keeping best subsets (for testing purposes)
+SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
+	// data initializations
+	IntegerMatrix Rcpp_subsetMat(R_subsetMat);					// subset matrix
+	const int h = Rcpp_subsetMat.nrow(), nsamp = Rcpp_subsetMat.ncol();
+	Map<MatrixXi> subsetMat(Rcpp_subsetMat.begin(), h, nsamp);	// reuse memory
+	NumericVector Rcpp_crits(R_crits);				// values
+	Map<VectorXd> crits(Rcpp_crits.begin(), nsamp);	// reuse memory
+	int nkeep = as<int>(R_nkeep);
+	// call native C++ function
+	vector<Subset> subsets(nsamp);
+	for(int k = 0; k < nsamp; k++) {
+		Subset subset(subsetMat.col(k));
+		subset.crit = crits(k);
+		subsets[k] = subset;
+	}
+	keepBest(subsets, nkeep);
+	// return results as list
+	MatrixXi subsetMatOut(h, nkeep);
+	VectorXd critsOut(nkeep);
+	for(int k = 0; k < nkeep; k++) {
+		Subset subset = subsets[k];
+		subsetMatOut.col(k) = subset.indices;
+		critsOut(k) = subset.crit;
+	}
+	return List::create(
+			Named("subsetMat") = subsetMatOut,
+			Named("crits") = critsOut,
+			Named("nkeep") = nkeep
+			);
 }
 
 // compute the mean of a subset of the data
