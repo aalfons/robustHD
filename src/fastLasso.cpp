@@ -143,7 +143,7 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 //		intercept = 0;	// zero intercept
 	}
 
-	// normalize predictors and store norms
+	// compute norms and find variables with too small a norm
 	uvec inactive = seqLen(p);
 	rowvec normX = sqrt(sum(xs % xs, 0));	// columnwise norms
 	double epsNorm = eps * sqrt(n);	// R package 'lars' uses n, not n-1
@@ -157,6 +157,13 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 		inactive.shed_row(i);
 	}
 	uword m = inactive.n_elem;
+	if(m < p) {
+		p = m;	// update number of variables if necessary
+	}
+	// normalize predictors
+	for(int j = 0; j < p; j++) {
+		xs.col(j) /= normX(j);		// sweep out norm
+	}
 
 	// compute Gram matrix if requested (saves time if number of variables is
 	// not too large)
