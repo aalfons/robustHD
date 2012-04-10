@@ -32,9 +32,10 @@
 }
 \examples{
 ## generate data
+# example is not high-dimensional to keep computation time low
 set.seed(1234)  # for reproducibility
 n <- 100  # number of observations
-p <- 200  # number of variables
+p <- 25   # number of variables
 beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
 sigma <- 0.5      # controls signal-to-noise ratio
 epsilon <- 0.1    # contamination level
@@ -46,7 +47,7 @@ y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit robust LARS model
-fit <- rlars(x, y, sMax = 25)
+fit <- rlars(x, y)
 
 ## create plots
 plot(fit, zeros = FALSE)
