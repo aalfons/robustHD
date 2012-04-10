@@ -123,6 +123,17 @@
 #' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
+#' @note Package \pkg{robustHD} has a built-in back end for sparse least 
+#' trimmed squares using the C++ library Armadillo.  Another back end is 
+#' available through package \pkg{sparseLTSEigen}, which uses the C++ library 
+#' Eigen.  The latter is faster, but not available on all platforms.  For 
+#' instance, \pkg{sparseLTSEigen} currently does not work on 32-bit \R for 
+#' Windows.  In addition, there is currently no binary package for OS X 
+#' available on CRAN due to problems with the PowerPC 
+#' architecture.  Nevertheless, OS X users with Intel machines can install 
+#' \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if the standard \R 
+#' developer tools are installed.
+#' 
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link{sparseLTSGrid}}, \code{\link{coef.sparseLTS}}, 
@@ -136,8 +147,6 @@
 #' 
 #' @export 
 #' @import Rcpp 
-#' @import RcppArmadillo
-#' @useDynLib robustHD
 
 sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 
@@ -253,10 +262,11 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         intercept=intercept, eps=eps, use.Gram=use.Gram) - 1
     
     ## call C++ function
-    fit <- .Call("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
+    callBackend <- getBackend()
+    fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
         R_subsets=subsets, R_intercept=intercept, 
         R_ncstep=as.integer(ncstep), R_nkeep=as.integer(nsamp[2]), 
-        R_tol=tol, R_eps=eps, R_useGram=use.Gram, PACKAGE="robustHD")
+        R_tol=tol, R_eps=eps, R_useGram=use.Gram)
     best <- sort.int(fit$best + 1)
     objective <- fit$crit
     
@@ -420,6 +430,17 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
+#' @note Package \pkg{robustHD} has a built-in back end for sparse least 
+#' trimmed squares using the C++ library Armadillo.  Another back end is 
+#' available through package \pkg{sparseLTSEigen}, which uses the C++ library 
+#' Eigen.  The latter is faster, but not available on all platforms.  For 
+#' instance, \pkg{sparseLTSEigen} currently does not work on 32-bit \R for 
+#' Windows.  In addition, there is currently no binary package for OS X 
+#' available on CRAN due to problems with the PowerPC 
+#' architecture.  Nevertheless, OS X users with Intel machines can install 
+#' \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if the standard \R 
+#' developer tools are installed.
+#' 
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link{sparseLTS}}, 
@@ -437,8 +458,6 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' 
 #' @export 
 #' @import Rcpp 
-#' @import RcppArmadillo
-#' @useDynLib robustHD
 
 sparseLTSGrid <- function(x, ...) UseMethod("sparseLTSGrid")
 

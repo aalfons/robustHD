@@ -357,7 +357,6 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 		int& nkeep, const double& tol, const double& eps, const bool& useGram,
 		double& center, double& scale) {
 	// initializations
-	const int n = x.n_rows, p = x.n_cols;
 	const int h = initial.n_rows, nsamp = initial.n_cols;
 	// define STL vector of initial subsets and compute lasso fits
 	vector<Subset> subsets(nsamp);

@@ -85,7 +85,7 @@ SEXP R_corHuberUni(SEXP R_x, SEXP R_y, SEXP R_c) {
 
 // robust correlation based on adjusted univariate winsorization
 double corHuberAdj(const vec& x, const vec& y, const double& c) {
-	const int n = x.n_elem;
+	const uword n = x.n_elem;
 	ivec sign(n);
 	uword n1 = 0, n2 = 0;
 	for(uword i = 0; i < n; i++) {
@@ -153,7 +153,9 @@ double corHuberBi(const vec& x, const vec& y, const double& c,
 		const double& prob, const double& tol) {
 	// compute the initial correlation matrix with adjusted winsorization
 	double r0 = corHuberAdj(x, y, c);
-	if(isnan(r0) || (1 - abs(r0) < tol)) {
+	// C++ isnan() is not portable and gives error on Windows systems
+	// use R macro ISNAN() instead
+	if(ISNAN(r0) || (1 - abs(r0) < tol)) {
 		// points almost on a line, leads to computationally singular system
 		return r0;
 	}

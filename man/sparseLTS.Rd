@@ -210,6 +210,20 @@
   \eqn{L_{1}}{L1} penalty on the regression coefficients,
   which allows for sparse model estimates.
 }
+\note{
+  Package \pkg{robustHD} has a built-in back end for sparse
+  least trimmed squares using the C++ library Armadillo.
+  Another back end is available through package
+  \pkg{sparseLTSEigen}, which uses the C++ library Eigen.
+  The latter is faster, but not available on all platforms.
+  For instance, \pkg{sparseLTSEigen} currently does not
+  work on 32-bit \R for Windows.  In addition, there is
+  currently no binary package for OS X available on CRAN
+  due to problems with the PowerPC architecture.
+  Nevertheless, OS X users with Intel machines can install
+  \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if
+  the standard \R developer tools are installed.
+}
 \examples{
 ## generate data
 library("mvtnorm")

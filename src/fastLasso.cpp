@@ -161,7 +161,7 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 		p = m;	// update number of variables if necessary
 	}
 	// normalize predictors
-	for(int j = 0; j < p; j++) {
+	for(uword j = 0; j < p; j++) {
 		xs.col(j) /= normX(j);		// sweep out norm
 	}
 
