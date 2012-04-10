@@ -6,7 +6,7 @@
 #include "utils.h"
 
 using namespace Rcpp;
-using namespace Eigen;
+using namespace arma;
 using namespace std;
 
 
@@ -16,19 +16,19 @@ using namespace std;
 
 class SortData {
 public:
-	int index;
+	uword index;
 	double value;
 
 	// constructors
 	SortData();
-	SortData(int&, const double&);
+	SortData(uword&, const double&);
 //	// overloaded < (is less) operator for sorting and ordering
 //	bool operator< (const SortData&);
 };
 
 // constructors
 inline SortData::SortData() {}
-inline SortData::SortData(int& first, const double& second) {
+inline SortData::SortData(uword& first, const double& second) {
 	index = first;
 	value = second;
 }
@@ -50,19 +50,19 @@ bool sortDataIsLess(const SortData& left, const SortData& right) {
 
 // find indices of h smallest observations
 // those are not ordered, but they are the h smallest
-VectorXi findSmallest(const VectorXd& x, const int& h) {
+uvec findSmallest(const vec& x, const uword& h) {
 	// initialize data structure for sorting
-	const int n = x.size();
+	const uword n = x.size();
 	vector<SortData> sortVector(n);
-	for(int i = 0; i < n; i++) {
+	for(uword i = 0; i < n; i++) {
 		sortVector[i] = SortData(i, x(i));
 	}
 	// call STL's nth_element()
 	nth_element(sortVector.begin(), sortVector.begin()+h, sortVector.end(),
 			sortDataIsLess);
 	// construct and return vector of indices
-	VectorXi indices(h);
-	for(int i = 0; i < h; i++) {
+	uvec indices(h);
+	for(uword i = 0; i < h; i++) {
 		SortData sortElement = sortVector[i];
 		indices(i) = sortElement.index;
 	}
@@ -72,26 +72,26 @@ VectorXi findSmallest(const VectorXd& x, const int& h) {
 // R interface to findSmallest()
 SEXP R_findSmallest(SEXP R_x, SEXP R_h) {
 	NumericVector Rcpp_x(R_x);
-	Map<VectorXd> x(Rcpp_x.begin(), Rcpp_x.size());	// reuse memory
+	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
 	int h = as<int>(R_h);
-	VectorXi indices = findSmallest(x, h);	// call native C++ function
-	return wrap(indices);
+	uvec indices = findSmallest(x, h);	// call native C++ function
+	return wrap(indices.memptr(), indices.memptr() + indices.n_elem);
 }
 
 // find indices of h smallest observations
-VectorXi partialOrder(const VectorXd& x, const int& h) {
+uvec partialOrder(const vec& x, const uword& h) {
 	// initialize data structure for sorting
-	const int n = x.size();
+	const uword n = x.size();
 	vector<SortData> sortVector(n);
-	for(int i = 0; i < n; i++) {
+	for(uword i = 0; i < n; i++) {
 		sortVector[i] = SortData(i, x(i));
 	}
 	// call STL's partial_sort()
 	partial_sort(sortVector.begin(), sortVector.begin()+h, sortVector.end(),
 			sortDataIsLess);
 	// construct and return vector of indices
-	VectorXi indices(h);
-	for(int i = 0; i < h; i++) {
+	uvec indices(h);
+	for(uword i = 0; i < h; i++) {
 		SortData sortElement = sortVector[i];
 		indices(i) = sortElement.index;
 	}
@@ -101,10 +101,10 @@ VectorXi partialOrder(const VectorXd& x, const int& h) {
 // R interface to partialOrder()
 SEXP R_partialOrder(SEXP R_x, SEXP R_h) {
 	NumericVector Rcpp_x(R_x);
-	Map<VectorXd> x(Rcpp_x.begin(), Rcpp_x.size());	// reuse memory
+	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
 	int h = as<int>(R_h);
-	VectorXi indices = partialOrder(x, h);	// call native C++ function
-	return wrap(indices);
+	uvec indices = partialOrder(x, h);	// call native C++ function
+	return wrap(indices.memptr(), indices.memptr() + indices.n_elem);
 }
 
 //// R interface to partial sort of h smallest observations
@@ -116,22 +116,3 @@ SEXP R_partialOrder(SEXP R_x, SEXP R_h) {
 //	partial_sort(x.begin(), x.begin()+h, x.end(), sortDataIsLess);
 //	return x;
 //}
-
-// order observations
-VectorXi order(const VectorXd& x) {
-	// initialize data structure for sorting
-	const int n = x.size();
-	vector<SortData> sortVector(n);
-	for(int i = 0; i < n; i++) {
-		sortVector[i] = SortData(i, x(i));
-	}
-	// call STL's sort()
-	sort(sortVector.begin(), sortVector.end(), sortDataIsLess);
-	// construct and return vector of indices
-	VectorXi indices(n);
-	for(int i = 0; i < n; i++) {
-		SortData sortElement = sortVector[i];
-		indices(i) = sortElement.index;
-	}
-	return indices;
-}

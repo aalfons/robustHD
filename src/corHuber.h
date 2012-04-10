@@ -6,11 +6,9 @@
 #ifndef _robustHD_CORHUBER_H
 #define _robustHD_CORHUBER_H
 
-#define EIGEN_NO_DEBUG
+#define ARMA_NO_DEBUG
 
-#include <RcppEigen.h>
-
-using namespace Rcpp;
+#include <RcppArmadillo.h>
 
 // functions to export to R
 RcppExport SEXP R_corHuberUni(SEXP R_x, SEXP R_y, SEXP R_c);

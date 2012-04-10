@@ -16,10 +16,18 @@ Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.1.0\cr
 Date: \tab 2012-04-10\cr
-Depends: \tab Rcpp (>= 0.9.10), cvTools (>= 0.3.0), lattice, MASS, robustbase (>= 0.6-0)\cr
-Imports: \tab RcppEigen (>= 0.2.0), stats\cr
-LinkingTo: \tab Rcpp, RcppEigen\cr
-Suggests: \tab mvtnorm\cr
+Depends: \tab 
+Rcpp (>= 0.9.10),
+cvTools (>= 0.3.0),
+lattice,
+MASS,
+robustbase (>= 0.6-0)\cr
+Imports: \tab 
+RcppArmadillo (>= 0.2.36),
+stats\cr
+LinkingTo: \tab Rcpp, RcppArmadillo\cr
+Suggests: \tab 
+mvtnorm\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr
 }

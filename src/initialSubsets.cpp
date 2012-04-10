@@ -6,33 +6,29 @@
 #include "initialSubsets.h"
 
 using namespace Rcpp;
-using namespace Eigen;
+using namespace arma;
 
 // function used internally by initialSubsets(), which computes lasso fits for
 // subsets containing a small number of observations (typically only 3) and
 // returns the indices of the respective h observations with the smallest
 // absolute residuals
-MatrixXi initialSubsetsSparse(const MatrixXd& x, const VectorXd& y,
-		const MatrixXi& subsets, const int& h, const double& lambda,
-		const bool& useIntercept, const double& eps,
-		const bool& useGram) {
-	const int nsamp = subsets.cols();
-	MatrixXi indices(h, nsamp);
-	for(int k = 0; k < nsamp; k++) {
+umat initialSubsetsSparse(const mat& x, const vec& y, const umat& subsets,
+		const uword& h, const double& lambda, const bool& useIntercept,
+		const double& eps, const bool& useGram) {
+	const uword nsamp = subsets.n_cols;
+	umat indices(h, nsamp);
+	for(uword k = 0; k < nsamp; k++) {
 		// compute lasso fit
 		double intercept;
-		VectorXd coefficients = fastLasso(x, y, lambda, true, subsets.col(k),
+		vec coefficients = fastLasso(x, y, lambda, true, subsets.unsafe_col(k),
 				useIntercept, eps, useGram, intercept);
 		// compute residuals
-		VectorXd residuals;
-		residuals.noalias() = y - x * coefficients;
+		vec residuals = y - x * coefficients;
 		if(useIntercept) {
-			for(int i = 0; i < residuals.size(); i++) {
-				residuals(i) -= intercept;
-			}
+			residuals -= intercept;
 		}
 		// find h observations with smallest absolute residuals
-		indices.col(k) = findSmallest(residuals.cwiseAbs(), h);
+		indices.col(k) = findSmallest(abs(residuals), h);
 	}
 	return indices;
 }
@@ -41,21 +37,26 @@ MatrixXi initialSubsetsSparse(const MatrixXd& x, const VectorXd& y,
 SEXP R_initialSubsetsSparse(SEXP R_x, SEXP R_y, SEXP R_subsets, SEXP R_h,
 		SEXP R_lambda, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
 	// data initializations
-	NumericMatrix Rcpp_x(R_x);	// predictor matrix
+	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	Map<MatrixXd> x(Rcpp_x.begin(), n, p);	// reuse memory
-	NumericVector Rcpp_y(R_y);	// response
-	Map<VectorXd> y(Rcpp_y.begin(), n);		// reuse memory
-	IntegerMatrix Rcpp_subsets(R_subsets);	// subset to use for computation
-	const int nsamp = Rcpp_subsets.ncol();
-	Map<MatrixXi> subsets(Rcpp_subsets.begin(), Rcpp_subsets.nrow(), nsamp);
+	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
+	NumericVector Rcpp_y(R_y);			// response
+	vec y(Rcpp_y.begin(), n, false);	// reuse memory
+	IntegerMatrix Rcpp_subsets(R_subsets);		// subset to use for computation
+	const int s = Rcpp_subsets.nrow(), nsamp = Rcpp_subsets.ncol();
+	umat subsets(s, nsamp);
+	for(int j = 0; j < nsamp; j++) {
+		for(int i = 0; i < s; i++) {
+			subsets(i,j) = Rcpp_subsets(i,j);	// can't use the same memory-saving conversion for integer matrices
+		}
+	}
 	int h = as<int>(R_h);
 	double lambda = as<double>(R_lambda);
 	bool useIntercept = as<bool>(R_intercept);
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// call native C++ function and return results
-	MatrixXi indices = initialSubsetsSparse(x, y, subsets, h, lambda,
+	umat indices = initialSubsetsSparse(x, y, subsets, h, lambda,
 			useIntercept, eps, useGram);
 	return wrap(indices);
 }

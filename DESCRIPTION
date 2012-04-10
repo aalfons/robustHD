@@ -13,9 +13,9 @@ Depends:
     MASS,
     robustbase (>= 0.6-0)
 Imports:
-    RcppEigen (>= 0.2.0),
+    RcppArmadillo (>= 0.2.36),
     stats
-LinkingTo: Rcpp, RcppEigen
+LinkingTo: Rcpp, RcppArmadillo
 Suggests:
     mvtnorm
 Description: Robust methods for high-dimensional data, in particular linear
@@ -25,6 +25,7 @@ License: GPL (>= 2)
 LazyLoad: yes
 Collate:
     'AIC.R'
+    'backend.R'
     'coef.R'
     'corHuber.R'
     'cv.R'
@@ -45,3 +46,4 @@ Collate:
     'utils.R'
     'weights.R'
     'winsorize.R'
+    'zzz.R'

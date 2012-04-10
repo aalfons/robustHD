@@ -6,40 +6,33 @@
 #include "fastLasso.h"
 
 using namespace Rcpp;
-using namespace Eigen;
+using namespace arma;
 
 
 // compute sign of a numeric value
-int sign(const double& x) {
+sword sign(const double& x) {
 	return (x > 0) - (x < 0);
+}
+
+// create sequence of integers (starting with 0)
+uvec seqLen(const uword& n) {
+	uvec sequence(n);
+	for(uword i = 0; i < n; i++) {
+		sequence(i) = i;
+	}
+	return sequence;
 }
 
 // find maximum number of active variables
 // n .............. number of observations
 // p .............. number of predictors
 // useIntercept ... logical indicating whether model has an intercept
-int findMaxActive(const int& n, const int& p, const bool& useIntercept) {
-	int maxActive = n - useIntercept;
+uword findMaxActive(const uword& n, const uword& p, const bool& useIntercept) {
+	uword maxActive = n - useIntercept;
 	if(p < maxActive) {
 		maxActive = p;
 	}
 	return maxActive;
-}
-
-// find new active predictors
-// absCor ... absolute correlations of inactive variables with current response
-// maxCor ... maximum absolute correlation
-VectorXi findNewActive(const VectorXd& absCor, const double& maxCor) {
-	const int m = absCor.size();	// number of inactive predictors
-	int k = 0;						// number of new active predictors
-	VectorXi newActive(m);
-	for(int j = 0; j < m; j++) {
-		if(absCor(j) >= maxCor) {
-			newActive(k) = j;
-			k++;
-		}
-	}
-	return newActive.head(k);
 }
 
 // compute step size in the direction of the equiangular vector
@@ -48,33 +41,17 @@ VectorXi findNewActive(const VectorXd& absCor, const double& maxCor) {
 // corActiveU ..... correlations of active variables with equiangular vector
 // corInactiveU ... correlations of inactive variables with equiangular vector
 // eps ............ small numerical value (effective zero)
-double findStep(const double& corActiveY, const VectorXd& corInactiveY,
-		const double& corActiveU, const VectorXd& corInactiveU,
+double findStep(const double& corActiveY, const vec& corInactiveY,
+		const double& corActiveU, const vec& corInactiveU,
 		const double& eps) {
-	const int m = corInactiveY.size();	// number of inactive variables
-	int k = 0;							// number of positive values
-	double step;						// step size
-	VectorXd steps(2*m);				// vector of all values to consider
-	// first direction
-	for(int j = 0; j < m; j++) {
-		step = (corActiveY - corInactiveY(j))/(corActiveU - corInactiveU(j));
-		if(step > eps) {
-			steps(k) = step;
-			k++;
-		}
-	}
-	// second direction
-	for(int j = 0; j < m; j++) {
-		step = (corActiveY + corInactiveY(j))/(corActiveU + corInactiveU(j));
-		if(step > eps) {
-			steps(k) = step;
-			k++;
-		}
-	}
+	// construct vector of all values to consider
+	vec steps = join_cols((corActiveY - corInactiveY)/(corActiveU - corInactiveU),
+			(corActiveY + corInactiveY)/(corActiveU + corInactiveU));
+	steps = steps.elem(find(steps > eps));
 	// find and return step size
-	step = corActiveY/corActiveU;	// maximum possible step;
-	if(k > 0) {
-		double smallestPositive = steps.head(k).minCoeff();	// smallest positive value
+	double step = corActiveY/corActiveU;	// maximum possible step;
+	if(steps.n_elem > 0) {
+		double smallestPositive = steps.min();	// smallest positive value
 		if(smallestPositive < step) {
 			step = smallestPositive;
 		}
@@ -90,46 +67,30 @@ double findStep(const double& corActiveY, const VectorXd& corInactiveY,
 //            the equiangular vector
 // eps ...... small numerical value (effective zero)
 // step ..... step size in direction of equiangular vector
-VectorXi findDrops(const VectorXd& beta, const VectorXi& active,
-		const VectorXd& w, const double& eps, double& step) {
-	const int k = active.size();	// number of active variables
-	int s = 0;	// number of active variables with sign change
-	int d = 0;	// number of variables to be dropped
-	VectorXd steps(k);
-	VectorXi drops(k);
-	double tmp;
+uvec findDrops(const vec& beta, const uvec& active, const vec& w,
+		const double& eps, double& step) {
 	// for each variable, compute step size where sign change would take place,
 	// and keep track of indices of variables that are potentially dropped
-	for(int j = 0; j < k; j++) {
-		tmp = -beta(active(j))/w(j);
-		if(tmp > eps) {
-			steps(s) = tmp;
-			drops(s) = j;
-			s++;
-		}
-	}
-	if(s > 0) {
+	vec steps = -beta.elem(active) / w;
+	uvec drops = find(steps > eps);
+	if(drops.n_elem > 0) {
 		// check if sign change occurs before the designated step size
 		// if so, adjust step size and find variables to be dropped
-		double smallestPositive = steps.head(s).minCoeff();	// smallest positive value
+		steps = steps.elem(drops);
+		double smallestPositive = steps.min();
 		if(smallestPositive < step) {
 			step = smallestPositive;
-			for(int j = 0; j < s; j++) {
-				if(steps(j) == smallestPositive) {
-					drops(d) = drops(j);
-					d++;
-				}
-			}
-		}
+			drops = drops.elem(find(steps == smallestPositive));
+		} else drops.reset();
 	}
 	// if there are no sign changes or sign change would occur after the
 	// designated step size, an empty vector is returned
-	return drops.head(d);
+	return drops;
 }
 
 
 // barebones version of the lasso for fixed lambda
-// Eigen library is used for linear algebra
+// Armadillo library is used for linear algebra
 // ATTENTION: intercept is returned through corresponding parameter
 // x .............. predictor matrix
 // y .............. response
@@ -142,105 +103,95 @@ VectorXi findDrops(const VectorXd& beta, const VectorXi& active,
 // useGram ........ logical indicating whether Gram matrix should be computed
 //                  in advance
 // intercept ...... intercept is returned through this parameter
-VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		const bool& useSubset, const VectorXi& subset, const bool& useIntercept,
+vec fastLasso(const mat& x, const vec& y, const double& lambda,
+		const bool& useSubset, const uvec& subset, const bool& useIntercept,
 		const double& eps, const bool& useGram, double& intercept) {
 
 	// data initializations
-	int n, p = x.cols();
-	MatrixXd xs;
-	VectorXd ys;
+	uword n, p = x.n_cols;
+	mat xs;
+	vec ys;
 	if(useSubset) {
-		n = subset.size();
-		xs.resize(n, p);
-		ys.resize(n);
-		int s;
-		for(int i = 0; i < n; i++) {
+		n = subset.n_elem;
+		xs.set_size(n, p);
+		ys.set_size(n);
+		uword s;
+		for(uword i = 0; i < n; i++) {
 			s = subset(i);
 			xs.row(i) = x.row(s);
 			ys(i) = y(s);
 		}
 	} else {
-		n = x.rows();
+		n = x.n_rows;
 		xs = x;	// does this copy memory?
 		ys = y;	// does this copy memory?
 	}
 	double rescaledLambda = n * lambda / 2;
 
 	// center data and store means
-	RowVectorXd meanX;
+	rowvec meanX;
 	double meanY;
 	if(useIntercept) {
-		meanX = xs.colwise().mean();	// columnwise means of predictors
-		xs.rowwise() -= meanX;			// sweep out columnwise means
-		meanY = ys.mean();				// mean of response
-		for(int i = 0; i < n; i++) {
-			ys(i) -= meanY;				// sweep out mean
+		meanX = mean(xs, 0);		// columnwise means of predictors
+		for(uword j = 0; j < p; j++) {
+			xs.col(j) -= meanX(j);	// sweep out columnwise means
 		}
+		meanY = mean(ys);	// mean of response
+		ys -= meanY;		// sweep out mean
 	} else {
 		meanY = 0;		// just to avoid warning, this is never used
 //		intercept = 0;	// zero intercept
 	}
 
-	// some initializations
-	VectorXi inactive(p);	// inactive predictors
-	int m = 0;				// number of inactive predictors
-	VectorXi ignores;		// indicates variables to be ignored
-	int s = 0;				// number of ignored variables
-
-	// normalize predictors and store norms
-	RowVectorXd normX = xs.colwise().norm();	// columnwise norms
+	// compute norms and find variables with too small a norm
+	uvec inactive = seqLen(p);
+	rowvec normX = sqrt(sum(xs % xs, 0));	// columnwise norms
 	double epsNorm = eps * sqrt(n);	// R package 'lars' uses n, not n-1
-	for(int j = 0; j < p; j++) {
-		if(normX(j) < epsNorm) {
-			// variance is too small: ignore variable
-			ignores.append(j, s);
-			s++;
-			// set norm to tolerance to avoid numerical problems
-			normX(j) = epsNorm;
-		} else {
-			inactive(m) = j;		// add variable to inactive set
-			m++;					// increase number of inactive variables
-		}
-		xs.col(j) /= normX(j);		// sweep out norm
+	uvec ignores = find(normX < epsNorm);	// indicates variables to be ignored
+	uword s = ignores.n_elem;
+	for(sword j = s-1; j >= 0; j--) {	// reverse order (requires signed integer)
+		uword i = ignores(j);
+		// set norm to tolerance to avoid numerical problems
+		normX(i) = epsNorm;
+		// remove ignored variable from inactive set (hence reverse order)
+		inactive.shed_row(i);
 	}
-	// resize inactive set and update number of variables if necessary
+	uword m = inactive.n_elem;
 	if(m < p) {
-		inactive.conservativeResize(m);
-		p = m;
+		p = m;	// update number of variables if necessary
+	}
+	// normalize predictors
+	for(uword j = 0; j < p; j++) {
+		xs.col(j) /= normX(j);		// sweep out norm
 	}
 
 	// compute Gram matrix if requested (saves time if number of variables is
 	// not too large)
-	MatrixXd Gram;
+	mat Gram;
 	if(useGram) {
-		Gram.noalias() = xs.transpose() * xs;
+		Gram = trans(xs) * xs;
 	}
 
 	// further initializations for iterative steps
-	RowVectorXd corY;
-	corY.noalias() = ys.transpose() * xs;	// current correlations
-	VectorXi active;	// active predictors
-	int k = 0;			// number of active predictors
-	VectorXd previousBeta = VectorXd::Zero(p+s), currentBeta = VectorXd::Zero(p+s);	// previous and current regression coefficients
+	rowvec corY = conv_to<rowvec>::from(ys) * xs;	// current correlations (might be faster than trans())
+	uvec active;	// active predictors
+	uword k = 0;			// number of active predictors
+	vec previousBeta = zeros(p+s), currentBeta = zeros(p+s);	// previous and current regression coefficients
 	double previousLambda = 0, currentLambda = 0;	// previous and current penalty parameter
-	VectorXi drops;		// indicates variables to be dropped
-	VectorXd signs;		// keep track of sign of correlations for the active variables (double precision is necessary for solve())
-	MatrixXd L;			// Cholesky L of Gram matrix of active variables
-	int rank = 0;		// rank of Cholesky L
-	int maxActive = findMaxActive(n, p, useIntercept);	// maximum number of variables to be sequenced
+	uvec drops;		// indicates variables to be dropped
+	vec signs;		// keep track of sign of correlations for the active variables (double precision is necessary for solve())
+	mat L;			// Cholesky L of Gram matrix of active variables
+	uword rank = 0;		// rank of Cholesky L
+	uword maxActive = findMaxActive(n, p, useIntercept);	// maximum number of variables to be sequenced
 
 	// modified LARS algorithm for lasso solution
 	while(k < maxActive) {
 
 		// extract current correlations of inactive variables
-		VectorXd corInactiveY(m);
-		for(int j = 0; j < m; j++) {
-			corInactiveY(j) = corY(inactive(j));
-		}
+		vec corInactiveY = corY.elem(inactive);
 		// compute absolute values of correlations and find maximum
-		VectorXd absCorInactiveY = corInactiveY.cwiseAbs();
-		double maxCor = absCorInactiveY.maxCoeff();
+		vec absCorInactiveY = abs(corInactiveY);
+		double maxCor = absCorInactiveY.max();
 		// update current lambda
 		if(k == 0) {	// no active variables
 			previousLambda = maxCor;
@@ -250,40 +201,41 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 		currentLambda = maxCor;
 		if(currentLambda <= rescaledLambda) break;
 
-		if(drops.size() == 0) {
+		if(drops.n_elem == 0) {
 			// new active variables
-			VectorXi newActive = findNewActive(absCorInactiveY, maxCor - eps);
+			uvec newActive = find(absCorInactiveY >= (maxCor - eps));
 			// do calculations for new active variables
-			for(int j = 0; j < newActive.size(); j++) {
+			for(uword j = 0; j < newActive.n_elem; j++) {
 				// update Cholesky L of Gram matrix of active variables
-				// TODO: put this into void function
-				int newJ = inactive(newActive(j));
-				VectorXd xNewJ;
+				// this cannot be put into its own void function since
+				// insert_rows() doesn't work with referenced matrices
+				uword newJ = inactive(newActive(j));
+				vec xNewJ;
 				double newX;
 				if(useGram) {
-					newX = Gram(newJ, newJ);
+					xNewJ = Gram.unsafe_col(newJ);	// reuses memory
+					newX = xNewJ(newJ);
 				} else {
-					xNewJ = xs.col(newJ);
-					newX = xNewJ.squaredNorm();
+					xNewJ = xs.unsafe_col(newJ);	// reuses memory
+					newX = accu(xNewJ % xNewJ);
 				}
 				double normNewX = sqrt(newX);
 				if(k == 0) {	// no active variables, L is empty
-					L.resize(1,1);
+					L.set_size(1,1);
 					L(0, 0) = normNewX;
 					rank = 1;
 				} else {
-					VectorXd oldX(k);
+					vec oldX;
 					if(useGram) {
-						for(int j = 0; j < k; j++) {
-							oldX(j) = Gram(active(j), newJ);
-						}
+						oldX = xNewJ.elem(active);
 					} else {
-						for(int j = 0; j < k; j++) {
-							oldX(j) = xNewJ.dot(xs.col(active(j)));
+						oldX.set_size(k);
+						for(uword j = 0; j < k; j++) {
+							oldX(j) = dot(xNewJ, xs.unsafe_col(active(j)));
 						}
 					}
-					VectorXd l = L.triangularView<Lower>().solve(oldX);
-					double lkk = newX - l.squaredNorm();
+					vec l = solve(trimatl(L), oldX);
+					double lkk = newX - accu(l % l);
 					// check if L is machine singular
 					if(lkk > eps) {
 						// no singularity: update Cholesky L
@@ -295,19 +247,24 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 						// hence we define quadratic matrix and use
 						// triangularView() to interpret matrix the
 						// correct way
-						L.conservativeResize(k+1, k+1);
-						for(int j = 0; j < k; j++) {
+						// insert row and column without initializing memory
+						// (set_size() and reshape() have strange behavior)
+						L.insert_rows(k, 1, false);
+						L.insert_cols(k, 1, false);
+						// fill new parts of the matrix
+						for(uword j = 0; j < k; j++) {
 							L(k, j) = l(j);
 							L(j, k) = l(j);
 						}
-						L(k,k) = lkk;
+						L(k, k) = lkk;
 					}
 				}
 				// add new variable to active set or drop it for good
 				// in case of singularity
 				if(rank == k) {
 					// singularity: drop variable for good
-					ignores.append(newJ, s);
+					ignores.insert_rows(s, 1, false);	// do not initialize new memory
+					ignores(s) = newJ;
 					s++;	// increase number of ignored variables
 					p--;	// decrease number of variables
 					if(p < maxActive) {
@@ -316,36 +273,41 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 					}
 				} else {
 					// no singularity: add variable to active set
-					active.append(newJ, k);
+					active.insert_rows(k, 1, false);	// do not initialize new memory
+					active(k) = newJ;
 					// keep track of sign of correlation for new active variable
-					signs.append(sign(corY(newJ)), k);
+					signs.insert_rows(k, 1, false);		// do not initialize new memory
+					signs(k) = sign(corY(newJ));
 					k++;	// increase number of active variables
 				}
 			}
 			// remove new active or ignored variables from inactive variables
 			// and corresponding vector of current correlations
-			inactive.remove(newActive);
-			corInactiveY.remove(newActive);
-			m = inactive.size();	// update number of inactive variables
+			for(sword j = newActive.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
+				uword i = newActive(j);
+				inactive.shed_row(i);
+				corInactiveY.shed_row(i);
+			}
+			m = inactive.n_elem;	// update number of inactive variables
 		}
 		// prepare for computation of step size
 		// here double precision of signs is necessary
-		VectorXd b = L.triangularView<Lower>().solve(signs);
-		VectorXd G = L.triangularView<Upper>().solve(b);
+		vec b = solve(trimatl(L), signs);
+		vec G = solve(trimatu(L), b);
 		// correlations of active variables with equiangular vector
-		double corActiveU = 1/sqrt(G.dot(signs));
+		double corActiveU = 1/sqrt(dot(G, signs));
 		// coefficients of active variables in linear combination forming the
 		// equiangular vector
-		VectorXd w = G * corActiveU;	// note that this has the right signs
+		vec w = G * corActiveU;	// note that this has the right signs
 		// equiangular vector
-		VectorXd u;
+		vec u;
 		if(!useGram) {
 			// we only need equiangular vector if we don't use the precomputed
 			// Gram matrix, otherwise we can compute the correlations directly
 			// from the Gram matrix
-			u = VectorXd::Zero(n);
-			for(int i = 0; i < n; i++) {
-				for(int j = 0; j < k; j++) {
+			u = zeros<vec>(n);
+			for(uword i = 0; i < n; i++) {
+				for(uword j = 0; j < k; j++) {
 					u(i) += xs(i, active(j)) * w(j);
 				}
 			}
@@ -354,17 +316,15 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 		double step;
 		if(k < maxActive) {
 			// correlations of inactive variables with equiangular vector
-			VectorXd corInactiveU(m);
+			vec corInactiveU(m);
 			if(useGram) {
-				for(int j = 0; j < m; j++) {
-					corInactiveU(j) = 0;
-					for(int i = 0; i < k; i++) {
-						corInactiveU(j) += w(i) * Gram(active(i), inactive(j));
-					}
+				for(uword j = 0; j < m; j++) {
+					vec gram = Gram.unsafe_col(inactive(j));
+					corInactiveU(j) = dot(w, gram.elem(active));
 				}
 			} else {
-				for(int j = 0; j < m; j++) {
-					corInactiveU(j) = u.dot(xs.col(inactive(j)));
+				for(uword j = 0; j < m; j++) {
+					corInactiveU(j) = dot(u, xs.unsafe_col(inactive(j)));
 				}
 			}
 			// compute step size in the direction of the equiangular vector
@@ -377,37 +337,34 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 		drops = findDrops(currentBeta, active, w, eps, step);
 		// update current regression coefficients
 		previousBeta = currentBeta;
-		for(int j = 0; j < k; j++) {
-			currentBeta(active(j)) += step * w(j);
-		}
+		currentBeta.elem(active) += step * w;
 		// update current correlations
 		if(useGram) {
 			// we also need to do this for active variables, since they may be
 			// dropped at a later stage
-			// TODO: computing a vector step * w in advance may save some computation time
-			for(int j = 0; j < Gram.cols(); j++) {
-				for(int i = 0; i < k; i++) {
-					corY(j) -= step * w(i) * Gram(active(i), j);
-				}
+			for(uword j = 0; j < Gram.n_cols; j++) {
+				vec gram = Gram.unsafe_col(j);
+				corY(j) -= step * dot(w, gram.elem(active));
 			}
 		} else {
 			ys -= step * u;	// take step in equiangular direction
-			corY.noalias() = ys.transpose() * xs;	// update correlations
+			corY = conv_to<rowvec>::from(ys) * xs;	// might be faster than trans()
 		}
 		// drop variables if necessary
-		if(drops.size() > 0) {
+		if(drops.n_elem > 0) {
 			// downdate Cholesky L
-			// TODO: put this into void function
-			for(int j = drops.size()-1; j >= 0; j--) {
+			// this cannot be put into its own void function since
+			// shed_col() and shed_row() don't work with referenced matrices
+			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
 				// variables need to be dropped in descending order
-				int drop = drops(j);	// index with respect to active set
+				uword drop = drops(j);	// index with respect to active set
 				// modify upper triangular part as in R package 'lars'
 				// simply deleting columns is not enough, other computations
 				// necessary but complicated due to Fortran code
-				L.removeCol(drop);
-				VectorXd z = VectorXd::Constant(k, 1, 1);
+				L.shed_col(drop);
+				vec z = ones<vec>(k);
 				k--;	// decrease number of active variables
-				for(int i = drop; i < k; i++) {
+				for(uword i = drop; i < k; i++) {
 					double a = L(i,i), b = L(i+1,i);
 					if(b != 0.0) {
 						// compute the rotation
@@ -423,7 +380,7 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 						}
 						// update 'L' and 'z';
 						L(i,i) = c*a - s*b;
-						for(int j = i+1; j < k; j++) {
+						for(uword j = i+1; j < k; j++) {
 							a = L(i,j);
 							b = L(i+1,j);
 							L(i,j) = c*a - s*b;
@@ -435,35 +392,36 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 						z(i+1) = s*a + c*b;
 					}
 				}
-				// TODO: removing all rows together may save some computation time
-				L.conservativeResize(k, NoChange);
+				L.shed_row(k);
 				rank--;
 			}
 			// mirror lower triangular part
-			for(int j = 0; j < k; j++) {
-				for(int i = j+1; i < k; i++) {
-					L(i,j) = L(j,i);
-				}
-			}
+			L = symmatu(L);
 			// add dropped variables to inactive set and make sure
 			// coefficients are 0
-			inactive.conservativeResize(m + drops.size());
-			for(int j = 0; j < drops.size(); j++) {
-				int newInactive = active(drops(j));
+			inactive.insert_rows(m, drops.n_elem, false);
+			for(uword j = 0; j < drops.n_elem; j++) {
+				uword newInactive = active(drops(j));
 				inactive(m + j) = newInactive;
 				currentBeta(newInactive) = 0;	// make sure coefficient is 0
 			}
-			m = inactive.size();	// update number of inactive variables
+			m = inactive.n_elem;	// update number of inactive variables
 			// drop variables from active set and sign vector
 			// number of active variables is already updated above
-			active.remove(drops);
-			signs.remove(drops);
+			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
+				// variables need to be dropped in descending order
+				uword drop = drops(j);	// index with respect to active set
+				// drop variables from active set and sign vector
+				// number of active variables is already updated above
+				active.shed_row(drop);
+				signs.shed_row(drop);
+			}
 		}
 	}
 
 	// interpolate coefficients for given lambda
-	p = currentBeta.size();	// reset number of variables to include ignored ones
-	VectorXd beta(p);		// final coefficient vector
+	p = currentBeta.n_elem;	// reset number of variables to include ignored ones
+	vec beta(p);		// final coefficient vector
 	if(rescaledLambda <= currentLambda) {
 		beta = currentBeta;
 	} else if(rescaledLambda >= previousLambda) {
@@ -477,11 +435,9 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 	}
 
 	// transform coefficients back
-	for(int j = 0; j < p; j++) {
-		beta(j) /= normX(j);
-	}
+	beta = beta / conv_to<colvec>::from(normX);
 	if(useIntercept) {
-		intercept = meanY - beta.dot(meanX);
+		intercept = meanY - dot(beta, meanX);
 	}
 
 	return beta;
@@ -489,19 +445,17 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 
 // wrapper function used for R interface, which returns fitted values and
 // residuals through corresponding parameters
-VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
-		const bool& useSubset, const VectorXi& subset, const bool& useIntercept,
-		const double& eps, const bool& useGram, double& intercept,
-		VectorXd& fitted, VectorXd& residuals) {
+vec fastLasso(const mat& x, const vec& y, const double& lambda,
+		const bool& useSubset, const uvec& subset, const bool& useIntercept,
+		const double& eps, const bool& useGram, double& intercept, vec& fitted,
+		vec& residuals) {
 	// compute coefficients
-	VectorXd coefficients = fastLasso(x, y, lambda, useSubset, subset,
+	vec coefficients = fastLasso(x, y, lambda, useSubset, subset,
 			useIntercept, eps, useGram, intercept);
 	// compute fitted values
-	fitted.noalias() = x * coefficients;
+	fitted = x * coefficients;
 	if(useIntercept) {
-		for(int i = 0; i < fitted.size(); i++) {
-			fitted(i) += intercept;
-		}
+		fitted += intercept;
 	}
 	// compute residuals
 	residuals = y - fitted;
@@ -513,30 +467,41 @@ VectorXd fastLasso(const MatrixXd& x, const VectorXd& y, const double& lambda,
 SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 		SEXP R_subset, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
     // data initializations
-	NumericMatrix Rcpp_x(R_x);	// predictor matrix
+	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	Map<MatrixXd> x(Rcpp_x.begin(), n, p);	// reuse memory
-	NumericVector Rcpp_y(R_y);	// response
-	Map<VectorXd> y(Rcpp_y.begin(), n);		// reuse memory
+	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
+	NumericVector Rcpp_y(R_y);			// response
+	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	double lambda = as<double>(R_lambda);
 	bool useSubset = as<bool>(R_useSubset);
-	IntegerVector Rcpp_subset(R_subset);	// subset to use for computation
-	Map<VectorXi> subset(Rcpp_subset.begin(), Rcpp_subset.size());
+	uvec subset;
+	if(useSubset) {
+		IntegerVector Rcpp_subset(R_subset);	// subset to use for computation
+		const int h = Rcpp_subset.size();
+		subset = uvec(h);
+		for(int i = 0; i < h; i++) {
+			subset(i) = Rcpp_subset[i];			// can't use the same memory-saving conversion for integer vectors
+		}
+	}
 	bool useIntercept = as<bool>(R_intercept);
 	double intercept;
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// call native C++ function and return results as list
-	VectorXd fitted, residuals;
-	VectorXd coefficients = fastLasso(x, y, lambda, useSubset, subset,
-			useIntercept, eps, useGram, intercept, fitted, residuals);
-	NumericVector R_coefficients = wrap(coefficients);
+	vec fitted, residuals;
+	vec coefficients = fastLasso(x, y, lambda, useSubset, subset, useIntercept,
+			eps, useGram, intercept, fitted, residuals);
 	if(useIntercept) {
-		R_coefficients.push_front(intercept);	// prepend intercept
+		// prepend intercept
+		coefficients.insert_rows(0, 1, false);
+		coefficients(0) = intercept;
 	}
 	return List::create(
-			Named("coefficients") = R_coefficients,
-			Named("fitted.values") = fitted,
-			Named("residuals") = residuals
+			Named("coefficients") = wrap(coefficients.memptr(),
+					coefficients.memptr() + coefficients.n_elem),
+			Named("fitted.values") = wrap(fitted.memptr(),
+					fitted.memptr() + fitted.n_elem),
+			Named("residuals") = wrap(residuals.memptr(),
+					residuals.memptr() + residuals.n_elem)
 			);
 }

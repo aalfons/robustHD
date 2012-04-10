@@ -21,9 +21,10 @@ initialSubsets <- function(x, y, h, nsamp = 500,
 		subsets <- randomSubsets(d[1], 3, nsamp)-1
 		# call C++ function to compute lasso fits and find observations with 
 		# smallest absolute residuals
-        subsets <- .Call("R_initialSubsetsSparse", R_x=x, R_y=y, 
+        callBackend <- getBackend()
+        subsets <- callBackend("R_initialSubsetsSparse", R_x=x, R_y=y, 
 			R_subsets=subsets, R_h=h, R_lambda=lambda, R_intercept=intercept, 
-            R_eps=eps, R_useGram=use.Gram, PACKAGE="robustHD")+1
+            R_eps=eps, R_useGram=use.Gram)+1
 	} else if(type == "hyperplane") {
         ## subsets based on hyperplane
         x <- addIntercept(x)

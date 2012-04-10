@@ -15,7 +15,8 @@ fastLasso <- function(x, y, lambda, subset = NULL, intercept = TRUE,
         subset <- subset - 1
     }
     # call C++ function
-    .Call("R_fastLasso", R_x=x, R_y=y, R_lambda=lambda, 
+    callBackend <- getBackend()
+    callBackend("R_fastLasso", R_x=x, R_y=y, R_lambda=lambda, 
         R_useSubset=useSubset, R_subset=subset, R_intercept=isTRUE(intercept), 
-        R_eps=eps, R_useGram=isTRUE(use.Gram), PACKAGE="robustHD")
+        R_eps=eps, R_useGram=isTRUE(use.Gram))
 }

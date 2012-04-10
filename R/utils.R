@@ -117,8 +117,8 @@ defaultMain <- function() "Coefficient path"
 ## find indices of h smallest observations
 findSmallest <- function(x, h) {
     # call C++ function
-    .Call("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h), 
-        PACKAGE="robustHD") + 1
+    callBackend <- getBackend()
+    callBackend("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h)) + 1
 }
 
 ## get a call function
@@ -202,15 +202,15 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
 # find indices of h smallest observations
 partialOrder <- function(x, h) {
     # call C++ function
-    .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h), 
-        PACKAGE="robustHD") + 1
+    callBackend <- getBackend()
+    callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h)) + 1
 }
 
 ## find indices of h smallest observations
 #partialSort <- function(x, h) {
 #    # call C++ function
-#    .Call("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h), 
-#        PACKAGE="robustHD")
+#    callBackend <- getBackend()
+#    callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
 #}
 
 ## prepend something to column names of a matrix
