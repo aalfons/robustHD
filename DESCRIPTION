@@ -1,8 +1,8 @@
 Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
-Version: 0.1.0
-Date: 2012-04-10
+Version: 0.2.0
+Date: 2012-04-18
 Author: Andreas Alfons
 Maintainer: Andreas Alfons
     <andreas.alfons@econ.kuleuven.be>
@@ -32,6 +32,8 @@ Collate:
     'fastLasso.R'
     'fitModels.R'
     'fitted.R'
+    'grplars.R'
+    'grplarsWork.R'
     'initialSubsets.R'
     'lambda0.R'
     'plot.R'
@@ -43,6 +45,9 @@ Collate:
     'sparseLTS.R'
     'standardize.R'
     'test.R'
+    'tsBlocks.R'
+    'tslarsP.R'
+    'tslars.R'
     'utils.R'
     'weights.R'
     'winsorize.R'

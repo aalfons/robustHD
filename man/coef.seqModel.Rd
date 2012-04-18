@@ -1,13 +1,22 @@
 \name{coef.seqModel}
+\alias{coef.grplars}
 \alias{coef.rlars}
 \alias{coef.seqModel}
+\alias{coef.tslars}
+\alias{coef.tslarsP}
 \title{Extract coefficients from a sequence of regression models}
 \usage{
   \method{coef}{seqModel} (object, s, zeros = TRUE, ...)
+
+  \method{coef}{tslars} (object, p, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract
   coefficients.}
+
+  \item{p}{an integer giving the lag length for which to
+  extract coefficients (the default is to use the optimal
+  lag length).}
 
   \item{s}{an integer vector giving the steps of the
   submodels for which to extract coefficients (the default
@@ -17,7 +26,10 @@
   coefficients (\code{TRUE}, the default) or to drop them
   (\code{FALSE}).}
 
-  \item{\dots}{additional arguments are currently ignored.}
+  \item{\dots}{for the \code{"tslars"} method, additional
+  arguments to be passed down to the \code{"seqModel"}
+  method.  For the \code{"seqModel"} method, additional
+  arguments are currently ignored.}
 }
 \value{
   If only one submodel is requested, a numeric vector
@@ -29,8 +41,8 @@
 }
 \description{
   Extract coefficients from a sequence of regression models
-  such as submodels along a robust least angle regression
-  sequence.
+  such as submodels along a robust or groupwise least angle
+  regression sequence.
 }
 \examples{
 ## generate data
@@ -59,7 +71,10 @@ coef(fit, s = 1:5, zeros = FALSE)
   Andreas Alfons
 }
 \seealso{
-  \code{\link[stats]{coef}}, \code{\link{rlars}}
+  \code{\link[stats]{coef}}, \code{\link{rlars}},
+  \code{\link{grplars}}, \code{\link{rgrplars}},
+  \code{\link{tslarsP}}, \code{\link{rtslarsP}},
+  \code{\link{tslars}}, \code{\link{rtslars}}
 }
 \keyword{regression}
 

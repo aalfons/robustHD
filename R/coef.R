@@ -6,17 +6,21 @@
 #' Extract coefficients from a sequence of regression models
 #' 
 #' Extract coefficients from a sequence of regression models such as submodels 
-#' along a robust least angle regression sequence.
+#' along a robust or groupwise least angle regression sequence.
 #' 
 #' @method coef seqModel
-#' @aliases coef.rlars
+#' @aliases coef.rlars coef.grplars coef.tslarsP
 #' 
 #' @param object  the model fit from which to extract coefficients.
+#' @param p  an integer giving the lag length for which to extract coefficients 
+#' (the default is to use the optimal lag length).
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract coefficients (the default is to use the optimal submodel).
 #' @param zeros  a logical indicating whether to keep zero coefficients 
 #' (\code{TRUE}, the default) or to drop them (\code{FALSE}).
-#' @param \dots  additional arguments are currently ignored.
+#' @param \dots  for the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} 
+#' method, additional arguments are currently ignored.
 #' 
 #' @return  
 #' If only one submodel is requested, a numeric vector containing the 
@@ -27,7 +31,9 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[stats]{coef}}, \code{\link{rlars}}
+#' @seealso \code{\link[stats]{coef}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}
 #' 
 #' @example inst/doc/examples/example-coef.rlars.R
 #' 
@@ -49,6 +55,29 @@ coef.seqModel <- function(object, s, zeros = TRUE, ...) {
     }
     ## return coefficients
     coef
+}
+
+
+#' @rdname coef.seqModel
+#' @method coef tslars
+#' @export
+
+coef.tslars <- function(object, p, ...) {
+    ## initializations
+    # check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) {
+        p <- object$pOpt
+    } else p <- p[1]
+    pMax <- object$pMax
+    if(p < 1) {
+        p <- 1
+        warning("lag length too small, using lag length 1")
+    } else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## extract coefficients for specified lag length
+    coef(object$pFit[[p]], ...)
 }
 
 

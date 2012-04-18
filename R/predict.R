@@ -6,14 +6,23 @@
 #' Predict from a sequence of regression models
 #' 
 #' Make predictions from a sequence of regression models such as submodels 
-#' along a robust least angle regression sequence.
+#' along a robust or groupwise least angle regression sequence.  For 
+#' autoregressive time series models with exogenous inputs, \eqn{h}-step ahead 
+#' forecasts are performed.
 #' 
 #' For \code{predict.seqModel}, the \code{newdata} argument defaults to the 
 #' matrix of predictors used to fit the model such that the fitted values are 
 #' computed.
 #' 
+#' For autoregressive time series models with exogenous inputs with forecast 
+#' horizon \eqn{h}, the \eqn{h} most recent observations of the predictors are 
+#' omitted from fitting the model since there are no corresponding values for 
+#' the response.  Hence the \code{newdata} argument for \code{predict.tslarsP} 
+#' and \code{predict.tslars} defaults to those \eqn{h} observations of the 
+#' predictors.
+#' 
 #' @method predict seqModel
-#' @aliases predict.rlars
+#' @aliases predict.rlars predict.grplars
 #' 
 #' @param object  the model fit from which to make predictions.
 #' @param newdata  new data for the predictors.  If the model fit was computed 
@@ -21,10 +30,15 @@
 #' the predictor variables.  Otherwise this should be a matrix containing the 
 #' same variables as the predictor matrix used to fit the model (including a 
 #' column of ones to account for the intercept).
+#' @param p  an integer giving the lag length for which to make predictions 
+#' (the default is to use the optimal lag length). 
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' make predictions (the default is to use the optimal submodel).
-#' @param \dots  additional arguments to be passed down to the respective 
-#' method of \code{\link[=coef.seqModel]{coef}}.
+#' @param \dots  for the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"tslarsP"} method.  For the \code{"tslarsP"} 
+#' method, additional arguments are currently ignored.  For the 
+#' \code{"seqModel"} method, additional arguments to be passed down to the 
+#' respective method of \code{\link[=coef.seqModel]{coef}}.
 #' 
 #' @return  
 #' If only one submodel is requested, a numeric vector containing the 
@@ -35,7 +49,9 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[stats]{predict}}, \code{\link{rlars}}
+#' @seealso \code{\link[stats]{predict}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}
 #' 
 #' @example inst/doc/examples/example-predict.rlars.R
 #' 
@@ -76,6 +92,93 @@ predict.seqModel <- function(object, newdata, s, ...) {
     out <- newdata %*% coef
     if(is.null(d)) out <- drop(out)
     out
+}
+
+
+#' @rdname predict.seqModel
+#' @method predict tslarsP
+#' @export
+
+predict.tslarsP <- function(object, newdata, s, ...) {
+    ## initializations
+    coef <- coef(object, s=s, ...)  # extract coefficients
+    d <- dim(coef)
+    terms <- object$terms  # extract terms for model matrix
+    if(missing(newdata) || is.null(newdata)) {
+        if(is.null(x <- object$x) || is.null(y <- object$y)) {
+            if(is.null(x)) x <- try(model.matrix(object$terms), silent=TRUE)
+            if(is.null(y)) y <- try(model.response(object$terms), silent=TRUE)
+            if(inherits(x, "try-error") || inherits(y, "try-error")) {
+                stop("model data not available")
+            }
+        }
+        newdata <- newdataBlocks(x, y, object$h, object$p)
+    } else {
+        # interpret vector as row
+        if(is.null(dim(newdata))) newdata <- t(newdata)
+        # check dimensions if model was not specified with a formula, 
+        # otherwise use the terms object to extract model matrix
+        if(is.null(terms)) {
+            newdata <- as.matrix(newdata)
+            # add a column of ones to the new data matrix 
+            # (unless it already contains intercept column)
+            newdata <- addIntercept(newdata, check=TRUE)
+            # check dimensions of new data
+            p <- if(is.null(d)) length(coef) else d[1]
+            if(ncol(newdata) != p) {
+                stop(sprintf("new data must have %d columns", p))
+            }
+        } else {
+            mf <- model.frame(terms, as.data.frame(newdata))
+            y <- model.response(mf)
+            x <- model.matrix(terms, mf)
+            if(attr(terms, "intercept")) x <- x[, -1, drop=FALSE]
+            newdata <- tsBlocks(x, y, object$p)
+        }
+    }
+    ## compute predictions
+    # ensure that a vector is returned if only one fit is requested
+    out <- newdata %*% coef
+    if(is.null(d)) out <- drop(out)
+    out
+    
+}
+
+
+#' @rdname predict.seqModel
+#' @method predict tslars
+#' @export
+
+predict.tslars <- function(object, newdata, p, ...) {
+    ## initializations
+	# check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) {
+        p <- object$pOpt
+    } else p <- p[1]
+    pMax <- object$pMax
+    if(p < 1) {
+        p <- 1
+		warning("lag length too small, using lag length 1")
+	} else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## compute predictions
+    # if missing, construct newdata
+    if(missing(newdata) || is.null(newdata)) {
+        if(is.null(x <- object$x) || is.null(y <- object$y)) {
+            if(is.null(x)) x <- try(model.matrix(object$terms), silent=TRUE)
+            if(is.null(y)) y <- try(model.response(object$terms), silent=TRUE)
+            if(inherits(x, "try-error") || inherits(y, "try-error")) {
+                stop("model data not available")
+            }
+        }
+        # extract model for specified lag length and add original data
+		object <- object$pFit[[p]]
+        object$x <- x
+        object$y <- y
+        predict(object, ...)
+    } else predict(object$pFit[[p]], newdata, ...)
 }
 
 

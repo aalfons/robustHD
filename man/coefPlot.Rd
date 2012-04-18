@@ -1,8 +1,11 @@
 \name{coefPlot}
 \alias{coefPlot}
+\alias{coefPlot.grplars}
 \alias{coefPlot.rlars}
 \alias{coefPlot.seqModel}
 \alias{coefPlot.sparseLTSGrid}
+\alias{coefPlot.tslars}
+\alias{coefPlot.tslarsP}
 \title{Coefficient plot of a sequence of regression models}
 \usage{
   coefPlot(x, ...)
@@ -11,6 +14,8 @@
     abscissa = c("step", "df"), zeros = FALSE, grid = TRUE,
     labels, pos = 4, offset = 0.5, ...)
 
+  \method{coefPlot}{tslars} (x, p, ...)
+
   \method{coefPlot}{sparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"),
     abscissa = c("step", "df"), zeros = FALSE, grid = TRUE,
@@ -18,6 +23,10 @@
 }
 \arguments{
   \item{x}{the model fit to be plotted.}
+
+  \item{p}{an integer giving the lag length for which to
+  produce the plot (the default is to use the optimal lag
+  length).}
 
   \item{fit}{a character string specifying for which
   estimator to produce the plot.  Possible values are
@@ -56,6 +65,8 @@
 
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
+  \code{"tslars"} method, additional arguments to be passed
+  down to the \code{"seqModel"} method.  For the
   \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
   additional arguments to be passed down to
   \code{\link[lattice]{xyplot}}.}
@@ -66,10 +77,10 @@
 }
 \description{
   Produce a plot of the coefficients from a sequence of
-  regression models, such as submodels along a robust least
-  angle regression sequence, or sparse least trimmed
-  squares regression models for a grid of values for the
-  penalty parameter.
+  regression models, such as submodels along a robust or
+  groupwise least angle regression sequence, or sparse
+  least trimmed squares regression models for a grid of
+  values for the penalty parameter.
 }
 \examples{
 ## generate data
@@ -98,6 +109,9 @@ coefPlot(fit, zeros = FALSE)
 }
 \seealso{
   \code{\link[lattice]{xyplot}}, \code{\link{rlars}},
+  \code{\link{grplars}}, \code{\link{rgrplars}},
+  \code{\link{tslarsP}}, \code{\link{rtslarsP}},
+  \code{\link{tslars}}, \code{\link{rtslars}},
   \code{\link{sparseLTSGrid}}
 }
 \keyword{hplot}

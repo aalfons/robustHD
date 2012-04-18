@@ -19,6 +19,54 @@ print.seqModel <- function(x, zeros = TRUE, ...) {
     invisible(x)
 }
 
+#' @S3method print grplars
+print.grplars <- function(x, ...) {
+    # print function call
+    if(!is.null(call <- x$call)) {
+        cat("\nCall:\n")
+        dput(x$call)
+    }
+    # print LARS sequence of groups
+    active <- x$active
+    steps <- seq_along(active)
+    active <- t(active)
+    dimnames(active) <- list("Group", steps)
+    cat("\nSequence of LARS moves:\n")
+    print(active, ...)
+    # print coefficients of optimal LARS submodel
+    cat("\nCoefficients of optimal LARS submodel:\n")
+    print(coef(x, zeros=FALSE), ...)
+    # return object invisibly
+    invisible(x)
+}
+
+#' @S3method print tslarsP
+print.tslarsP <- function(x, ...) {
+    # print "grplars" model
+    print.grplars(x, ...)
+    # print lag length
+#    cat("\nLag length:\n")
+#    print(x$p, ...)
+    cat(sprintf("\nLag length: %d\n", x$p))
+    # return object invisibly
+    invisible(x)
+}
+
+#' @S3method print tslars
+print.tslars <- function(x, ...) {
+    # print "grplars" model with optimal lag length
+    pOpt <- x$pOpt
+    xOpt <- x$pFit[[pOpt]]
+    xOpt$call <- x$call
+    print.grplars(xOpt, ...)
+    # print optimal lag length
+#    cat("\nOptimal lag length:\n")
+#    print(pOpt, ...)
+    cat(sprintf("\nOptimal lag length: %d\n", pOpt))
+    # return object invisibly
+    invisible(x)
+}
+
 #' @S3method print rlars
 print.rlars <- function(x, ...) {
     # print function call

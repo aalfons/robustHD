@@ -1,4 +1,5 @@
 \name{repCV.seqModel}
+\alias{repCV.grplars}
 \alias{repCV.rlars}
 \alias{repCV.seqModel}
 \title{Cross-validation for a sequential regression model}
@@ -78,10 +79,11 @@
 \description{
   Perform (repeated) \eqn{K}-fold cross-validation to
   estimate the prediction error of a previously fit
-  sequential regression model such as a robust least angle
-  regression model.  In each iteration of cross-validation,
-  the optimal model is thereby selected from the training
-  data and used to make predictions for the test data.
+  sequential regression model such as a robust or groupwise
+  least angle regression model.  In each iteration of
+  cross-validation, the optimal model is thereby selected
+  from the training data and used to make predictions for
+  the test data.
 }
 \examples{
 ## generate data
@@ -108,7 +110,8 @@ cv
   Andreas Alfons
 }
 \seealso{
-  \code{\link{rlars}}, \code{\link{predict.seqModel}},
+  \code{\link{rlars}}, \code{\link{grplars}},
+  \code{\link{rgrplars}}, \code{\link{predict.seqModel}},
   \code{\link[cvTools]{cvFolds}},
   \code{\link[cvTools]{cost}}
 }

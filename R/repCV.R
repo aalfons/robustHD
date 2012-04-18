@@ -6,13 +6,13 @@
 #' Cross-validation for a sequential regression model
 #' 
 #' Perform (repeated) \eqn{K}-fold cross-validation to estimate the prediction 
-#' error of a previously fit sequential regression model such as a robust least 
-#' angle regression model.  In each iteration of cross-validation, the optimal 
-#' model is thereby selected from the training data and used to make 
-#' predictions for the test data.
+#' error of a previously fit sequential regression model such as a robust or 
+#' groupwise least angle regression model.  In each iteration of 
+#' cross-validation, the optimal model is thereby selected from the training 
+#' data and used to make predictions for the test data.
 #' 
 #' @method repCV seqModel
-#' @aliases repCV.rlars
+#' @aliases repCV.rlars repCV.grplars
 #' 
 #' @param object  the model fit for which to estimate the prediction error.
 #' @param cost  a cost function measuring prediction loss.  It should expect 
@@ -59,8 +59,9 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{rlars}}, \code{\link{predict.seqModel}}, 
-#' \code{\link[cvTools]{cvFolds}}, \code{\link[cvTools]{cost}}
+#' @seealso \code{\link{rlars}}, \code{\link{grplars}}, \code{\link{rgrplars}}, 
+#' \code{\link{predict.seqModel}}, \code{\link[cvTools]{cvFolds}}, 
+#' \code{\link[cvTools]{cost}}
 #' 
 #' @example inst/doc/examples/example-repCV.rlars.R
 #' 

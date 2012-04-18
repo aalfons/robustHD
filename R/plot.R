@@ -6,14 +6,16 @@
 #' Plot a sequence of regression models
 #' 
 #' Produce a plot of the coefficients or values of the optimality criterion for 
-#' a sequence of regression models, such as submodels along a robust least 
-#' angle regression sequence, or sparse least trimmed squares regression models 
-#' for a grid of values for the penalty parameter.
+#' a sequence of regression models, such as submodels along a robust or 
+#' groupwise least angle regression sequence, or sparse least trimmed squares 
+#' regression models for a grid of values for the penalty parameter.
 #' 
 #' @method plot seqModel
-#' @aliases plot.rlars plot.sparseLTSGrid
+#' @aliases plot.rlars plot.grplars plot.tslarsP plot.sparseLTSGrid
 #' 
 #' @param x  the model fit to be plotted.
+#' @param p  an integer giving the lag length for which to produce the plot 
+#' (the default is to use the optimal lag length).
 #' @param method  a character string specifying the type of plot.  Possible 
 #' values are \code{"coefficients"} to plot the coefficients from the submodels 
 #' via \code{\link{coefPlot}}, or \code{"crit"} to plot the values of the 
@@ -26,6 +28,8 @@
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link{coefPlot}}, \code{\link{critPlot}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}, 
 #' \code{\link{sparseLTSGrid}}
 #' 
 #' @example inst/doc/examples/example-plot.rlars.R
@@ -42,18 +46,36 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
     else critPlot(x, ...)
 }
 
+
+#' @rdname plot.seqModel
+#' @method plot tslars
+#' @export
+
+plot.tslars <- function(x, p, method = c("coefficients", "crit"), ...) {
+    ## initializations
+    method <- match.arg(method)
+    ## call plot function
+    if(method == "coefficients") {
+        if(missing(p)) coefPlot(x, ...) else coefPlot(x, p, ...)
+    } else {
+        if(missing(p)) critPlot(x, ...) else critPlot(x, p, ...)
+    }
+}
+
 # ----------------------
 
 #' Coefficient plot of a sequence of regression models
 #' 
 #' Produce a plot of the coefficients from a sequence of regression models, 
-#' such as submodels along a robust least angle regression sequence, or sparse 
-#' least trimmed squares regression models for a grid of values for the penalty 
-#' parameter.
+#' such as submodels along a robust or groupwise least angle regression 
+#' sequence, or sparse least trimmed squares regression models for a grid of 
+#' values for the penalty parameter.
 #' 
-#' @aliases coefPlot.rlars
+#' @aliases coefPlot.rlars coefPlot.grplars coefPlot.tslarsP
 #' 
 #' @param x  the model fit to be plotted.
+#' @param p  an integer giving the lag length for which to produce the plot 
+#' (the default is to use the optimal lag length).
 #' @param fit  a character string specifying for which estimator to produce the 
 #' plot.  Possible values are \code{"reweighted"} (the default) for the 
 #' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both 
@@ -78,8 +100,9 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
 #' corresponding coefficient values from the last step (in fractions of a 
 #' character width).
 #' @param \dots  for the generic function, additional arguments to be passed 
-#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
-#' methods, additional arguments to be passed down to 
+#' down to methods.  For the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} and 
+#' \code{"sparseLTSGrid"} methods, additional arguments to be passed down to 
 #' \code{\link[lattice]{xyplot}}.
 #' 
 #' @return  
@@ -88,6 +111,8 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link[lattice]{xyplot}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}, 
 #' \code{\link{sparseLTSGrid}}
 #' 
 #' @example inst/doc/examples/example-coefPlot.rlars.R
@@ -147,6 +172,30 @@ coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE,
     command <- paste("localXyplot(Coefficient~x, groups=Variable,", 
         "grid=grid, labels=labels, pos=pos, offset=offset, ...)")
     eval(parse(text=command))
+}
+
+
+#' @rdname coefPlot
+#' @method coefPlot tslars
+#' @export
+
+coefPlot.tslars <- function(x, p, ...) {
+    ## check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) p <- x$pOpt
+    if(length(p) > 1) {
+        warning("multiple lag lengths not yet supported")
+        p <- p[1]
+    }
+    pMax <- x$pMax
+    if(p < 1) {
+        p <- 1
+        warning("lag length too small, using lag length 1")
+    } else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## call plot function for specified lag length
+    coefPlot(x$pFit[[p]], ...)
 }
 
 
@@ -258,20 +307,23 @@ panelCoefPlot <- function(x, y, grid = TRUE, labels = NULL, pos = 4,
 #' Optimality criterion plot of a sequence of regression models
 #' 
 #' Produce a plot of the values of the optimality criterion for a sequence of 
-#' regression models, such as submodels along a robust least angle regression 
-#' sequence, or sparse least trimmed squares regression models for a grid of 
-#' values for the penalty parameter.
+#' regression models, such as submodels along a robust or groupwise least angle 
+#' regression sequence, or sparse least trimmed squares regression models for 
+#' a grid of values for the penalty parameter.
 #' 
-#' @aliases critPlot.rlars
+#' @aliases critPlot.rlars critPlot.grplars critPlot.tslarsP
 #' 
 #' @param x  the model fit to be plotted.
+#' @param p  an integer giving the lag length for which to produce the plot 
+#' (the default is to use the optimal lag length).
 #' @param fit  a character string specifying for which estimator to produce the 
 #' plot.  Possible values are \code{"reweighted"} (the default) for the 
 #' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both 
 #' estimators.
 #' @param \dots  for the generic function, additional arguments to be passed 
-#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
-#' methods, additional arguments to be passed down to 
+#' down to methods.  For the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} and 
+#' \code{"sparseLTSGrid"} methods, additional arguments to be passed down to 
 #' \code{\link[lattice]{xyplot}}.
 #' 
 #' @return  
@@ -280,6 +332,8 @@ panelCoefPlot <- function(x, y, grid = TRUE, labels = NULL, pos = 4,
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link[lattice]{xyplot}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}, 
 #' \code{\link{sparseLTSGrid}}
 #' 
 #' @example inst/doc/examples/example-critPlot.rlars.R
@@ -310,6 +364,30 @@ critPlot.seqModel <- function(x, ...) {
     ## call 'xyplot
     form <- as.formula(paste(crit, "Step", sep=" ~ "))  # formula
     localXyplot(form, ...)
+}
+
+
+#' @rdname critPlot
+#' @method critPlot tslars
+#' @export
+
+critPlot.tslars <- function(x, p, ...) {
+    ## check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) p <- x$pOpt
+    if(length(p) > 1) {
+        warning("multiple lag lengths not yet supported")
+        p <- p[1]
+    }
+    pMax <- x$pMax
+    if(p < 1) {
+        p <- 1
+        warning("lag length too small, using lag length 1")
+    } else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## call plot function for specified lag length
+    critPlot(x$pFit[[p]], ...)
 }
 
 

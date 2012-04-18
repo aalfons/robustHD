@@ -1,19 +1,31 @@
 \name{residuals.seqModel}
+\alias{residuals.grplars}
 \alias{residuals.rlars}
 \alias{residuals.seqModel}
+\alias{residuals.tslars}
+\alias{residuals.tslarsP}
 \title{Extract residuals from a sequence of regression models}
 \usage{
   \method{residuals}{seqModel} (object, s, ...)
+
+  \method{residuals}{tslars} (object, p, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract
   residuals.}
 
+  \item{p}{an integer giving the lag length for which to
+  extract residuals (the default is to use the optimal lag
+  length).}
+
   \item{s}{an integer vector giving the steps of the
   submodels for which to extract the residuals (the default
   is to use the optimal submodel).}
 
-  \item{\dots}{additional arguments are currently ignored.}
+  \item{\dots}{for the \code{"tslars"} method, additional
+  arguments to be passed down to the \code{"seqModel"}
+  method.  For the \code{"seqModel"} method, additional
+  arguments are currently ignored.}
 }
 \value{
   If only one submodel is requested, a numeric vector
@@ -25,8 +37,8 @@
 }
 \description{
   Extract residuals from a sequence of regression models
-  such as submodels along a robust least angle regression
-  sequence.
+  such as submodels along a robust or groupwise least angle
+  regression sequence.
 }
 \examples{
 ## generate data
@@ -55,7 +67,10 @@ residuals(fit, s = 1:5)
   Andreas Alfons
 }
 \seealso{
-  \code{\link[stats]{residuals}}, \code{\link{rlars}}
+  \code{\link[stats]{residuals}}, \code{\link{rlars}},
+  \code{\link{grplars}}, \code{\link{rgrplars}},
+  \code{\link{tslarsP}}, \code{\link{rtslarsP}},
+  \code{\link{tslars}}, \code{\link{rtslars}}
 }
 \keyword{regression}
 

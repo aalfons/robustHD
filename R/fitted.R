@@ -6,15 +6,19 @@
 #' Extract fitted values from a sequence of regression models
 #' 
 #' Extract fitted values from a sequence of regression models such as submodels 
-#' along a robust least angle regression sequence.
+#' along a robust or groupwise least angle regression sequence.
 #' 
 #' @method fitted seqModel
-#' @aliases fitted.rlars
+#' @aliases fitted.rlars fitted.grplars fitted.tslarsP
 #' 
 #' @param object  the model fit from which to extract fitted values.
+#' @param p  an integer giving the lag length for which to extract fitted 
+#' values (the default is to use the optimal lag length).
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract the fitted values (the default is to use the optimal submodel).
-#' @param \dots  additional arguments are currently ignored.
+#' @param \dots  for the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} 
+#' method, additional arguments are currently ignored.
 #' 
 #' @return  
 #' If only one submodel is requested, a numeric vector containing the 
@@ -25,7 +29,9 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[stats]{fitted}}, \code{\link{rlars}}
+#' @seealso \code{\link[stats]{fitted}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}
 #' 
 #' @example inst/doc/examples/example-fitted.rlars.R
 #' 
@@ -35,6 +41,29 @@
 
 fitted.seqModel <- function(object, s, ...) {
     getComponent(object, "fitted.values", s=s, ...)
+}
+
+
+#' @rdname fitted.seqModel
+#' @method fitted tslars
+#' @export
+
+fitted.tslars <- function(object, p, ...) {
+    ## initializations
+    # check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) {
+        p <- object$pOpt
+    } else p <- p[1]
+    pMax <- object$pMax
+    if(p < 1) {
+        p <- 1
+		warning("lag length too small, using lag length 1")
+	} else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## extract fitted values for specified lag length
+    fitted(object$pFit[[p]], ...)
 }
 
 

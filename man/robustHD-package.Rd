@@ -14,8 +14,8 @@ Robust methods for high-dimensional data, in particular linear
 \tabular{ll}{
 Package: \tab robustHD\cr
 Type: \tab Package\cr
-Version: \tab 0.1.0\cr
-Date: \tab 2012-04-10\cr
+Version: \tab 0.2.0\cr
+Date: \tab 2012-04-18\cr
 Depends: \tab 
 Rcpp (>= 0.9.10),
 cvTools (>= 0.3.0),
@@ -45,6 +45,8 @@ coefPlot                Coefficient plot of a sequence of regression
 corHuber                Robust correlation based on winsorization.
 critPlot                Optimality criterion plot of a sequence of
                         regression models
+cvGrplars               Cross-validation along a groupwise least angle
+                        regression sequence
 cvRlars                 Cross-validation along a robust least angle
                         regression sequence
 cvSparseLTS             Cross-validation for sparse LTS regression
@@ -55,6 +57,7 @@ fitted.seqModel         Extract fitted values from a sequence of
                         regression models
 fitted.sparseLTS        Extract fitted values from sparse LTS
                         regression models
+grplars                 Groupwise least angle regression
 lambda0                 Penalty parameter for sparse LTS regression
 plot.seqModel           Plot a sequence of regression models
 predict.seqModel        Predict from a sequence of regression models
@@ -67,11 +70,21 @@ residuals.seqModel      Extract residuals from a sequence of regression
                         models
 residuals.sparseLTS     Extract residuals from sparse LTS regression
                         models
+rgrplars                Robust groupwise least angle regression
 rlars                   Robust least angle regression
 robustHD-package        Robust methods for high-dimensional data
+rtslars                 Robust least angle regression for time series
+                        data
+rtslarsP                Robust least angle regression for time series
+                        data with fixed lag length
 sparseLTS               Sparse least trimmed squares regression
 sparseLTSGrid           Sparse least trimmed squares regression
 standardize             Data standardization
+tsBlocks                Construct predictor blocks for time series
+                        models
+tslars                  Least angle regression for time series data
+tslarsP                 Least angle regression for time series data
+                        with fixed lag length
 weights.sparseLTS       Extract outlier weights from sparse LTS
                         regression models
 winsorize               Data cleaning by winsorization

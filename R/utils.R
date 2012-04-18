@@ -121,6 +121,12 @@ findSmallest <- function(x, h) {
     callBackend("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h)) + 1
 }
 
+## construct blocks of original and lagged values for time series models
+fitBlocks <- function(x, y, h = 1, p = 2, intercept = FALSE) {
+    n <- length(y)
+	tsBlocks(x, y, p=p, subset=-((n-h+1):n), intercept=intercept)
+}
+
 ## get a call function
 # this returns a function that either
 # 1) simply evaluates a supplied function for the basic arguments if there are
@@ -199,18 +205,25 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
     length(which(abs(beta) > tol))
 }
 
-# find indices of h smallest observations
-partialOrder <- function(x, h) {
-    # call C++ function
-    callBackend <- getBackend()
-    callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h)) + 1
+## construct blocks of original and lagged values for prediction from time 
+## series models
+newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
+    n <- length(y)
+    tsBlocks(x, y, p=p, subset=(n-h-p+2):n, intercept=intercept)
 }
 
 ## find indices of h smallest observations
-#partialSort <- function(x, h) {
+#partialOrder <- function(x, h) {
 #    # call C++ function
-#    callBackend <- getBackend()
-#    callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
+#    .CallBackend <- getBackendEnv("backend")
+#    .CallBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h)) + 1
+#}
+
+## find indices of h smallest observations
+#partialSort <- function(x, h, backend) {
+#    # call C++ function
+#    .CallBackend <- getBackendEnv("backend")
+#    .CallBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
 #}
 
 ## prepend something to column names of a matrix

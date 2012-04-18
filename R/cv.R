@@ -66,6 +66,240 @@ cvSeqModel <- function(
 }
 
 
+#' Cross-validation along a groupwise least angle regression sequence
+#' 
+#' Estimate the prediction error of submodels along a groupwise least angle 
+#' regression sequence via (repeated) \eqn{K}-fold cross-validation.
+#' 
+#' @param formula  a formula describing the full model.
+#' @param data  an optional data frame, list or environment (or object 
+#' coercible to a data frame by \code{\link{as.data.frame}}) containing the 
+#' variables in the model.  If not found in data, the variables are taken 
+#' from \code{environment(formula)}, typically the environment from which 
+#' \code{cvGrplars} or \code{cvRgrplars} is called.
+#' @param x  a matrix or data frame containing the candidate predictors.
+#' @param y  a numeric vector containing the response.
+#' @param cost  a cost function measuring prediction loss.  It should expect 
+#' vectors to be passed as its first two arguments, the first corresponding to 
+#' the observed values of the response and the second to the predicted values, 
+#' and must return a non-negative scalar value.  The default is to use the root 
+#' mean squared prediction error for \code{cvGrplars} and the root trimmed 
+#' mean squared prediction error for \code{cvRgrplars} (see 
+#' \code{\link[cvTools]{cost}}).
+#' @param K  an integer giving the number of groups into which the data should 
+#' be split (the default is five).  Keep in mind that this should be chosen 
+#' such that all groups are of approximately equal size.  Setting \code{K} 
+#' equal to \code{n} yields leave-one-out cross-validation.
+#' @param R  an integer giving the number of replications for repeated 
+#' \eqn{K}-fold cross-validation.  This is ignored for for leave-one-out 
+#' cross-validation and other non-random splits of the data.
+#' @param foldType  a character string specifying the type of folds to be 
+#' generated.  Possible values are \code{"random"} (the default), 
+#' \code{"consecutive"} or \code{"interleaved"}.
+#' @param folds  an object of class \code{"cvFolds"} giving the folds of the 
+#' data for cross-validation (as returned by 
+#' \code{\link[cvTools]{cvFolds}}).  If supplied, this is preferred over 
+#' \code{K} and \code{R}.
+#' @param selectBest  a character string specifying a criterion for selecting 
+#' the best model.  Possible values are \code{"min"} (the default) or 
+#' \code{"hastie"}.  The former selects the model with the smallest prediction 
+#' error.  The latter selects the most parsimonious model whose prediction 
+#' error is no larger than \code{seFactor} standard errors above the prediction 
+#' error of the best overall model.
+#' @param seFactor  a numeric value giving a multiplication factor of the 
+#' standard error for the selection of the best model.  This is ignored if 
+#' \code{selectBest} is \code{"min"}.
+#' @param active  an integer vector containing the sequence of predictor 
+#' groups (as returned by \code{\link{grplars}} or  \code{\link{rgrplars}}).
+#' @param s  an integer vector giving the steps of the submodels for which to 
+#' estimate the prediction errors (the default is to use all steps along the 
+#' sequence as long as there are twice as many observations as predictor 
+#' variables).
+#' @param assign  an integer vector giving the predictor group to which 
+#' each predictor variable belongs.
+#' @param regFun  a function to compute robust linear regressions (defaults to 
+#' \code{\link[robustbase]{lmrob}}).
+#' @param regArgs  a list of arguments to be passed to \code{regFun}.
+#' @param seed  optional initial seed for the random number generator (see 
+#' \code{\link{.Random.seed}}).
+#' @param \dots  additional arguments to be passed to the prediction loss 
+#' function \code{cost}.
+#' 
+#' @return An object of class \code{"cvSeqModel"} (which inherits from class 
+#' \code{"cvSelect"}) with the following components:
+#' @returnItem n  an integer giving the number of observations.
+#' @returnItem K  an integer giving the number of folds used in 
+#' cross-validation.
+#' @returnItem R  an integer giving the number of replications used in 
+#' cross-validation.
+#' @returnItem best  an integer giving the index of the submodel with the best 
+#' prediction performance.
+#' @returnItem cv  a data frame containing the estimated prediction errors for 
+#' the submodels.  For repeated cross-validation, those are average values over 
+#' all replications.
+#' @returnItem se  a data frame containing the estimated standard errors of the 
+#' prediction loss for the submodels.
+#' @returnItem selectBest  a character string specifying the criterion used for 
+#' selecting the best model.
+#' @returnItem seFactor  a numeric value giving the multiplication factor of 
+#' the standard error used for the selection of the best model.
+#' @returnItem reps  a data frame containing the estimated prediction errors 
+#' for the submodels from all replications.  This is only returned for repeated 
+#' cross-validation.
+#' @returnItem call  the matched function call.
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link{repCV.grplars}}, \code{\link{grplars}}, 
+#' \code{\link{rgrplars}}, \code{\link{predict.grplars}}, 
+#' \code{\link[cvTools]{cvFolds}}, \code{\link[cvTools]{cost}}
+#' 
+#' @keywords utilities robust
+#' 
+#' @export
+#' @import cvTools
+
+cvGrplars <- function(x, ...) UseMethod("cvGrplars")
+
+
+#' @rdname cvGrplars
+#' @method cvGrplars formula
+#' @export
+
+cvGrplars.formula <- function(formula, data, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("cvGrplars")
+    # prepare model frame
+    mf <- match.call(expand.dots = FALSE)
+    m <- match(c("formula", "data"), names(mf), 0)
+    mf <- mf[c(1, m)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+    mt <- attr(mf, "terms")
+    attr(mt, "intercept") <- 1  # ensure model with intercept
+#    if(is.empty.model(mt)) stop("empty model")
+    # extract response and candidate predictors from model frame
+    y <- model.response(mf, "numeric")
+    x <- model.matrix(mt, mf)
+    ## call default method
+    out <- cvGrplars.default(x, y, ...)
+    out$call <- call  # add call to return object
+    out
+}
+
+
+#' @rdname cvGrplars
+#' @method cvGrplars data.frame
+#' @export
+
+cvGrplars.data.frame <- function(x, y, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("cvGrplars")
+    x <- model.matrix(~ ., data=x)   # convert data.frame to design matrix
+    ## call default method
+    out <- cvGrplars.default(x, y, ...)
+    out$call <- call  # add call to return object
+    out
+}
+
+
+#' @rdname cvGrplars
+#' @method cvGrplars default
+#' @export
+
+cvGrplars.default <- function(x, y, cost = rmspe, K = 5, R = 1, 
+        foldType = c("random", "consecutive", "interleaved"), folds = NULL, 
+        selectBest = c("min", "hastie"), seFactor = 1, active, s = NULL, 
+        assign, seed = NULL, ...) {
+    ## initializations
+    matchedCall <- match.call()
+    matchedCall[[1]] <- as.name("cvGrplars")
+    if(missing(assign)) assign <- NULL
+    ## call workhorse function and modify return object
+    out <- cvSeqModel(x, y, cost=cost, K=K, R=R, foldType=foldType, 
+        folds=folds, selectBest=selectBest, seFactor=seFactor, active=active, 
+        s=s, groupwise=TRUE, assign=assign, robust=FALSE, class="grplars", 
+        seed=seed, ...)
+    out$call <- matchedCall
+    out
+}
+
+
+#' @rdname cvGrplars
+#' @export
+
+cvRgrplars <- function(x, ...) UseMethod("cvRgrplars")
+
+
+#' @rdname cvGrplars
+#' @method cvRgrplars formula
+#' @export
+
+cvRgrplars.formula <- function(formula, data, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("cvRgrplars")
+    # prepare model frame
+    mf <- match.call(expand.dots = FALSE)
+    m <- match(c("formula", "data"), names(mf), 0)
+    mf <- mf[c(1, m)]
+    mf$drop.unused.levels <- TRUE
+    mf[[1]] <- as.name("model.frame")
+    mf <- eval(mf, parent.frame())
+    mt <- attr(mf, "terms")
+    attr(mt, "intercept") <- 1  # ensure model with intercept
+#    if(is.empty.model(mt)) stop("empty model")
+    # extract response and candidate predictors from model frame
+    y <- model.response(mf, "numeric")
+    x <- model.matrix(mt, mf)
+    ## call default method
+    out <- cvRgrplars.default(x, y, ...)
+    out$call <- call  # add call to return object
+    out
+}
+
+
+#' @rdname cvGrplars
+#' @method cvRgrplars data.frame
+#' @export
+
+cvRgrplars.data.frame <- function(x, y, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("cvRgrplars")
+    x <- model.matrix(~ ., data=x)   # convert data.frame to design matrix
+    ## call default method
+    out <- cvRgrplars.default(x, y, ...)
+    out$call <- call  # add call to return object
+    out
+}
+
+
+#' @rdname cvGrplars
+#' @method cvRgrplars default
+#' @export
+
+cvRgrplars.default <- function(x, y, cost = rtmspe, K = 5, R = 1, 
+        foldType = c("random", "consecutive", "interleaved"), folds = NULL, 
+        selectBest = c("min", "hastie"), seFactor = 1, active, s = NULL,  
+        assign, regFun = lmrob, regArgs = list(), seed = NULL, ...) {
+    ## initializations
+    matchedCall <- match.call()
+    matchedCall[[1]] <- as.name("cvRgrplars")
+    if(missing(assign)) assign <- NULL
+    ## call workhorse function and modify return object
+    out <- cvSeqModel(x, y, cost=cost, K=K, R=R, foldType=foldType, 
+        folds=folds, selectBest=selectBest, seFactor=seFactor, active=active, 
+        s=s, groupwise=TRUE, assign=assign, robust=TRUE, regFun=regFun, 
+        regArgs=regArgs, class="grplars", seed=seed, ...)
+    out$call <- matchedCall
+    out
+}
+
+
 #' Cross-validation along a robust least angle regression sequence
 #' 
 #' Estimate the prediction error of submodels along a robust least angle 

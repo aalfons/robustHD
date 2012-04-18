@@ -6,15 +6,19 @@
 #' Extract residuals from a sequence of regression models
 #' 
 #' Extract residuals from a sequence of regression models such as submodels 
-#' along a robust least angle regression sequence.
+#' along a robust or groupwise least angle regression sequence.
 #' 
 #' @method residuals seqModel
-#' @aliases residuals.rlars
+#' @aliases residuals.rlars residuals.grplars residuals.tslarsP
 #' 
 #' @param object  the model fit from which to extract residuals.
+#' @param p  an integer giving the lag length for which to extract residuals 
+#' (the default is to use the optimal lag length).
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract the residuals (the default is to use the optimal submodel).
-#' @param \dots  additional arguments are currently ignored.
+#' @param \dots  for the \code{"tslars"} method, additional arguments to be 
+#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} 
+#' method, additional arguments are currently ignored.
 #' 
 #' @return  
 #' If only one submodel is requested, a numeric vector containing the 
@@ -25,7 +29,9 @@
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[stats]{residuals}}, \code{\link{rlars}}
+#' @seealso \code{\link[stats]{residuals}}, \code{\link{rlars}}, 
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}
 #' 
 #' @example inst/doc/examples/example-residuals.rlars.R
 #' 
@@ -35,6 +41,29 @@
 
 residuals.seqModel <- function(object, s, ...) {
     getComponent(object, "residuals", s=s, ...)
+}
+
+
+#' @rdname residuals.seqModel
+#' @method residuals tslars
+#' @export
+
+residuals.tslars <- function(object, p, ...) {
+    ## initializations
+    # check lag length
+    if(missing(p) || !is.numeric(p) || length(p) == 0) {
+        p <- object$pOpt
+    } else p <- p[1]
+    pMax <- object$pMax
+    if(p < 1) {
+        p <- 1
+		warning("lag length too small, using lag length 1")
+	} else if(p > pMax) {
+        p <- pMax
+        warning(sprintf("lag length too large, using maximum lag length %d", p))
+    }
+    ## extract residuals for specified lag length
+    residuals(object$pFit[[p]], ...)
 }
 
 
