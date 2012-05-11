@@ -14,8 +14,8 @@ Robust methods for high-dimensional data, in particular linear
 \tabular{ll}{
 Package: \tab robustHD\cr
 Type: \tab Package\cr
-Version: \tab 0.1.0\cr
-Date: \tab 2012-04-10\cr
+Version: \tab 0.1.1\cr
+Date: \tab 2012-05-11\cr
 Depends: \tab 
 Rcpp (>= 0.9.10),
 cvTools (>= 0.3.0),

@@ -267,7 +267,9 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         R_subsets=subsets, R_intercept=intercept, 
         R_ncstep=as.integer(ncstep), R_nkeep=as.integer(nsamp[2]), 
         R_tol=tol, R_eps=eps, R_useGram=use.Gram)
-    best <- sort.int(fit$best + 1)
+    fit$best <- sort.int(drop(fit$best) + 1)
+    fit$coefficients <- drop(fit$coefficients)
+    fit$residuals <- drop(fit$residuals)
     objective <- fit$crit
     
     ## correct scale estimate if requested
@@ -315,7 +317,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     df <- modelDf(fit$coefficients, tol)
     
     ## return object
-    fit <- list(best=best, objective=objective, 
+    fit <- list(best=raw.fit$best, objective=objective, 
         coefficients=copyColnames(fit$coefficients, x), 
         fitted.values=copyNames(fit$fitted.values, y), 
         residuals=copyNames(fit$residuals, y), center=center, scale=s, 

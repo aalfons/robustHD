@@ -497,11 +497,8 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 		coefficients(0) = intercept;
 	}
 	return List::create(
-			Named("coefficients") = wrap(coefficients.memptr(),
-					coefficients.memptr() + coefficients.n_elem),
-			Named("fitted.values") = wrap(fitted.memptr(),
-					fitted.memptr() + fitted.n_elem),
-			Named("residuals") = wrap(residuals.memptr(),
-					residuals.memptr() + residuals.n_elem)
+			Named("coefficients") = coefficients,
+			Named("fitted.values") = fitted,
+			Named("residuals") = residuals
 			);
 }
