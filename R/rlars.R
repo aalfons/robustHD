@@ -157,10 +157,10 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
 #    callRegFun <- getCallFun(regArgs)
     crit <- match.arg(crit)
     
-    ## STEP 2: find first ranked block
+    ## STEP 2: find first ranked predictor
     r.z <- unname(apply(xs, 2, corHuberBi, z, const=const, prob=prob))
     A <- which.max(abs(r.z))  # active set
-    Ac <- seq_len(p)[-A]       # not yet sequenced blocks
+    Ac <- seq_len(p)[-A]      # not yet sequenced blocks
     
     ## STEP 3: update active set
     R <- matrix(1, p, sMax[1])  # correlation matrix of predictors with active set
@@ -207,7 +207,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         r.z[Ac] <- r.z[Ac] - gamma.k * a.kj
         # update active set and not yet sequenced blocks
         A <- c(A, Ac[whichMin[, 1]])  # update active set
-        Ac <- Ac[-whichMin[, 1]]      # update not yet sequenced blocks
+        Ac <- Ac[-whichMin[, 1]]      # update not yet sequenced predictors
     }
     
     ## STEP 4: choose optimal model according to specified criterion
@@ -232,4 +232,53 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         out$call <- call  # add call to return object
         out
     } else A
+}
+
+
+#' @export
+fastRlars <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
+        const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
+        crit = "BIC", model = TRUE, tol = .Machine$double.eps^0.5, ...) {
+    ## initializations
+    call <- match.call()  # get function call
+    call[[1]] <- as.name("rlars")
+    n <- length(y)
+    x <- addColnames(as.matrix(x))
+    p <- ncol(x)
+    sMax <- checkSMax(sMax, n, p)
+    # robustly standardize data
+    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
+    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+    # check regression function
+    regControl <- getRegControl(regFun)
+    regFun <- regControl$fun  # if possible, do not use formula interface
+    crit <- match.arg(crit)
+    
+    ## call C++ function
+    active <- .Call("R_fastRlars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
+        R_c=as.numeric(const), R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
+        PACKAGE="robustHD") + 1
+    
+    ## choose optimal model according to specified criterion
+    if(isTRUE(fit)) {
+        # add ones to matrix of predictors to account for intercept
+        x <- addIntercept(x)
+        # call function to fit models along the sequence
+        s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
+        out <- fitModels(x, y, s=s, robust=TRUE, regFun=regFun, 
+            useFormula=regControl$useFormula, regArgs=regArgs, 
+            active=active, crit=crit, class="rlars")
+        # add center and scale estimates
+        out$muY <- attr(z, "center")
+        out$sigmaY <- attr(z, "scale")
+        out$muX <- attr(xs, "center")
+        out$sigmaX <- attr(xs, "scale")
+        if(isTRUE(model)) {
+            # add model data to result
+            out$x <- x
+            out$y <- y
+        }
+        out$call <- call  # add call to return object
+        out
+    } else active
 }

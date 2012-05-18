@@ -20,5 +20,7 @@ RcppExport SEXP R_partialOrder(SEXP R_x, SEXP R_h);
 // functions to be used within C++
 uvec findSmallest(const vec& x, const uword& h);
 uvec partialOrder(const vec& x, const uword& h);
+uvec seqLen(const uword& n);
+sword sign(const double& x);
 
 #endif

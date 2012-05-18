@@ -116,3 +116,17 @@ SEXP R_partialOrder(SEXP R_x, SEXP R_h) {
 //	partial_sort(x.begin(), x.begin()+h, x.end(), sortDataIsLess);
 //	return x;
 //}
+
+// create sequence of integers (starting with 0)
+uvec seqLen(const uword& n) {
+	uvec sequence(n);
+	for(uword i = 0; i < n; i++) {
+		sequence(i) = i;
+	}
+	return sequence;
+}
+
+// compute sign of a numeric value
+sword sign(const double& x) {
+	return (x > 0) - (x < 0);
+}
