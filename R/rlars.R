@@ -182,7 +182,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
             eig <- eigen(G, symmetric=TRUE)
             if(eig$values[k] < 0) {  # last eigenvalue is the smallest
                 Q <- eig$vectors  # matrix of eigenvectors
-                lambda <- apply(xs[, A] %*% Q, 2, scaleFun)^2
+                lambda <- apply(xs[, A, drop=FALSE] %*% Q, 2, scaleFun)^2
                 G <- Q %*% diag(lambda) %*% t(Q)
             }
             invG <- solve(G)
@@ -257,7 +257,7 @@ fastRlars <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     ## call C++ function
     active <- .Call("R_fastRlars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
         R_c=as.numeric(const), R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
-        PACKAGE="robustHD") + 1
+        scaleFun=scaleFun, PACKAGE="robustHD") + 1
     
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {

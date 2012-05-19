@@ -48,6 +48,23 @@ bool sortDataIsLess(const SortData& left, const SortData& right) {
 // utility functions
 // *****************
 
+// correct eigenvalues of a correlation matrix to ensure positive definiteness
+vec correctEigenvalues(const mat& x, const uvec& select,
+		const mat& eigVec, SEXP scaleFun) {
+	// call R function from package robustHD
+	Environment robustHD("package:robustHD");
+	Function correctEigVal = robustHD["correctEigVal"];
+	NumericMatrix Rcpp_x = wrap(x);				// does this reuse memory?
+	IntegerVector Rcpp_select = wrap(select.memptr(),
+			select.memptr() + select.n_elem);
+	NumericMatrix Rcpp_eigVec = wrap(eigVec);	// does this reuse memory?
+	// call R function and convert result
+	NumericVector Rcpp_scale = correctEigVal(Rcpp_x,
+			Rcpp_select + 1, Rcpp_eigVec, scaleFun);
+	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
+	return scale;
+}
+
 // find indices of h smallest observations
 // those are not ordered, but they are the h smallest
 uvec findSmallest(const vec& x, const uword& h) {

@@ -21,7 +21,7 @@ using namespace std;
 // prob ... tuning parameter for bivariate winsorization
 // tol .... numeric tolerance for detecting singularity
 uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
-		const double& prob, const double& tol) {
+		const double& prob, const double& tol, SEXP scaleFun) {
 	// initializations
 	const uword n = x.n_rows, p = x.n_cols;
 
@@ -77,7 +77,9 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         	mat eigVec;
         	eig_sym(eigVal, eigVec, G);
         	if(eigVal(0) < 0) {  // first eigenvalue is the smallest
-        		// TODO: correction of correlation matrix
+        		// correction of correlation matrix for positive definiteness
+        		vec lambda = correctEigenvalues(x, active, eigVec, scaleFun);
+        		G = eigVec * diagmat(lambda) * trans(eigVec);
         	}
             // compute quantities necessary for computing the step size
         	mat invG = inv(G);
@@ -129,7 +131,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 
 // R interface to fastRlars()
 SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c,
-		SEXP R_prob, SEXP R_tol) {
+		SEXP R_prob, SEXP R_tol, SEXP scaleFun) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -141,6 +143,6 @@ SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c,
 	double prob = as<double>(R_prob);
 	double tol = as<double>(R_tol);
 	// call native C++ function
-	uvec active = fastRlars(x, y, sMax, c, prob, tol);
+	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun);
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }
