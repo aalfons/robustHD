@@ -78,7 +78,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         	eig_sym(eigVal, eigVec, G);
         	if(eigVal(0) < 0) {  // first eigenvalue is the smallest
         		// correction of correlation matrix for positive definiteness
-        		vec lambda = correctEigenvalues(x, active, eigVec, scaleFun);
+        		vec lambda = square(applyScaleFun(x.cols(active) * eigVec, scaleFun));
         		G = eigVec * diagmat(lambda) * trans(eigVec);
         	}
             // compute quantities necessary for computing the step size

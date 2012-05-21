@@ -1,4 +1,7 @@
 Changes in robustHD version 0.1.1
 
+    + rlars() is now using C++ code for variable sequencing.
+
     + Bugfixes in C++ code for sparseLTS() and fastLasso() to prevent memory 
       related errors.
+      

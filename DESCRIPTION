@@ -13,7 +13,7 @@ Depends:
     MASS,
     robustbase (>= 0.6-0)
 Imports:
-    RcppArmadillo (>= 0.2.36),
+    RcppArmadillo (>= 0.3.0),
     stats
 LinkingTo: Rcpp, RcppArmadillo
 Suggests:

@@ -12,7 +12,8 @@
   \method{rlars}{default} (x, y, sMax = NA,
     centerFun = median, scaleFun = mad, const = 2,
     prob = 0.95, fit = TRUE, regFun = lmrob,
-    regArgs = list(), crit = "BIC", model = TRUE, ...)
+    regArgs = list(), crit = "BIC", model = TRUE,
+    tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -72,6 +73,13 @@
 
   \item{model}{a logical indicating whether the model data
   should be included in the returned object.}
+
+  \item{tol}{a small positive numeric value.  This is used
+  in bivariate winsorization to determine whether the
+  initial estimate from adjusted univariate winsorization
+  is close to 1 in absolute value.  In this case, bivariate
+  winsorization would fail since the points form almost a
+  straight line, and the initial estimate is returned.}
 
   \item{\dots}{additional arguments to be passed down.  For
   the default method, additional arguments to be passed

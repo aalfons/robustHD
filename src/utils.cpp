@@ -48,19 +48,14 @@ bool sortDataIsLess(const SortData& left, const SortData& right) {
 // utility functions
 // *****************
 
-// correct eigenvalues of a correlation matrix to ensure positive definiteness
-vec correctEigenvalues(const mat& x, const uvec& select,
-		const mat& eigVec, SEXP scaleFun) {
-	// call R function from package robustHD
-	Environment robustHD("package:robustHD");
-	Function correctEigVal = robustHD["correctEigVal"];
-	NumericMatrix Rcpp_x = wrap(x);				// does this reuse memory?
-	IntegerVector Rcpp_select = wrap(select.memptr(),
-			select.memptr() + select.n_elem);
-	NumericMatrix Rcpp_eigVec = wrap(eigVec);	// does this reuse memory?
+// apply scale function to columns of a matrix
+vec applyScaleFun(const mat& x, SEXP scaleFun) {
+	// initializations
+	Environment base("package:base");
+	Function apply = base["apply"];
+	NumericMatrix Rcpp_x = wrap(x);	// does this reuse memory?
 	// call R function and convert result
-	NumericVector Rcpp_scale = correctEigVal(Rcpp_x,
-			Rcpp_select + 1, Rcpp_eigVec, scaleFun);
+	NumericVector Rcpp_scale = apply(Rcpp_x, 2, scaleFun);
 	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
 	return scale;
 }

@@ -17,12 +17,6 @@ addIntercept <- function(x, check = FALSE) {
     } else x
 }
 
-## correct eigenvalues of a correlation matrix to ensure positive definiteness
-#' @export
-correctEigVal <- function(x, select, eigVec, scaleFun) {
-    apply(x[, select, drop=FALSE] %*% eigVec, 2, scaleFun)^2
-}
-
 ## remove intercept column from design matrix
 #removeIntercept <- function(x, pos) {
 #    if(missing(pos)) {
@@ -220,7 +214,7 @@ partialOrder <- function(x, h) {
 #}
 
 ## prepend something to column names of a matrix
-prependcolnames <- function(x, prefix) {
+prependColnames <- function(x, prefix) {
     colnames(x) <- paste(prefix, colnames(x), sep=".")
     x
 }
