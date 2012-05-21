@@ -82,7 +82,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         		G = eigVec * diagmat(lambda) * trans(eigVec);
         	}
             // compute quantities necessary for computing the step size
-        	mat invG = inv(G);
+        	mat invG = solve(G, eye<mat>(k, k));
             a = pow(as_scalar(ones<rowvec>(k) * invG * ones<vec>(k)), -0.5);
             w = a * (invG * ones<vec>(k));
         }
