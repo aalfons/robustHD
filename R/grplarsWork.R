@@ -52,7 +52,7 @@ grplarsWork <- function(
             # and with centerFun/scaleFun otherwise
 			z <- robStandardize(y, centerFun, scaleFun)  # robustly standardize response
             dummy <- rep(dummy, length.out=sum(p))
-            xs <- x
+#            xs <- x
 #            xs[, dummy] <- standardize(x[, dummy])
 #            xs[, !dummy] <- robStandardize(x[, !dummy], centerFun, scaleFun)
             xs <- robStandardizeDummy(x, dummy, centerFun, scaleFun)
@@ -145,7 +145,7 @@ grplarsWork <- function(
         A <- which.max(unname(Rsq / p))  # adjust for block length
     } else A <- which.max(Rsq)
     Ac <- seq_len(m)[-A]      # not yet sequenced blocks
-    # extract model coefficients and fitted values
+    # extract fitted values
     tmp <- lapply(tmp, function(x) x$model)
     zHat <- sapply(tmp, fitted)
     
@@ -269,4 +269,170 @@ grplarsWork <- function(
         }
         out
     } else A
+}
+
+
+
+# R/C++ implementation of groupwise LARS
+#' @export
+fastGrplars <- function(
+    ## basic arguments
+    x,  # matrix of predictor blocks
+    y,  # response
+    sMax = NA,  # number of predictors to be ranked and included in the model
+    assign,     # integer vector giving the group assignment of the variables 
+    dummy = TRUE,  # logical vector indicating dummy variables
+    ## arguments for scaling, correlation and short regression estimates
+    robust = FALSE,     # logical indicating whether methods are robust
+    centerFun = mean,   # center function
+    scaleFun = sd,      # scale function
+    regFun = lm.fit,    # (short) regression function
+    regArgs = list(),   # additional arguments for (short) regression function
+    winsorize = FALSE,  # logical indicating whether data should be winsorized
+    const = 2,     # tuning constant for adjusted univariate winsorization
+    prob = 0.95,   # tuning constant for multivariate winsorization
+    combine = c("min", "euclidean", "mahalanobis"),
+    ## arguments for optimal model selection
+    fit = TRUE,    # logical indicating whether to fit models along sequence
+    crit = "BIC",  # character string specifying the optimality criterion
+    ## other arguments,
+    model = TRUE  # logical indicating whether model data should be added to result
+) {
+    ## initializations
+    n <- length(y)
+    assignList <- split(seq_len(length(assign)), assign)  # column indices for each block in list form
+    m <- length(assignList)  # number of blocks
+    p <- sapply(assignList, length)  # number of variables in each block
+    adjust <- length(unique(p)) > 1  # adjust for block length?
+    robust <- isTRUE(robust)
+    if(robust) {
+        dummy <- sapply(dummy, isTRUE)
+        haveDummies <- any(dummy)
+        regControl <- getRegControl(regFun)
+        regFun <- regControl$fun  # if possible, do not use formula interface
+        callRegFun <- getCallFun(regArgs)
+        winsorize <- isTRUE(winsorize) && !haveDummies  # do not winsorize if there are dummies
+        combine <- match.arg(combine)
+    }
+    crit <- match.arg(crit)
+    addModel <- isTRUE(model)
+    if(robust) {
+        if(haveDummies) {
+            # use standardization with mean/MAD for dummies 
+            # and with centerFun/scaleFun otherwise
+            z <- robStandardize(y, centerFun, scaleFun)  # robustly standardize response
+            dummy <- rep(dummy, length.out=sum(p))
+            xs <- robStandardizeDummy(x, dummy, centerFun, scaleFun)
+        } else {
+            z <- robStandardize(y, centerFun, scaleFun)  # robustly standardize response
+            xs <- robStandardize(x, centerFun, scaleFun)
+        }
+        muY <- attr(z, "center")
+        sigmaY <- attr(z, "scale")
+        muX <- attr(xs, "center")
+        sigmaX <- attr(xs, "scale")
+        if(winsorize) {
+            if(is.null(const)) const <- 2
+            w <- winsorize(cbind(y, x), standardized=TRUE, 
+                const=const, prob=prob, return="weights")
+        } else {
+            # clean data in a limited sense: there may still be correlation 
+            # outliers between the blocks, but these should not be a problem
+            # compute weights from robust regression for each block
+            if(combine == "min") {
+                w <- sapply(assignList, 
+                    function(i, x, y) {
+                        x <- x[, i, drop=FALSE]
+                        if(regControl$useFormula) {
+                            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
+                        } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+                        sqrt(weights(fit))
+                    }, xs, z)
+                w <- apply(w, 1, min)  # take smallest weight for each observation
+                # observations can have zero weight, in which case the number 
+                # of observations needs to be adjusted
+                n <- length(which(w > 0))
+            } else {
+                # compute scaled residuals
+                residuals <- sapply(assignList, 
+                    function(i, x, y) {
+                        x <- x[, i, drop=FALSE]
+                        if(regControl$useFormula) {
+                            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
+                        } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+                        residuals <- residuals(fit)
+                        sigma <- fit$scale
+                        if(is.null(sigma)) sigma <- fit$s
+                        if(is.null(sigma)) sigma <- scaleFun(residuals)
+                        residuals/sigma
+                    }, xs, z)
+                if(combine == "euclidean") {
+                    # assume diagonal structure of the residual correlation matrix
+                    # and compute weights based on resulting mahalanobis distances
+                    d <- qchisq(prob, df=m)  # quantile of the chi-squared distribution
+                    w <- pmin(sqrt(d/rowSums(residuals^2)), 1)
+                } else {
+                    # get weights from multivariate winsorization of residuals
+                    w <- winsorize(residuals, standardized=TRUE, 
+                        const=const, prob=prob, return="weights")
+                }
+            }
+        }
+        z <- standardize(w*z)  # standardize cleaned response
+        xs <- standardize(w*xs)
+        # center and scale of response
+        muY <- muY + attr(z, "center")
+        sigmaY <- sigmaY * attr(z, "scale")
+        # center and scale of candidate predictor variables
+        muX <- muX + attr(xs, "center")
+        sigmaX <- sigmaX * attr(xs, "scale")
+    } else {
+        z <- standardize(y)   # standardize response
+        xs <- standardize(x)
+        # center and scale of response
+        muY <- attr(z, "center")
+        sigmaY <- attr(z, "scale")
+        # center and scale of candidate predictor variables
+        muX <- attr(xs, "center")
+        sigmaX <- attr(xs, "scale")
+    }
+    sMax <- checkSMax(sMax, n, m)  # check maximum number of steps
+    
+    ## call C++ function
+    active <- .Call("R_fastGrplars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
+        R_assign=assignList, PACKAGE="robustHD") + 1
+    
+    ## choose optimal model according to specified criterion
+    if(isTRUE(fit)) {
+        # add ones to matrix of predictors to account for intercept
+        x <- addIntercept(x)
+        # call function to fit models along the sequence
+        s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
+        out <- fitModels(x, y, s=s, assign=assignList, robust=robust, 
+            regFun=regFun, useFormula=regControl$useFormula, regArgs=regArgs, 
+            active=active, crit=crit, class="grplars")
+        # add center and scale estimates
+        out$muY <- muY
+        out$sigmaY <- sigmaY
+        out$muX <- muX
+        out$sigmaX <- sigmaX
+        if(addModel) {
+            # add model data to result
+            out$x <- x
+            out$y <- y
+        }
+        out$assign <- assign  # this is helpful for plot() and repCV() methods
+        out$robust <- robust
+        if(robust) {
+            out$w <- w
+            # TODO: should information on how models are fit be stored?
+#            out$centerFun <- centerFun
+#            out$scaleFun <- scaleFun
+#            out$winsorize <- winsorize
+#            out$const <- const
+#            out$prob <- prob
+#            out$combine <- combine
+        }
+        out
+    } else active
 }
