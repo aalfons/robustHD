@@ -2,7 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
 Version: 0.1.1
-Date: 2012-05-11
+Date: 2012-05-21
 Author: Andreas Alfons
 Maintainer: Andreas Alfons
     <andreas.alfons@econ.kuleuven.be>
