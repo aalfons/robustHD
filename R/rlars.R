@@ -46,6 +46,11 @@
 #' Bayes information criterion is implemented.
 #' @param model  a logical indicating whether the model data should be included 
 #' in the returned object.
+#' @param tol  a small positive numeric value.  This is used in bivariate 
+#' winsorization to determine whether the initial estimate from adjusted 
+#' univariate winsorization is close to 1 in absolute value.  In this case, 
+#' bivariate winsorization would fail since the points form almost a straight 
+#' line, and the initial estimate is returned.
 #' @param \dots  additional arguments to be passed down.  For the default 
 #' method, additional arguments to be passed down to 
 #' \code{\link[=standardize]{robStandardize}}.
@@ -137,16 +142,110 @@ rlars.formula <- function(formula, data, ...) {
 #' @method rlars default
 #' @export
 
+#rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
+#        const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
+#        crit = "BIC", model = TRUE, ...) {
+#    ## STEP 1: initializations
+#    call <- match.call()  # get function call
+#    call[[1]] <- as.name("rlars")
+#    n <- length(y)
+#    x <- addColnames(as.matrix(x))
+#    p <- ncol(x)
+#    sMax <- checkSMax(sMax, n, p)
+#    # robustly standardize data
+#    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
+#    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+#    # check regression function
+#    regControl <- getRegControl(regFun)
+#    regFun <- regControl$fun  # if possible, do not use formula interface
+#    crit <- match.arg(crit)
+#    
+#    ## STEP 2: find first ranked predictor
+#    r.z <- unname(apply(xs, 2, corHuberBi, z, const=const, prob=prob))
+#    A <- which.max(abs(r.z))  # active set
+#    Ac <- seq_len(p)[-A]      # not yet sequenced blocks
+#    
+#    ## STEP 3: update active set
+#    R <- matrix(1, p, sMax[1])  # correlation matrix of predictors with active set
+#    sign <- c(sign(r.z[A]), rep.int(NA, sMax[1]-1))
+#    r <- c(sign[1]*r.z[A], rep.int(NA, sMax[1]-1))
+#    # start iterative computations
+#    for(k in seq_len(sMax[1]-1)) {
+#        R[Ac, k] <- apply(xs[, Ac, drop=FALSE], 2, corHuberBi, xs[, A[k]], 
+#            const=const, prob=prob)
+#        seqK <- seq_len(k)
+#        R[A[-k], k] <- R[A[k], seqK[-k]]
+#        if(k == 1) {
+#            a <- 1
+#            w.k <- 1
+#        } else {
+#            G <- (sign[seqK] %*% t(sign[seqK])) * R[A, seqK, drop=FALSE]
+#            # check if correlation matrix is positive definite and 
+#            # perform corrections if necessary
+#            eig <- eigen(G, symmetric=TRUE)
+#            if(eig$values[k] < 0) {  # last eigenvalue is the smallest
+#                Q <- eig$vectors  # matrix of eigenvectors
+#                lambda <- apply(xs[, A, drop=FALSE] %*% Q, 2, scaleFun)^2
+#                G <- Q %*% diag(lambda) %*% t(Q)
+#            }
+#            invG <- solve(G)
+#            ones <- rep.int(1, k)
+#            a <- c(t(ones) %*% invG %*% ones)^(-1/2)
+#            w.k <- c(a * invG %*% ones)
+#        }
+#        # compute step size in equiangular direction
+#        a.kj <- sapply(Ac, 
+#            function(j) {
+#                r.j <- R[j, seqK]
+#                sum(sign[seqK] * r.j * w.k)
+#            })
+#        gamma <- cbind((r[k] - r.z[Ac]) / (a - a.kj), 
+#            (r[k] + r.z[Ac]) / (a + a.kj))
+#        gamma[gamma <= 0] <- Inf
+#        whichMin <- arrayInd(which.min(gamma), .dim=dim(gamma))
+#        gamma.k <- gamma[whichMin[, 1], whichMin[, 2]]
+#        sign[k+1] <- c(1, -1)[whichMin[, 2]]
+#        # update correlations
+#        r[k+1] <- r[k] - gamma.k * a
+#        r.z[Ac] <- r.z[Ac] - gamma.k * a.kj
+#        # update active set and not yet sequenced blocks
+#        A <- c(A, Ac[whichMin[, 1]])  # update active set
+#        Ac <- Ac[-whichMin[, 1]]      # update not yet sequenced predictors
+#    }
+#    
+#    ## STEP 4: choose optimal model according to specified criterion
+#    if(isTRUE(fit)) {
+#        # add ones to matrix of predictors to account for intercept
+#        x <- addIntercept(x)
+#        # call function to fit models along the sequence
+#        s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
+#        out <- fitModels(x, y, s=s, robust=TRUE, regFun=regFun, 
+#            useFormula=regControl$useFormula, regArgs=regArgs, 
+#            active=A, crit=crit, class="rlars")
+#        # add center and scale estimates
+#        out$muY <- attr(z, "center")
+#        out$sigmaY <- attr(z, "scale")
+#        out$muX <- attr(xs, "center")
+#        out$sigmaX <- attr(xs, "scale")
+#        if(isTRUE(model)) {
+#            # add model data to result
+#            out$x <- x
+#            out$y <- y
+#        }
+#        out$call <- call  # add call to return object
+#        out
+#    } else A
+#}
+
 rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
         const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
-        crit = "BIC", model = TRUE, ...) {
-    ## STEP 1: initializations
+        crit = "BIC", model = TRUE, tol = .Machine$double.eps^0.5, ...) {
+    ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rlars")
     n <- length(y)
     x <- addColnames(as.matrix(x))
     p <- ncol(x)
-#    if(!is.finite(sMax) || !isTRUE(sMax <= min(p, n-1))) sMax <- min(p, n-1)
     sMax <- checkSMax(sMax, n, p)
     # robustly standardize data
     z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
@@ -154,63 +253,14 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     # check regression function
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
-#    callRegFun <- getCallFun(regArgs)
     crit <- match.arg(crit)
     
-    ## STEP 2: find first ranked block
-    r.z <- unname(apply(xs, 2, corHuberBi, z, const=const, prob=prob))
-    A <- which.max(abs(r.z))  # active set
-    Ac <- seq_len(p)[-A]       # not yet sequenced blocks
+    ## call C++ function
+    active <- .Call("R_fastRlars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
+        R_c=as.numeric(const), R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
+        scaleFun=scaleFun, PACKAGE="robustHD") + 1
     
-    ## STEP 3: update active set
-    R <- matrix(1, p, sMax[1])  # correlation matrix of predictors with active set
-    sign <- c(sign(r.z[A]), rep.int(NA, sMax[1]-1))
-    r <- c(sign[1]*r.z[A], rep.int(NA, sMax[1]-1))
-    # start iterative computations
-    for(k in seq_len(sMax[1]-1)) {
-        R[Ac, k] <- apply(xs[, Ac, drop=FALSE], 2, corHuberBi, xs[, A[k]], 
-            const=const, prob=prob)
-        seqK <- seq_len(k)
-        R[A[-k], k] <- R[A[k], seqK[-k]]
-        if(k == 1) {
-            a <- 1
-            w.k <- 1
-        } else {
-            G <- (sign[seqK] %*% t(sign[seqK])) * R[A, seqK, drop=FALSE]
-            # check if correlation matrix is positive definite and 
-            # perform corrections if necessary
-            eig <- eigen(G, symmetric=TRUE)
-            if(eig$values[k] < 0) {  # last eigenvalue is the smallest
-                Q <- eig$vectors  # matrix of eigenvectors
-                lambda <- apply(xs[, A] %*% Q, 2, scaleFun)^2
-                G <- Q %*% diag(lambda) %*% t(Q)
-            }
-            invG <- solve(G)
-            ones <- rep.int(1, k)
-            a <- c(t(ones) %*% invG %*% ones)^(-1/2)
-            w.k <- c(a * invG %*% ones)
-        }
-        # compute step size in equiangular direction
-        a.kj <- sapply(Ac, 
-            function(j) {
-                r.j <- R[j, seqK]
-                sum(sign[seqK] * r.j * w.k)
-            })
-        gamma <- cbind((r[k] - r.z[Ac]) / (a - a.kj), 
-            (r[k] + r.z[Ac]) / (a + a.kj))
-        gamma[gamma <= 0] <- Inf
-        whichMin <- arrayInd(which.min(gamma), .dim=dim(gamma))
-        gamma.k <- gamma[whichMin[, 1], whichMin[, 2]]
-        sign[k+1] <- c(1, -1)[whichMin[, 2]]
-        # update correlations
-        r[k+1] <- r[k] - gamma.k * a
-        r.z[Ac] <- r.z[Ac] - gamma.k * a.kj
-        # update active set and not yet sequenced blocks
-        A <- c(A, Ac[whichMin[, 1]])  # update active set
-        Ac <- Ac[-whichMin[, 1]]      # update not yet sequenced blocks
-    }
-    
-    ## STEP 4: choose optimal model according to specified criterion
+    ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {
         # add ones to matrix of predictors to account for intercept
         x <- addIntercept(x)
@@ -218,7 +268,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
         out <- fitModels(x, y, s=s, robust=TRUE, regFun=regFun, 
             useFormula=regControl$useFormula, regArgs=regArgs, 
-            active=A, crit=crit, class="rlars")
+            active=active, crit=crit, class="rlars")
         # add center and scale estimates
         out$muY <- attr(z, "center")
         out$sigmaY <- attr(z, "scale")
@@ -231,5 +281,5 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         }
         out$call <- call  # add call to return object
         out
-    } else A
+    } else active
 }

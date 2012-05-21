@@ -227,7 +227,7 @@ newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
 #}
 
 ## prepend something to column names of a matrix
-prependcolnames <- function(x, prefix) {
+prependColnames <- function(x, prefix) {
     colnames(x) <- paste(prefix, colnames(x), sep=".")
     x
 }

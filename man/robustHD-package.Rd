@@ -15,7 +15,7 @@ Robust methods for high-dimensional data, in particular linear
 Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.2.0\cr
-Date: \tab 2012-04-18\cr
+Date: \tab 2012-05-21\cr
 Depends: \tab 
 Rcpp (>= 0.9.10),
 cvTools (>= 0.3.0),
@@ -23,7 +23,7 @@ lattice,
 MASS,
 robustbase (>= 0.6-0)\cr
 Imports: \tab 
-RcppArmadillo (>= 0.2.36),
+RcppArmadillo (>= 0.3.0),
 stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
 Suggests: \tab 

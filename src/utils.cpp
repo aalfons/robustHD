@@ -48,6 +48,18 @@ bool sortDataIsLess(const SortData& left, const SortData& right) {
 // utility functions
 // *****************
 
+// apply scale function to columns of a matrix
+vec applyScaleFun(const mat& x, SEXP scaleFun) {
+	// initializations
+	Environment base("package:base");
+	Function apply = base["apply"];
+	NumericMatrix Rcpp_x = wrap(x);	// does this reuse memory?
+	// call R function and convert result
+	NumericVector Rcpp_scale = apply(Rcpp_x, 2, scaleFun);
+	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
+	return scale;
+}
+
 // find indices of h smallest observations
 // those are not ordered, but they are the h smallest
 uvec findSmallest(const vec& x, const uword& h) {
@@ -116,3 +128,17 @@ SEXP R_partialOrder(SEXP R_x, SEXP R_h) {
 //	partial_sort(x.begin(), x.begin()+h, x.end(), sortDataIsLess);
 //	return x;
 //}
+
+// create sequence of integers (starting with 0)
+uvec seqLen(const uword& n) {
+	uvec sequence(n);
+	for(uword i = 0; i < n; i++) {
+		sequence(i) = i;
+	}
+	return sequence;
+}
+
+// compute sign of a numeric value
+sword sign(const double& x) {
+	return (x > 0) - (x < 0);
+}

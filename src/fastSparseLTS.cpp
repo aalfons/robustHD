@@ -157,21 +157,16 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	Subset subset(initial);
 	subset.lasso(x, y, lambda, useIntercept, eps, useGram);
 	// return results as list
-	uvec indices = subset.indices;
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
 		// prepend intercept
 		coefficients.insert_rows(0, 1, false);
 		coefficients(0) = subset.intercept;
 	}
-	vec residuals = subset.residuals;
 	return List::create(
-			Named("indices") = wrap(indices.memptr(),
-					indices.memptr() + indices.n_elem),
-			Named("coefficients") = wrap(coefficients.memptr(),
-					coefficients.memptr() + coefficients.n_elem),
-			Named("residuals") = wrap(residuals.memptr(),
-					residuals.memptr() + residuals.n_elem),
+			Named("indices") = subset.indices,
+			Named("coefficients") = coefficients,
+			Named("residuals") = subset.residuals,
 			Named("crit") = subset.crit,
 			Named("continueCSteps") = subset.continueCSteps
 			);
@@ -216,21 +211,16 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	// call native C++ function
 	subset.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
 	// return results as list
-	uvec indices = subset.indices;
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
 		// prepend intercept
 		coefficients.insert_rows(0, 1, false);
 		coefficients(0) = subset.intercept;
 	}
-	vec residuals = subset.residuals;
 	return List::create(
-			Named("indices") = wrap(indices.memptr(),
-					indices.memptr() + indices.n_elem),
-			Named("coefficients") = wrap(coefficients.memptr(),
-					coefficients.memptr() + coefficients.n_elem),
-			Named("residuals") = wrap(residuals.memptr(),
-					residuals.memptr() + residuals.n_elem),
+			Named("indices") = subset.indices,
+			Named("coefficients") = coefficients,
+			Named("residuals") = subset.residuals,
 			Named("crit") = subset.crit,
 			Named("continueCSteps") = subset.continueCSteps
 			);
@@ -295,9 +285,8 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 		critsOut(k) = subset.crit;
 	}
 	return List::create(
-			Named("subsetMat") = wrap(subsetMatOut),
-			Named("crits") = wrap(critsOut.memptr(),
-					critsOut.memptr() + critsOut.n_elem),
+			Named("subsetMat") = subsetMatOut,
+			Named("crits") = critsOut,
 			Named("nkeep") = nkeep
 			);
 }
@@ -434,21 +423,16 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	Subset best = fastSparseLTS(x, y, lambda, initial, useIntercept, ncstep,
 			nkeep, tol, eps, useGram, center, scale);
 	// return results as list
-	uvec indices = best.indices;
 	vec coefficients = best.coefficients;
 	if(useIntercept) {
 		// prepend intercept
 		coefficients.insert_rows(0, 1, false);
 		coefficients(0) = best.intercept;
 	}
-	vec residuals = best.residuals;
 	return List::create(
-			Named("best") = wrap(indices.memptr(),
-					indices.memptr() + indices.n_elem),
-			Named("coefficients") = wrap(coefficients.memptr(),
-					coefficients.memptr() + coefficients.n_elem),
-			Named("residuals") = wrap(residuals.memptr(),
-					residuals.memptr() + residuals.n_elem),
+			Named("best") = best.indices,
+			Named("coefficients") = coefficients,
+			Named("residuals") = best.residuals,
 			Named("crit") = best.crit,
 			Named("center") = center,
 			Named("scale") = scale

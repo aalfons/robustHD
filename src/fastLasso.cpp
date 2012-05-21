@@ -9,20 +9,6 @@ using namespace Rcpp;
 using namespace arma;
 
 
-// compute sign of a numeric value
-sword sign(const double& x) {
-	return (x > 0) - (x < 0);
-}
-
-// create sequence of integers (starting with 0)
-uvec seqLen(const uword& n) {
-	uvec sequence(n);
-	for(uword i = 0; i < n; i++) {
-		sequence(i) = i;
-	}
-	return sequence;
-}
-
 // find maximum number of active variables
 // n .............. number of observations
 // p .............. number of predictors
@@ -497,11 +483,8 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 		coefficients(0) = intercept;
 	}
 	return List::create(
-			Named("coefficients") = wrap(coefficients.memptr(),
-					coefficients.memptr() + coefficients.n_elem),
-			Named("fitted.values") = wrap(fitted.memptr(),
-					fitted.memptr() + fitted.n_elem),
-			Named("residuals") = wrap(residuals.memptr(),
-					residuals.memptr() + residuals.n_elem)
+			Named("coefficients") = coefficients,
+			Named("fitted.values") = fitted,
+			Named("residuals") = residuals
 			);
 }
