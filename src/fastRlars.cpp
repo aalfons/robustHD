@@ -11,6 +11,19 @@ using namespace arma;
 using namespace std;
 
 
+// apply scale function to columns of a matrix
+vec applyScaleFun(const mat& x, SEXP scaleFun) {
+	// initializations
+	Environment base("package:base");
+	Function apply = base["apply"];
+	NumericMatrix Rcpp_x = wrap(x);	// does this reuse memory?
+	// call R function and convert result
+	NumericVector Rcpp_scale = apply(Rcpp_x, 2, scaleFun);
+	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
+	return scale;
+}
+
+
 // variable sequencing via robust least angle regression
 // Armadillo library is used for linear algebra
 // ATTENTION: the data are assumed to be standardized (this is done in R)
@@ -54,10 +67,10 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 	// start iterative computations
 	for(uword k = 1; k < sMax; k++) {
 		// compute correlations of inactive predictors with new active predictor
-		vec xx = x.unsafe_col(active(k-1));
+		vec xk = x.unsafe_col(active(k-1));
 		for(uword j = 0; j < inactive.n_elem; j++) {
 			vec xj = x.unsafe_col(inactive(j));
-			R(inactive(j), k-1) = corHuberBi(xj, xx, c, prob, tol);
+			R(inactive(j), k-1) = corHuberBi(xj, xk, c, prob, tol);
 		}
 		for(uword j = 1; j < k; j++) {
 			R(active(j-1), k-1) = R(active(k-1), j-1);
@@ -83,7 +96,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         	}
             // compute quantities necessary for computing the step size
         	mat invG = solve(G, eye<mat>(k, k));
-            a = pow(as_scalar(ones<rowvec>(k) * invG * ones<vec>(k)), -0.5);
+            a = 1 / sqrt(as_scalar(ones<rowvec>(k) * invG * ones<vec>(k)));
             w = a * (invG * ones<vec>(k));
         }
         // compute correlations of inactive predictors with equiangular vector
@@ -113,7 +126,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         	signs(k) = -1;
         }
         // update correlations
-		r.insert_rows(k, 1, false);	// do not initialize new memory
+		r.insert_rows(k, 1, false);			// do not initialize new memory
         r(k) = r(k-1) - gamma * a;
 		corY.shed_row(whichMin);
 		corU.shed_row(whichMin);

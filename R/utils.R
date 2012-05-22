@@ -121,6 +121,18 @@ findSmallest <- function(x, h) {
     callBackend("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h)) + 1
 }
 
+## find possible step sizes for groupwise LARS by solving quadratic equation
+#' @export
+findStepSizes <- function(r, a, corY, corU, tau) {
+    mapply(function(corY, corU, tau, r, a) {
+            # quadratic equation to be solved
+            comp <- c(r^2 - corY^2, 2 * (corU*corY - a*r), a^2 - tau^2)
+            # solution of quadratic equation
+            gamma <- Re(polyroot(comp))
+            min(gamma[gamma >= 0])
+        }, corY, corU, tau, MoreArgs=list(r=r, a=a))
+}
+
 ## construct blocks of original and lagged values for time series models
 fitBlocks <- function(x, y, h = 1, p = 2, intercept = FALSE) {
     n <- length(y)

@@ -48,18 +48,6 @@ bool sortDataIsLess(const SortData& left, const SortData& right) {
 // utility functions
 // *****************
 
-// apply scale function to columns of a matrix
-vec applyScaleFun(const mat& x, SEXP scaleFun) {
-	// initializations
-	Environment base("package:base");
-	Function apply = base["apply"];
-	NumericMatrix Rcpp_x = wrap(x);	// does this reuse memory?
-	// call R function and convert result
-	NumericVector Rcpp_scale = apply(Rcpp_x, 2, scaleFun);
-	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
-	return scale;
-}
-
 // find indices of h smallest observations
 // those are not ordered, but they are the h smallest
 uvec findSmallest(const vec& x, const uword& h) {

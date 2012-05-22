@@ -36,8 +36,7 @@ using namespace arma;
 //	return covXY / (sqrt(varX) * sqrt(varY));
 //}
 double corPearson(const vec& x, const vec& y) {
-	mat corXY = cor(x, y);	// arma function cor() always returns matrix
-	return corXY(0, 0);
+	return as_scalar(cor(x, y));	// arma function cor() always returns matrix
 }
 
 
