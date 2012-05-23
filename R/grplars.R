@@ -8,7 +8,7 @@
 #' Sequence groups of candidate predictors according to their predictive 
 #' content and find the optimal model along the sequence.
 #' 
-#' @aliases print.grplars
+#' @aliases print.grplars findStepSizes
 #' 
 #' @param formula  a formula describing the full model.
 #' @param data  an optional data frame, list or environment (or object coercible 
@@ -72,6 +72,11 @@
 #' @returnItem robust  a logical indicating whether a robust fit was computed 
 #' (\code{FALSE} for function \code{grplars}).
 #' @returnItem call  the matched function call.
+#' 
+#' @note \code{findStepSizes} is a utility function that computes the step size 
+#' for each inactive predictor group.  It is only exported so it can be called 
+#' by the underlying C++ code for sequencing the predictor groups.  Hence it is 
+#' not expected to be called by the user and not documented.
 #' 
 #' @author Andreas Alfons
 #' 

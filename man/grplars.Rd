@@ -1,4 +1,5 @@
 \name{grplars}
+\alias{findStepSizes}
 \alias{grplars}
 \alias{grplars.data.frame}
 \alias{grplars.default}
@@ -122,6 +123,13 @@
   Sequence groups of candidate predictors according to
   their predictive content and find the optimal model along
   the sequence.
+}
+\note{
+  \code{findStepSizes} is a utility function that computes
+  the step size for each inactive predictor group.  It is
+  only exported so it can be called by the underlying C++
+  code for sequencing the predictor groups.  Hence it is
+  not expected to be called by the user and not documented.
 }
 \author{
   Andreas Alfons

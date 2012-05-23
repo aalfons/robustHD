@@ -12,11 +12,15 @@ using namespace std;
 
 
 // barebones version of least squares regression
+// x ... predictor matrix
+// y ... response variable
 vec fastLm(const mat& x, const vec& y) {
 	return solve(x, y);
 }
 
 // compute fitted values
+// x ...... predictor matrix
+// beta ... regression coefficients
 vec fitted(const mat& x, const vec& beta) {
 	return x * beta;
 }
@@ -77,7 +81,8 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 	}
 
 	// STEP 1: find first ranked predictor group
-	// compute correlation with response for each predictor group
+	// compute the correlation of the fitted values from each predictor group
+	// with the response
 	mat yHat(n, m);
 	vec corY(m);
 	for(uword j = 0; j < m; j++) {
@@ -86,17 +91,18 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 		yHat.col(j) = fitted(xj, beta);
 		corY(j) = stddev(yHat.unsafe_col(j));
 	}
-	vec sqrtP;
+	// if necessary, compute the denominators for adjustment w.r.t. the number
+	// of variables in the group, and adjust the correlations of the fitted
+	// values with the response
+	vec adjustment;
 	if(adjust) {
-		sqrtP.set_size(m);
-		// compute denominators for adjustment w.r.t. the number of variables
-		// in the group and adjust correlation with response
+		adjustment.set_size(m);
 		for(uword j = 0; j < m; j++) {
-			sqrtP(j) = sqrt((double)(p(j)));
-			corY(j) /= sqrtP(j);
+			adjustment(j) = sqrt((double)(p(j)));
+			corY(j) /= adjustment(j);
 		}
 	}
-	// find predictor with maximum correlation
+	// find predictor group with maximum correlation
 	vec r(1);
 	uword whichMax;
 	r(0) = corY.max(whichMax);	// find index of maximum correlation
@@ -109,26 +115,29 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
     corY.shed_row(whichMax);
 
 	// STEP 2: update active set
-	// correlation matrix of active predictor groups
+	// initialize correlation matrix of the fitted values from the active
+    // predictor groups
 	mat R = eye<mat>(1, 1);
-	// quantities related to the equiangular vector
+	// initialize correlation of the fitted values from the active predictors
+	// with the equiangular vector
 	double a = 1.0;
 	if(adjust) {
-		// adjust correlation of active variables equiangular vector
-		a /= sqrtP(whichMax);
+		a /= adjustment(whichMax);	// adjust for unequal group sizes
 	}
+	// other quantities related to the equiangular vector
 	vec w = ones<vec>(1), u(n), corU(m-1), tau(m-1);
-	// keep track of scale for update formulas
+	// keep track of the scale of the current response for update formulas
 	double sigma = 1.0;
 	// start iterative computations
 	for(uword k = 1; k < sMax; k++) {
-		// standardize fitted values for new active predictor group
+		// standardize the fitted values for the new active predictor group
 		standardize(yHat, active(k-1));
 		// compute the equiangular vector
 		if(k == 1) {
-			u = yHat.col(whichMax);
+			u = yHat.col(whichMax);	// fitted values from the first active group
 		} else {
-			// compute correlations between fitted values for active groups
+			// expand correlation matrix of the fitted values from the active
+			// predictor groups
 			R.resize(k, k);
 			R(k-1, k-1) = 1;
 			vec yk = yHat.unsafe_col(active(k-1));
@@ -138,17 +147,17 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 			}
 			// other computations according to algorithm
 			mat invR = solve(R, eye<mat>(k, k));
-			vec q;
+			vec q(k);
 			if(adjust) {
-				q = sqrtP.elem(active);
+				q = adjustment.elem(active);
 			} else {
-				q.ones(k);
+				q.ones();
 			}
-			// compute correlation of active predictor groups with equiangular
-			// vector (adjustment for unequal group size is considered via
-			// vector 'q')
-			a = 1 / sqrt(as_scalar(trans(q) * invR * q));
-			// compute equiangular vector
+			// compute the correlation of the fitted values from the active
+			// predictor groups with the equiangular vector (adjustment for
+			// unequal group size is considered via vector 'q')
+			a = 1 / sqrt(as_scalar(conv_to<rowvec>::from(q) * invR * q));
+			// compute the equiangular vector
 			w = a * (invR * q);
 			u = yHat.cols(active) * w;
 		}
@@ -169,24 +178,25 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 		if(adjust) {
 			// adjustment for unequal group size
 			for(uword j = 0; j < inactive.n_elem; j++) {
-				double tmp = sqrtP(inactive(j));
+				double tmp = adjustment(inactive(j));
 				corU(j) /= tmp;
 				tau(j) /= tmp;
 			}
 		}
-		// compute step size by solving quadratic equation
+		// compute the step size by solving the quadratic equation
 		vec gammas = computeStepSizes(r(k-1), a, corY, corU, tau);
 		uword whichMin;
 		double gamma = gammas.min(whichMin);
         // the following computations are not necessary in the last iteration
 		if(k < (sMax-1)) {
-    		// update scale of response
+    		// update the scale of the current response
             sigma = sqrt(1 - 2 * gamma * r(k-1)/a + pow(gamma, 2));
-           	// update fitted values for new or not yet sequenced groups
+           	// update the fitted values from the new or not yet sequenced
+            // predictor groups
         	for(uword j = 0; j < inactive.size(); j++) {
-        		vec tmp = yHat.unsafe_col(inactive(j));
-        		tmp -= gamma * uHat.unsafe_col(j);
-        		tmp /= sigma;
+        		vec yj = yHat.unsafe_col(inactive(j));
+        		yj -= gamma * uHat.unsafe_col(j);
+        		yj /= sigma;
         	}
 			// update correlations (adjustment for unequal group size is taken
         	// care of by update formula)
@@ -196,10 +206,9 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 			corU.shed_row(whichMin);
 			tau.shed_row(whichMin);
 			// this is not alias safe:
-//
 //			corY = sqrt(pow(corY, 2) - 2 * gamma * corU * corY +
 //					pow(gamma, 2) * pow(tau, 2)) / sigma;
-			// this works fine:
+			// this works:
 			for(uword j = 0; j < corY.n_elem; j++) {
 				corY(j) = sqrt(pow(corY(j), 2) - 2*gamma*corU(j)*corY(j) +
 						pow(gamma, 2) * pow(tau(j), 2)) / sigma;
