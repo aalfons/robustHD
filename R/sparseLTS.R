@@ -68,6 +68,9 @@
 #' is \code{TRUE}).  If the number of variables is large (e.g., larger than the 
 #' number of observations), computation may be faster when this is set to 
 #' \code{FALSE}.
+#' @param ncores  a positive integer giving the number of processor cores to be 
+#' used for parallel computing (the default is 1 for sequential computing).  If 
+#' this is set to \code{NA}, all available processor cores are used.
 #' @param seed  optional initial seed for the random number generator (see 
 #' \code{\link{.Random.seed}}).
 #' @param model  a logical indicating whether the data \code{x} and \code{y} 
@@ -133,6 +136,9 @@
 #' architecture.  Nevertheless, OS X users with Intel machines can install 
 #' \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if the standard \R 
 #' developer tools are installed.
+#' 
+#' For both C++ back ends, parallel computing is implemented via \code{OpenMP} 
+#' (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
 #' 
