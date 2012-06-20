@@ -339,50 +339,65 @@ double partialScale(const vec& x, const double& center, const int& h) {
 // eps ............ small numerical value (effective zero)
 // useGram ........ logical indicating whether Gram matrix should be computed
 //                  in advance
+// ncores ......... number of processor cores for parallel computing
 // center ......... residual center estimate is returned through this parameter
 // scale .......... residual scale estimate is returned through this parameter
 Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 		const umat& initial, const bool& useIntercept, const int& ncstep,
 		int& nkeep, const double& tol, const double& eps, const bool& useGram,
-		double& center, double& scale) {
+		int& ncores, double& center, double& scale) {
 	// initializations
 	const int h = initial.n_rows, nsamp = initial.n_cols;
-	// define STL vector of initial subsets and compute lasso fits
+	const int ncoresMax = omp_get_num_procs();
+	if(ncores == 0 || ncores > ncoresMax) ncores = ncoresMax;
+
+	// block for parallel computing
 	vector<Subset> subsets(nsamp);
-	for(int k = 0; k < nsamp; k++) {
-		Subset subsetK(initial.unsafe_col(k));
-		subsetK.lasso(x, y, lambda, useIntercept, eps, useGram);
-		subsets[k] = subsetK;
-	}
-	// perform initial c-steps on all subsets
-	for(int k = 0; k < nsamp; k++) {
-		Subset subsetK = subsets[k];
-		int i = 0;
-		while(subsetK.continueCSteps && (i < ncstep)) {
-			subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
-			i++;
+	#pragma omp parallel num_threads(ncores)
+	{
+		// define STL vector of initial subsets, compute lasso fits and
+		// perform initial c-steps
+		#pragma omp for schedule(dynamic)
+		for(int k = 0; k < nsamp; k++) {
+			Subset subsetK(initial.unsafe_col(k));
+			// compute lasso fit on initial subset
+			subsetK.lasso(x, y, lambda, useIntercept, eps, useGram);
+			// perform initial c-steps
+			int i = 0;
+			while(subsetK.continueCSteps && (i < ncstep)) {
+				subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+				i++;
+			}
+			subsets[k] = subsetK;
 		}
-		subsets[k] = subsetK;
+
+		// keep best subsets (let only one process do the work)
+		#pragma omp single
+		if(nkeep < nsamp) {
+			keepBest(subsets, nkeep);
+		}
+
+		// perform additional c-steps on best subsets until convergence
+		#pragma omp for schedule(dynamic)
+		for(int k = 0; k < nkeep; k++) {
+			Subset subsetK = subsets[k];
+			int i = 0;
+			while(subsetK.continueCSteps) {
+				subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+				i++;
+			}
+			subsets[k] = subsetK;
+		}
 	}
 
-	// perform additional c-steps on best subsets until convergence and
-	// keep track of optimal subset
-	if(nkeep < nsamp) {
-		keepBest(subsets, nkeep);	// keep best subsets
-	}
+	// find optimal subset
 	int which = 0;					// initial optimal subset
 	double minCrit = R_PosInf;		// initial minimum of objective function
 	for(int k = 0; k < nkeep; k++) {
 		Subset subsetK = subsets[k];
-		int i = 0;
-		while(subsetK.continueCSteps) {
-			subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
-			i++;
-		}
 		if(subsetK.crit < minCrit) {
 			which = k;	// update optimal subset
 		}
-		subsets[k] = subsetK;
 	}
 
 	// return results
@@ -396,7 +411,7 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 // initial subsets are constructed in R and passed down to C++
 SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 		SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep, SEXP R_tol, SEXP R_eps,
-		SEXP R_useGram) {
+		SEXP R_useGram, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -418,10 +433,11 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	double tol = as<double>(R_tol);
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
+	int ncores = as<int>(R_ncores);
 	// call native C++ function
 	double center, scale;
 	Subset best = fastSparseLTS(x, y, lambda, initial, useIntercept, ncstep,
-			nkeep, tol, eps, useGram, center, scale);
+			nkeep, tol, eps, useGram, ncores, center, scale);
 	// return results as list
 	vec coefficients = best.coefficients;
 	if(useIntercept) {
