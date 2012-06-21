@@ -15,7 +15,7 @@
     initial = c("sparse", "hyperplane", "random"),
     ncstep = 2, use.correction = TRUE,
     tol = .Machine$double.eps^0.5,
-    eps = .Machine$double.eps, use.Gram = TRUE,
+    eps = .Machine$double.eps, use.Gram = TRUE, ncores = 1,
     seed = NULL, model = TRUE, ...)
 }
 \arguments{
@@ -109,6 +109,11 @@
   number of variables is large (e.g., larger than the
   number of observations), computation may be faster when
   this is set to \code{FALSE}.}
+
+  \item{ncores}{a positive integer giving the number of
+  processor cores to be used for parallel computing (the
+  default is 1 for sequential computing).  If this is set
+  to \code{NA}, all available processor cores are used.}
 
   \item{seed}{optional initial seed for the random number
   generator (see \code{\link{.Random.seed}}).}
@@ -223,6 +228,9 @@
   Nevertheless, OS X users with Intel machines can install
   \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if
   the standard \R developer tools are installed.
+
+  For both C++ back ends, parallel computing is implemented
+  via \code{OpenMP} (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data

@@ -68,6 +68,9 @@
 #' is \code{TRUE}).  If the number of variables is large (e.g., larger than the 
 #' number of observations), computation may be faster when this is set to 
 #' \code{FALSE}.
+#' @param ncores  a positive integer giving the number of processor cores to be 
+#' used for parallel computing (the default is 1 for sequential computing).  If 
+#' this is set to \code{NA}, all available processor cores are used.
 #' @param seed  optional initial seed for the random number generator (see 
 #' \code{\link{.Random.seed}}).
 #' @param model  a logical indicating whether the data \code{x} and \code{y} 
@@ -134,6 +137,9 @@
 #' \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if the standard \R 
 #' developer tools are installed.
 #' 
+#' For both C++ back ends, parallel computing is implemented via \code{OpenMP} 
+#' (\url{http://openmp.org/}).
+#' 
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link{sparseLTSGrid}}, \code{\link{coef.sparseLTS}}, 
@@ -193,8 +199,8 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         alpha = 0.75, intercept = TRUE, nsamp = c(500, 10), 
         initial = c("sparse", "hyperplane", "random"), ncstep = 2, 
         use.correction = TRUE, tol = .Machine$double.eps^0.5, 
-        eps = .Machine$double.eps, use.Gram = TRUE, seed = NULL, 
-        model = TRUE, ...) {
+        eps = .Machine$double.eps, use.Gram = TRUE, ncores = 1, 
+        seed = NULL, model = TRUE, ...) {
     ## initializations
     call <- match.call()
     call[[1]] <- as.name("sparseLTS")
@@ -254,6 +260,13 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         warning("missing or infinite value of 'eps'; using default value")
     }
     use.Gram <- isTRUE(use.Gram)
+    ncores <- rep(ncores, length.out=1)
+    if(is.na(ncores)) {
+        ncores <- 0  # use all available cores
+    } else if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+        ncores <- 1  # use default value
+        warning("invalid value of 'ncores'; using default value")
+    } else ncores <- as.integer(ncores)
     if(!is.null(seed)) set.seed(seed)
     
     ## compute initial subsets
@@ -266,7 +279,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
         R_subsets=subsets, R_intercept=intercept, 
         R_ncstep=as.integer(ncstep), R_nkeep=as.integer(nsamp[2]), 
-        R_tol=tol, R_eps=eps, R_useGram=use.Gram)
+        R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores)
     fit$best <- sort.int(drop(fit$best) + 1)
     fit$coefficients <- drop(fit$coefficients)
     fit$residuals <- drop(fit$residuals)
