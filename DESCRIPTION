@@ -11,6 +11,7 @@ Depends:
     cvTools (>= 0.3.0),
     lattice,
     MASS,
+    parallel,
     robustbase (>= 0.6-0)
 Imports:
     RcppArmadillo (>= 0.3.0),

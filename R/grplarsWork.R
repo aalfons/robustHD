@@ -271,6 +271,7 @@
 #    } else A
 #}
 
+#' @import parallel
 grplarsWork <- function(
     ## basic arguments
     x,  # matrix of predictor blocks
@@ -288,6 +289,8 @@ grplarsWork <- function(
     const = 2,     # tuning constant for adjusted univariate winsorization
     prob = 0.95,   # tuning constant for multivariate winsorization
     combine = c("min", "euclidean", "mahalanobis"),
+    ncores = 1,    # number of cores for parallel computing
+    cl = NULL,     # cluster for parallel computing
     ## arguments for optimal model selection
     fit = TRUE,    # logical indicating whether to fit models along sequence
     crit = "BIC",  # character string specifying the optimality criterion
@@ -332,36 +335,71 @@ grplarsWork <- function(
             w <- winsorize(cbind(y, x), standardized=TRUE, 
                 const=const, prob=prob, return="weights")
         } else {
+            # check whether parallel computing should be used
+            haveCl <- !is.null(cl)
+            useMC <- useSnow <- FALSE
+            if(!missing(ncores)) {
+                ncores <- rep(ncores, length.out=1)
+                if(!is.numeric(ncores) || !is.finite(ncores) || ncores < 1) {
+                    ncores <- 1  # use default value
+                    warning("invalid value of 'ncores'; using default value")
+                }
+                if(ncores > 1) {
+                    useSnow <- .Platform$OS.type == "windows"
+                    useMC <- !useSnow
+                }
+            } else if(haveCl) useSnow <- TRUE
+            # start snow cluster if not supplied (for parallel computing on 
+            # Windows systems)
+            if(useSnow && !haveCl) {
+                cl <- makePSOCKcluster(rep.int("localhost", ncores))
+                if(RNGkind()[1] == "L'Ecuyer-CMRG") clusterSetRNGStream(cl)
+            }
             # clean data in a limited sense: there may still be correlation 
             # outliers between the blocks, but these should not be a problem
             # compute weights from robust regression for each block
             if(combine == "min") {
-                w <- sapply(assignList, 
-                    function(i, x, y) {
-                        x <- x[, i, drop=FALSE]
-                        if(regControl$useFormula) {
-                            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
-                        } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
-                        sqrt(weights(fit))
-                    }, xs, z)
+                # define function to compute weights for each predictor group
+                getWeights <- function(i, x, y) {
+                    x <- x[, i, drop=FALSE]
+                    if(regControl$useFormula) {
+                        fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
+                    } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+                    sqrt(weights(fit))
+                }
+                # compute weights for each predictor group
+                if(useMC) {
+                    w <- simplify2array(mclapply(assignList, getWeights, 
+                            xs, z, mc.cores=ncores))
+                } else if(useSnow) {
+                    w <- parSapply(cl, assignList, getWeights, xs, z)
+                } else w <- sapply(assignList, getWeights, xs, z)
                 w <- apply(w, 1, min)  # take smallest weight for each observation
                 # observations can have zero weight, in which case the number 
                 # of observations needs to be adjusted
                 n <- length(which(w > 0))
             } else {
-                # compute scaled residuals
-                residuals <- sapply(assignList, 
-                    function(i, x, y) {
-                        x <- x[, i, drop=FALSE]
-                        if(regControl$useFormula) {
-                            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
-                        } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
-                        residuals <- residuals(fit)
-                        sigma <- fit$scale
-                        if(is.null(sigma)) sigma <- fit$s
-                        if(is.null(sigma)) sigma <- scaleFun(residuals)
-                        residuals/sigma
-                    }, xs, z)
+                # define function to compute scaled residuals for each 
+                # predictor group
+                getResiduals <- function(i, x, y) {
+                    x <- x[, i, drop=FALSE]
+                    if(regControl$useFormula) {
+                        fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
+                    } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+                    residuals <- residuals(fit)
+                    sigma <- fit$scale
+                    if(is.null(sigma)) sigma <- fit$s
+                    if(is.null(sigma)) sigma <- scaleFun(residuals)
+                    residuals/sigma
+                }
+                # compute scaled residuals for each predictor group
+                if(useMC) {
+                    residuals <- simplify2array(mclapply(assignList, 
+                            getResiduals, xs, z, mc.cores=ncores))
+                } else if(useSnow) {
+                    residuals <- parSapply(cl, assignList, getResiduals, xs, z)
+                } else residuals <- sapply(assignList, getResiduals, xs, z)
+                # obtain weights from scaled residuals
                 if(combine == "euclidean") {
                     # assume diagonal structure of the residual correlation matrix
                     # and compute weights based on resulting mahalanobis distances
@@ -373,6 +411,8 @@ grplarsWork <- function(
                         const=const, prob=prob, return="weights")
                 }
             }
+            # stop snow cluster if defined within this function
+            if(useSnow && !haveCl) stopCluster(cl)
         }
         z <- standardize(w*z)  # standardize cleaned response
         xs <- standardize(w*xs)

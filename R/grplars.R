@@ -335,9 +335,8 @@ rgrplars.data.frame <- function(x, y, ...) {
 
 rgrplars.default <- function(x, y, sMax = NA, assign, dummy, 
         centerFun = median, scaleFun = mad, regFun = lmrob, regArgs = list(), 
-        combine = c("min", "euclidean", "mahalanobis"), 
-	    const = 2, prob = 0.95, fit = TRUE, crit = "BIC", 
-        model = TRUE, ...) {
+        combine = c("min", "euclidean", "mahalanobis"), const = 2, prob = 0.95, 
+        ncores = 1, cl = NULL, fit = TRUE, crit = "BIC", model = TRUE, ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rgrplars")
@@ -363,8 +362,8 @@ rgrplars.default <- function(x, y, sMax = NA, assign, dummy,
     ## correlation and regression
     out <- grplarsFit(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=TRUE, 
         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
-		combine=combine, const=const, prob=prob, fit=fit, crit=crit, 
-        model=model)
+		combine=combine, const=const, prob=prob, ncores=ncores, cl=cl, fit=fit, 
+        crit=crit, model=model)
     if(inherits(out, "grplars")) out$call <- call  # add call to return object
     out
 }
@@ -403,7 +402,9 @@ grplarsFit <- function(x, y,
 	combine = c("min", "euclidean", "mahalanobis"),
 	const = 2,     # tuning constant for winsorization
 	prob = 0.95,   # tuning constant for winsorization
-	## arguments for optimal model selection
+    ncores = 1,    # number of cores for parallel computing
+    cl = NULL,     # cluster for parallel computing
+    ## arguments for optimal model selection
     fit = TRUE,    # logical indicating whether to fit models along sequence
     crit = "BIC",  # character string specifying the optimality criterion
     ## other arguments,
@@ -414,8 +415,8 @@ grplarsFit <- function(x, y,
     x <- addColnames(as.matrix(x))
     if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
     ## call workhorse function
-    grplarsWork(x, y, sMax=sMax, assign=assign, dummy=dummy, 
-		robust=robust, centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, 
-		regArgs=regArgs, const=const, prob=prob, combine=combine, fit=fit, 
+    grplarsWork(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=robust, 
+        centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
+        const=const, prob=prob, combine=combine, ncores=ncores, cl=cl, fit=fit, 
         crit=crit, model=model)
 }

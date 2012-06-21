@@ -259,8 +259,8 @@ rtslars.formula <- function(formula, data, ...) {
 rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA, 
         centerFun = median, scaleFun = mad, regFun = lmrob, 
         regArgs = list(), winsorize = FALSE, const = 2, prob = 0.95, 
-        combine = c("min", "euclidean", "mahalanobis"), 
-        fit = TRUE, crit = "BIC", model = TRUE, ...) {
+        combine = c("min", "euclidean", "mahalanobis"), ncores = 1, 
+        cl = NULL, fit = TRUE, crit = "BIC", model = TRUE, ...) {
     ## call fit function with classical functions for center, scale, 
     ## correlation and regression
     call <- match.call()  # get function call
@@ -268,7 +268,7 @@ rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA,
     out <- tslarsFit(x, y, h=h, pMax=pMax, sMax=sMax, robust=TRUE, 
         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
 		winsorize=winsorize, const=const, prob=prob, combine=combine, 
-		fit=fit, crit=crit, model=model)
+        ncores=ncores, cl=cl, fit=fit, crit=crit, model=model)
     if(inherits(out, "tslars")) out$call <- call  # add call to return object
     out
 }
@@ -288,10 +288,12 @@ tslarsFit <- function(x, y,
 	regFun = lm.fit,    # (short) regression function
     regArgs = list(),   # additional arguments for (short) regression function
     winsorize = FALSE,  # logical indicating whether data should be winsorized
-    const = 2,     # tuning constant for winsorization
-	prob = 0.95,   # tuning constant for winsorization
+    const = 2,          # tuning constant for winsorization
+	prob = 0.95,        # tuning constant for winsorization
 	combine = c("min", "euclidean", "mahalanobis"),
-	## arguments for optimal model selection
+    ncores = 1,    # number of cores for parallel computing
+    cl = NULL,     # cluster for parallel computing
+    ## arguments for optimal model selection
     fit = TRUE,    # logical indicating whether to fit models along sequence
     crit = "BIC",  # optimality criterion
 	## other arguments,
@@ -311,8 +313,8 @@ tslarsFit <- function(x, y,
             tslarsPFit(x[select, , drop=FALSE], y[select], h=h, p=i, sMax=sMax, 
                 robust=robust, centerFun=centerFun, scaleFun=scaleFun, 
                 regFun=regFun, regArgs=regArgs, winsorize=winsorize, 
-                const=const, prob=prob, combine=combine, fit=fit, crit=crit, 
-                model=FALSE)
+                const=const, prob=prob, combine=combine, ncores=ncores, 
+                cl=cl, fit=fit, crit=crit, model=FALSE)
         })
     names(out) <- p
     ## find optimal lag length
