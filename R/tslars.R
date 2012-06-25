@@ -116,13 +116,14 @@ tslars.formula <- function(formula, data, ...) {
 #' @export
 
 tslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA, fit = TRUE, 
-        crit = "BIC", model = TRUE, ...) {
+        crit = "BIC", ncores = 1, model = TRUE, ...) {
     ## call fit function with classical functions for center, scale, 
     ## correlation and regression
     call <- match.call()  # get function call
     call[[1]] <- as.name("tslars")
     out <- tslarsFit(x, y, h=h, pMax=pMax, sMax=sMax, robust=FALSE, 
-        centerFun=mean, scaleFun=sd, fit=fit, crit=crit, model=model)
+        centerFun=mean, scaleFun=sd, fit=fit, crit=crit, ncores=ncores, 
+        model=model)
     if(inherits(out, "tslars")) out$call <- call  # add call to return object
     out
 }

@@ -14,7 +14,8 @@
   \method{grplars}{data.frame} (x, y, ...)
 
   \method{grplars}{default} (x, y, sMax = NA, assign,
-    fit = TRUE, crit = "BIC", model = TRUE, ...)
+    fit = TRUE, crit = "BIC", ncores = 1, model = TRUE,
+    ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}

@@ -10,7 +10,8 @@
   \method{tslarsP}{formula} (formula, data, ...)
 
   \method{tslarsP}{default} (x, y, h = 1, p = 2, sMax = NA,
-    fit = TRUE, crit = "BIC", model = TRUE, ...)
+    fit = TRUE, crit = "BIC", ncores = 1, model = TRUE,
+    ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}

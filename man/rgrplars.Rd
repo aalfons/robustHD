@@ -15,8 +15,8 @@
     dummy, centerFun = median, scaleFun = mad,
     regFun = lmrob, regArgs = list(),
     combine = c("min", "euclidean", "mahalanobis"),
-    const = 2, prob = 0.95, fit = TRUE, crit = "BIC",
-    model = TRUE, ...)
+    const = 2, prob = 0.95, ncores = 1, cl = NULL,
+    fit = TRUE, crit = "BIC", model = TRUE, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}

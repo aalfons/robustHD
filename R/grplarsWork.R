@@ -436,7 +436,7 @@ grplarsWork <- function(
     
     ## call C++ function
     active <- .Call("R_fastGrplars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
-        R_assign=assignList, PACKAGE="robustHD") + 1
+        R_assign=assignList, R_ncores=ncores, PACKAGE="robustHD") + 1
     
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {

@@ -13,7 +13,8 @@
     regFun = lmrob, regArgs = list(), winsorize = FALSE,
     const = 2, prob = 0.95,
     combine = c("min", "euclidean", "mahalanobis"),
-    fit = TRUE, crit = "BIC", model = TRUE, ...)
+    ncores = 1, cl = NULL, fit = TRUE, crit = "BIC",
+    model = TRUE, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}

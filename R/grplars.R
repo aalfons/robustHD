@@ -143,7 +143,7 @@ grplars.data.frame <- function(x, y, ...) {
 #' @export
 
 grplars.default <- function(x, y, sMax = NA, assign, fit = TRUE, 
-        crit = "BIC", model = TRUE, ...) {
+        crit = "BIC", ncores = 1, model = TRUE, ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("grplars")
@@ -165,7 +165,8 @@ grplars.default <- function(x, y, sMax = NA, assign, fit = TRUE,
     ## call fit function with classical functions for center, scale, 
     ## correlation and regression
     out <- grplarsFit(x, y, sMax=sMax, assign=assign, robust=FALSE, 
-        centerFun=mean, scaleFun=sd, fit=fit, crit=crit, model=model)
+        centerFun=mean, scaleFun=sd, fit=fit, crit=crit, ncores=ncores, 
+        model=model)
     if(inherits(out, "grplars")) out$call <- call  # add call to return object
     out
 }

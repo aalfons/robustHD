@@ -62,8 +62,11 @@ vec computeStepSizes(const double& r, const double& a, const vec& corY,
 // sMax ..... number of predictors to be sequenced
 // assign ... each element is an integer vector giving the variables that
 //            belong to the corresponding group
+// ncores ... number of processor cores for parallel computing
+// parallel computing is only used for expensive computations with all
+// inactive predictors, otherwise there is no speedup due to overhead
 uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
-		const vector<uvec>& assign) {
+		const vector<uvec>& assign, int& ncores) {
 	// initializations
 	const uword n = x.n_rows, m = assign.size();
 	// determine number of variables in each predictor group
@@ -85,6 +88,7 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 	// with the response
 	mat yHat(n, m);
 	vec corY(m);
+	#pragma omp parallel for num_threads(ncores) schedule(dynamic)
 	for(uword j = 0; j < m; j++) {
 		mat xj = x.cols(assign[j]);
 		vec beta = fastLm(xj, y);
@@ -162,16 +166,16 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 			u = yHat.cols(active) * w;
 		}
 		// compute the fitted values of the equiangular vector for each
-		// inactive predictor group
+		// inactive predictor group, as well as the correlations involving the
+		// inactive predictor groups and the equiangular vector
 		mat uHat(n, inactive.n_elem);
+		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
 		for(uword j = 0; j < inactive.n_elem; j++) {
+			// compute the fitted values
 			mat xj = x.cols(assign[inactive(j)]);
 			vec beta = fastLm(xj, u);
 			uHat.col(j) = fitted(xj, beta);
-		}
-		// compute correlations involving the inactive predictor groups and
-		// the equiangular vector
-		for(uword j = 0; j < inactive.n_elem; j++) {
+			// compute the correlations
 			corU(j) = corPearson(yHat.unsafe_col(inactive(j)), u);
 			tau(j) = stddev(uHat.unsafe_col(j));
 		}
@@ -193,7 +197,7 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
             sigma = sqrt(1 - 2 * gamma * r(k-1)/a + pow(gamma, 2));
            	// update the fitted values from the new or not yet sequenced
             // predictor groups
-        	for(uword j = 0; j < inactive.size(); j++) {
+			for(uword j = 0; j < inactive.n_elem; j++) {
         		vec yj = yHat.unsafe_col(inactive(j));
         		yj -= gamma * uHat.unsafe_col(j);
         		yj /= sigma;
@@ -226,7 +230,8 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 }
 
 // R interface to fastRlars()
-SEXP R_fastGrplars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_assign) {
+SEXP R_fastGrplars(SEXP R_x, SEXP R_y, SEXP R_sMax,
+		SEXP R_assign, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -248,7 +253,8 @@ SEXP R_fastGrplars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_assign) {
 		}
 		assign[j] = group;	// indices of variables in j-th predictor group
 	}
+	int ncores = as<int>(R_ncores);
 	// call native C++ function
-	uvec active = fastGrplars(x, y, sMax, assign);
+	uvec active = fastGrplars(x, y, sMax, assign, ncores);
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }
