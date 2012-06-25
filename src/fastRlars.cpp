@@ -14,20 +14,27 @@ using namespace std;
 // variable sequencing via robust least angle regression
 // Armadillo library is used for linear algebra
 // ATTENTION: the data are assumed to be standardized (this is done in R)
-// x ...... predictor matrix
-// y ...... response
-// sMax ... number of predictors to be sequenced
-// c ...... tuning constant for initial adjusted univariate winsorization
-// prob ... tuning parameter for bivariate winsorization
-// tol .... numeric tolerance for detecting singularity
+// x .......... predictor matrix
+// y .......... response
+// sMax ....... number of predictors to be sequenced
+// c .......... tuning constant for initial adjusted univariate winsorization
+// prob ....... tuning parameter for bivariate winsorization
+// tol ........ numeric tolerance for detecting singularity
+// scaleFun ... R function to compute scale estimates
+// ncores ..... number of processor cores for parallel computing
+// parallel computing is only used for expensive computations with all
+// inactive predictors, otherwise there is no speedup due to overhead
 uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
-		const double& prob, const double& tol, SEXP scaleFun) {
+		const double& prob, const double& tol, SEXP scaleFun, int& ncores) {
 	// initializations
 	const uword n = x.n_rows, p = x.n_cols;
+	const int ncoresMax = omp_get_num_procs();
+	if(ncores == 0 || ncores > ncoresMax) ncores = ncoresMax;
 
 	// STEP 1: find first ranked predictor
 	// compute correlations with response
 	vec corY(p);
+	#pragma omp parallel for num_threads(ncores) schedule(dynamic)
 	for(uword j = 0; j < p; j++) {
 		corY(j) = corHuberBi(x.unsafe_col(j), y, c, prob, tol);
 	}
@@ -45,6 +52,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 	uvec inactive = seqLen(p);
 	inactive.shed_row(whichMax);
     corY.shed_row(whichMax);
+    uword m = inactive.n_elem;
 
 	// STEP 2: update active set
 	// further initializations
@@ -55,7 +63,8 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 	for(uword k = 1; k < sMax; k++) {
 		// compute correlations of inactive predictors with new active predictor
 		vec xx = x.unsafe_col(active(k-1));
-		for(uword j = 0; j < inactive.n_elem; j++) {
+		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
+		for(uword j = 0; j < m; j++) {
 			vec xj = x.unsafe_col(inactive(j));
 			R(inactive(j), k-1) = corHuberBi(xj, xx, c, prob, tol);
 		}
@@ -87,14 +96,15 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
             w = a * (invG * ones<vec>(k));
         }
         // compute correlations of inactive predictors with equiangular vector
-        vec corU(inactive.n_elem);
-        for(uword j = 0; j < inactive.n_elem; j++) {
+        vec corU(m);
+		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
+        for(uword j = 0; j < m; j++) {
         	corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
         }
         // compute step size in equiangular direction
         vec gammaMinus = (r(k-1) - corY) / (a - corU);
         vec gammaPlus = (r(k-1) + corY) / (a + corU);
-        for(uword j = 0; j < inactive.n_elem; j++) {
+        for(uword j = 0; j < m; j++) {
         	if(gammaMinus(j) <= 0) gammaMinus(j) = R_PosInf;
         	if(gammaPlus(j) <= 0) gammaPlus(j) = R_PosInf;
         }
@@ -123,6 +133,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 		active(k) = inactive(whichMin);
 		// update inactive set
 		inactive.shed_row(whichMin);
+		m--;	// decrement number of inactive variables
 	}
 
 	// return active set
@@ -130,8 +141,8 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 }
 
 // R interface to fastRlars()
-SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c,
-		SEXP R_prob, SEXP R_tol, SEXP scaleFun) {
+SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c, SEXP R_prob,
+		SEXP R_tol, SEXP scaleFun, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -142,7 +153,8 @@ SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c,
 	double c = as<double>(R_c);
 	double prob = as<double>(R_prob);
 	double tol = as<double>(R_tol);
+	int ncores = as<int>(R_ncores);
 	// call native C++ function
-	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun);
+	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun, ncores);
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }

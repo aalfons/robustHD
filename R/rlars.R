@@ -44,6 +44,9 @@
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Currently, only \code{"BIC"} for the 
 #' Bayes information criterion is implemented.
+#' @param ncores  a positive integer giving the number of processor cores to be 
+#' used for parallel computing (the default is 1 for sequential computing).  If 
+#' this is set to \code{NA}, all available processor cores are used.
 #' @param model  a logical indicating whether the model data should be included 
 #' in the returned object.
 #' @param tol  a small positive numeric value.  This is used in bivariate 
@@ -239,7 +242,8 @@ rlars.formula <- function(formula, data, ...) {
 
 rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
         const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
-        crit = "BIC", model = TRUE, tol = .Machine$double.eps^0.5, ...) {
+        crit = "BIC", ncores = 1, model = TRUE, tol = .Machine$double.eps^0.5, 
+        ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rlars")
@@ -254,11 +258,18 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
     crit <- match.arg(crit)
+    ncores <- rep(ncores, length.out=1)
+    if(is.na(ncores)) {
+        ncores <- 0  # use all available cores
+    } else if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+        ncores <- 1  # use default value
+        warning("invalid value of 'ncores'; using default value")
+    } else ncores <- as.integer(ncores)
     
     ## call C++ function
     active <- .Call("R_fastRlars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
         R_c=as.numeric(const), R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
-        scaleFun=scaleFun, PACKAGE="robustHD") + 1
+        scaleFun=scaleFun, R_ncores=ncores, PACKAGE="robustHD") + 1
     
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {

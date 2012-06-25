@@ -12,8 +12,8 @@
   \method{rlars}{default} (x, y, sMax = NA,
     centerFun = median, scaleFun = mad, const = 2,
     prob = 0.95, fit = TRUE, regFun = lmrob,
-    regArgs = list(), crit = "BIC", model = TRUE,
-    tol = .Machine$double.eps^0.5, ...)
+    regArgs = list(), crit = "BIC", ncores = 1,
+    model = TRUE, tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -70,6 +70,11 @@
   criterion to be used for selecting the final model.
   Currently, only \code{"BIC"} for the Bayes information
   criterion is implemented.}
+
+  \item{ncores}{a positive integer giving the number of
+  processor cores to be used for parallel computing (the
+  default is 1 for sequential computing).  If this is set
+  to \code{NA}, all available processor cores are used.}
 
   \item{model}{a logical indicating whether the model data
   should be included in the returned object.}
