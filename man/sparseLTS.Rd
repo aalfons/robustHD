@@ -112,8 +112,8 @@
 
   \item{ncores}{a positive integer giving the number of
   processor cores to be used for parallel computing (the
-  default is 1 for sequential computing).  If this is set
-  to \code{NA}, all available processor cores are used.}
+  default is 1 for no parallelization).  If this is set to
+  \code{NA}, all available processor cores are used.}
 
   \item{seed}{optional initial seed for the random number
   generator (see \code{\link{.Random.seed}}).}
@@ -230,7 +230,7 @@
   the standard \R developer tools are installed.
 
   For both C++ back ends, parallel computing is implemented
-  via \code{OpenMP} (\url{http://openmp.org/}).
+  via OpenMP (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data

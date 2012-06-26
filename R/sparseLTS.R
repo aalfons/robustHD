@@ -69,7 +69,7 @@
 #' number of observations), computation may be faster when this is set to 
 #' \code{FALSE}.
 #' @param ncores  a positive integer giving the number of processor cores to be 
-#' used for parallel computing (the default is 1 for sequential computing).  If 
+#' used for parallel computing (the default is 1 for no parallelization).  If 
 #' this is set to \code{NA}, all available processor cores are used.
 #' @param seed  optional initial seed for the random number generator (see 
 #' \code{\link{.Random.seed}}).
@@ -137,7 +137,7 @@
 #' \pkg{RcppEigen} and \pkg{sparseLTSEigen} from source if the standard \R 
 #' developer tools are installed.
 #' 
-#' For both C++ back ends, parallel computing is implemented via \code{OpenMP} 
+#' For both C++ back ends, parallel computing is implemented via OpenMP 
 #' (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
