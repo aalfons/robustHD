@@ -82,8 +82,8 @@
 #' not expected to be called by the user and not documented.
 #' 
 #' Parallel computing for some of of the more computer-intensive computations 
-#' for the inactive predictor groups is implemented on the C++ level via 
-#' \pkg{OpenMP} (\url{http://openmp.org/}).
+#' for the inactive predictor groups is implemented on the C++ level via OpenMP 
+#' (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
 #' 
@@ -287,8 +287,8 @@ grplars.default <- function(x, y, sMax = NA, assign, fit = TRUE,
 #' generator to \code{RNGkind("L'Ecuyer-CMRG")} beforehand for reprodicibility.  
 #' 
 #' In addition, parallel computing for some of of the more computer-intensive 
-#' computations for the inactive predictor groups is implemented on the 
-#' C++ level via \pkg{OpenMP} (\url{http://openmp.org/}).
+#' computations for the inactive predictor groups is implemented on the C++ 
+#' level via OpenMP (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
 #' 

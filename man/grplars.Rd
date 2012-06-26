@@ -140,7 +140,7 @@
   Parallel computing for some of of the more
   computer-intensive computations for the inactive
   predictor groups is implemented on the C++ level via
-  \pkg{OpenMP} (\url{http://openmp.org/}).
+  OpenMP (\url{http://openmp.org/}).
 }
 \author{
   Andreas Alfons
