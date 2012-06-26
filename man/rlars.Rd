@@ -73,8 +73,8 @@
 
   \item{ncores}{a positive integer giving the number of
   processor cores to be used for parallel computing (the
-  default is 1 for sequential computing).  If this is set
-  to \code{NA}, all available processor cores are used.}
+  default is 1 for no parallelization).  If this is set to
+  \code{NA}, all available processor cores are used.}
 
   \item{model}{a logical indicating whether the model data
   should be included in the returned object.}
@@ -148,6 +148,12 @@
   Robustly sequence candidate predictors according to their
   predictive content and find the optimal model along the
   sequence.
+}
+\note{
+  Parallel computing for some of of the more
+  computer-intensive computations for the inactive
+  predictors is implemented on the C++ level via OpenMP
+  (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data
