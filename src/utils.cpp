@@ -78,6 +78,11 @@ SEXP R_findSmallest(SEXP R_x, SEXP R_h) {
 	return wrap(indices.memptr(), indices.memptr() + indices.n_elem);
 }
 
+// get the number of processor cores
+SEXP R_getNumProcs() {
+	return wrap(omp_get_num_procs());
+}
+
 // find indices of h smallest observations
 uvec partialOrder(const vec& x, const uword& h) {
 	// initialize data structure for sorting

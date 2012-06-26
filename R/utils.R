@@ -161,6 +161,9 @@ getComponent.rlars <- getComponent.grplars <- function(x, component, s, ...) {
     comp
 }
 
+## get the number of processor cores
+getNumProcs <- function() .Call("R_getNumProcs", PACKAGE="robustHD")
+
 ## get the control object for model functions
 #' @import robustbase MASS
 getRegControl <- function(fun) {

@@ -289,13 +289,13 @@ grplarsWork <- function(
     const = 2,     # tuning constant for adjusted univariate winsorization
     prob = 0.95,   # tuning constant for multivariate winsorization
     combine = c("min", "euclidean", "mahalanobis"),
-    ncores = 1,    # number of cores for parallel computing
-    cl = NULL,     # cluster for parallel computing
     ## arguments for optimal model selection
     fit = TRUE,    # logical indicating whether to fit models along sequence
     crit = "BIC",  # character string specifying the optimality criterion
     ## other arguments,
-    model = TRUE  # logical indicating whether model data should be added to result
+    ncores = 1,    # number of cores for parallel computing
+    cl = NULL,     # cluster for parallel computing
+    model = TRUE   # logical indicating whether model data should be added to result
 ) {
     ## initializations
     n <- length(y)
@@ -314,6 +314,11 @@ grplarsWork <- function(
         combine <- match.arg(combine)
     }
     crit <- match.arg(crit)
+    if(is.na(ncores)) ncores <- getNumProcs()  # use all available cores
+    if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+        ncores <- 1  # use default value
+        warning("invalid value of 'ncores'; using default value")
+    } else ncores <- as.integer(ncores)
     addModel <- isTRUE(model)
     if(robust) {
         if(haveDummies) {
@@ -338,16 +343,9 @@ grplarsWork <- function(
             # check whether parallel computing should be used
             haveCl <- !is.null(cl)
             useMC <- useSnow <- FALSE
-            if(!missing(ncores)) {
-                ncores <- rep(ncores, length.out=1)
-                if(!is.numeric(ncores) || !is.finite(ncores) || ncores < 1) {
-                    ncores <- 1  # use default value
-                    warning("invalid value of 'ncores'; using default value")
-                }
-                if(ncores > 1) {
-                    useSnow <- .Platform$OS.type == "windows"
-                    useMC <- !useSnow
-                }
+            if(ncores > 1) {
+                useSnow <- .Platform$OS.type == "windows"
+                useMC <- !useSnow
             } else if(haveCl) useSnow <- TRUE
             # start snow cluster if not supplied (for parallel computing on 
             # Windows systems)

@@ -55,6 +55,11 @@
   Currently, only \code{"BIC"} for the Bayes information
   criterion is implemented.}
 
+  \item{ncores}{a positive integer giving the number of
+  processor cores to be used for parallel computing (the
+  default is 1 for no parallelization).  If this is set to
+  \code{NA}, all available processor cores are used.}
+
   \item{model}{a logical indicating whether the model data
   should be included in the returned object.}
 
@@ -135,6 +140,11 @@
 \note{
   The predictor group of lagged values of the response is
   indicated by the index 0.
+
+  Parallel computing for some of of the more
+  computer-intensive computations for the inactive
+  predictor groups is implemented on the C++ level via
+  \pkg{OpenMP} (\url{http://openmp.org/}).
 }
 \author{
   Andreas Alfons, based on code by Sarah Gelper
