@@ -7,10 +7,11 @@
 \usage{
   critPlot(x, ...)
 
-  \method{critPlot}{seqModel} (x, ...)
+  \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
   \method{critPlot}{sparseLTSGrid} (x,
-    fit = c("reweighted", "raw", "both"), ...)
+    fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
+    ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}

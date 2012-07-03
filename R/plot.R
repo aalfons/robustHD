@@ -271,8 +271,8 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
     offset <- paste(rep.int(" ", offset), collapse="")  # whitespace
     labelData$label <- paste(offset, labelData$label, sep="")
     labelMapping <- aes_string(x=abscissa, y="coefficient", label="label")
-    # draw minor grid lines for each step, but leave major grid lines and tick 
-    # marks pretty
+    # draw minor grid lines for each step, but leave 
+    # major grid lines and tick marks pretty
     gridX <- unique(coefData[, abscissa])
     # create plot
     ggplot(coefData) + 
@@ -327,21 +327,14 @@ critPlot <- function(x, ...) UseMethod("critPlot")
 #' @method critPlot seqModel
 #' @export
 
-critPlot.seqModel <- function(x, ...) {
+critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
     ## extract information from object
     crit <- x$crit
-    ## build data.frame for lattice graphics
+    ## construct data frame for ggplot2 graphics
     critData <- data.frame(getSteps(x), x$critValues)
-    names(critData) <- c("Step", crit)
-    ## define local version of 'xyplot' with different default values
-    ## this also avoids error message if 'data' argument is supplied
-    localXyplot <- function(..., data, type) {
-        if(missing(type)) type <- "b"
-        xyplot(..., data=critData, type=type)
-    }
-    ## call 'xyplot
-    form <- as.formula(paste(crit, "Step", sep=" ~ "))  # formula
-    localXyplot(form, ...)
+    names(critData) <- c("step", crit)
+    ## call workhorse function
+    ggCritPlot(critData, abscissa="step", size=size, ...)
 }
 
 
@@ -350,34 +343,57 @@ critPlot.seqModel <- function(x, ...) {
 #' @export
 
 critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
-        ...) {
+        size = c(0.5, 2), ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract information from object
     lambda <- x$lambda
     crit <- x$crit
-    ## build data.frame for lattice graphics
+    ## construct data frame for ggplot2 graphics
     if(fit == "both") {
         fits <- c("reweighted", "raw")
         sMax <- length(lambda)
-        critData <- data.frame(factor(rep(fits, each=sMax), levels=fits), 
+        critData <- data.frame(rep(factor(fits, levels=fits), each=sMax), 
             rep.int(lambda, 2), c(x$critValues, x$raw.critValues))
-        names(critData) <- c("Fit", "lambda", crit)
+        names(critData) <- c("fit", "lambda", crit)
     } else {
         critValues <- if(fit == "reweighted") x$critValues else x$raw.critValues
         critData <- data.frame(lambda, critValues)
         names(critData) <- c("lambda", crit)
     }
-    ## define local version of 'xyplot' with different default values
-    ## this also avoids error message if 'data' argument is supplied
-    localXyplot <- function(..., data, type) {
-        if(missing(type)) type <- "b"
-        xyplot(..., data=critData, type=type)
+    ## call workhorse function
+    p <- ggCritPlot(critData, abscissa="lambda", size=size, ...)
+    if(fit == "both") {
+        f <- as.formula(paste(".", "fit", sep="~"))
+        p <- p + facet_grid(f)
     }
-    ## call 'xyplot
-    conditional <- if(fit == "both") "Fit" else NULL
-    form <- getFormula(crit, "lambda", conditional)  # formula
-    localXyplot(form, ...)
+    p
+}
+
+
+## workhorse function
+ggCritPlot <- function(critData, abscissa = c("step", "lambda"), 
+        size = c(0.5, 2), ..., mapping, data, xlab, ylab) {
+    # initializations
+    abscissa <- match.arg(abscissa)
+    crit <- setdiff(names(critData), c("fit", "step", "lambda"))
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # define default axis labels
+    if(missing(xlab)) xlab <- switch(abscissa, step="Step", lambda="lambda")
+    if(missing(ylab)) ylab <- crit
+    # define aesthetic mapping for plotting coefficients
+    mapping <- aes_string(x=abscissa, y=crit)
+    # draw minor grid lines for each step, but leave 
+    # major grid lines and tick marks pretty
+    gridX <- unique(critData[, abscissa])
+    # create plot
+    ggplot(critData, mapping) + 
+        geom_line(size=size[1], ...) + 
+        geom_point(size=size[2], ...) + 
+        scale_x_continuous(minor_breaks=gridX) + 
+        labs(x=xlab, y=ylab)
 }
 
 # ----------------------
