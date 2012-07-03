@@ -38,31 +38,29 @@
   observations, in which case many coefficients are never
   nonzero.}
 
-  \item{grid}{a logical indicating whether vertical grid
-  lines should be drawn at each step.}
+  \item{size}{a numeric vector of length three giving the
+  line width, the point size and the label size,
+  respectively.}
 
   \item{labels}{an optional character vector containing
-  labels for the predictors.}
+  labels for the predictors.  Plotting labels can be
+  suppressed by setting this to \code{NULL}.}
 
-  \item{pos}{an integer position specifier for the labels.
-  Possible values are 1, 2, 3 and 4, respectively
-  indicating positions below, to the left of, above and to
-  the right of the corresponding coefficient values from
-  the last step.}
-
-  \item{offset}{a numeric value giving the offset of the
-  labels from the corresponding coefficient values from the
-  last step (in fractions of a character width).}
+  \item{offset}{an integer giving the offset of the labels
+  from the corresponding coefficient values from the last
+  step (i.e., the number of blank characters to be
+  prepended to the label).}
 
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
   \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
   additional arguments to be passed down to
-  \code{\link[lattice]{xyplot}}.}
+  \code{\link[ggplot2]{geom_line}} and
+  \code{\link[ggplot2]{geom_point}}.}
 }
 \value{
-  An object of class \code{"trellis"} (see
-  \code{\link[lattice]{xyplot}}).
+  An object of class \code{"ggplot"} (see
+  \code{\link[ggplot2]{ggplot}}).
 }
 \description{
   Produce a plot of the coefficients from a sequence of
@@ -97,7 +95,7 @@ coefPlot(fit, zeros = FALSE)
   Andreas Alfons
 }
 \seealso{
-  \code{\link[lattice]{xyplot}}, \code{\link{rlars}},
+  \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}},
   \code{\link{sparseLTSGrid}}
 }
 \keyword{hplot}

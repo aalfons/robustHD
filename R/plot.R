@@ -168,28 +168,25 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
 #' (\code{TRUE}) or omitted (\code{FALSE}, the default).  This is useful if the 
 #' number of predictors is much larger than the number of observations, in 
 #' which case many coefficients are never nonzero.
-#' @param grid  a logical indicating whether vertical grid lines should be 
-#' drawn at each step.
+#' @param size  a numeric vector of length three giving the line width, the 
+#' point size and the label size, respectively.
 #' @param labels  an optional character vector containing labels for the 
-#' predictors.
-#' @param pos  an integer position specifier for the labels.  Possible values 
-#' are 1, 2, 3 and 4, respectively indicating positions below, to the left of, 
-#' above and to the right of the corresponding coefficient values from the last 
-#' step.
-#' @param offset   a numeric value giving the offset of the labels from the 
-#' corresponding coefficient values from the last step (in fractions of a 
-#' character width).
+#' predictors.  Plotting labels can be suppressed by setting this to 
+#' \code{NULL}.
+#' @param offset   an integer giving the offset of the labels from the 
+#' corresponding coefficient values from the last step (i.e., the number of 
+#' blank characters to be prepended to the label).
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
 #' methods, additional arguments to be passed down to 
-#' \code{\link[lattice]{xyplot}}.
+#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
 #' 
 #' @return  
-#' An object of class \code{"trellis"} (see \code{\link[lattice]{xyplot}}).
+#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[lattice]{xyplot}}, \code{\link{rlars}}, 
+#' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}}, 
 #' \code{\link{sparseLTSGrid}}
 #' 
 #' @example inst/doc/examples/example-coefPlot.rlars.R
