@@ -20,8 +20,8 @@
   \item{\dots}{additional arguments to be passed down.}
 }
 \value{
-  An object of class \code{"trellis"} (see
-  \code{\link[lattice]{xyplot}}).
+  An object of class \code{"ggplot"} (see
+  \code{\link[ggplot2]{ggplot}}).
 }
 \description{
   Produce a plot of the coefficients or values of the

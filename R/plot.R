@@ -123,7 +123,7 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
 #' @param \dots  additional arguments to be passed down.
 #' 
 #' @return  
-#' An object of class \code{"trellis"} (see \code{\link[lattice]{xyplot}}).
+#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
 #' 
 #' @author Andreas Alfons
 #' 
@@ -301,17 +301,19 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 #' plot.  Possible values are \code{"reweighted"} (the default) for the 
 #' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both 
 #' estimators.
+#' @param size  a numeric vector of length two giving the line width and the 
+#' point size, respectively.
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
 #' methods, additional arguments to be passed down to 
-#' \code{\link[lattice]{xyplot}}.
+#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
 #' 
 #' @return  
-#' An object of class \code{"trellis"} (see \code{\link[lattice]{xyplot}}).
+#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[lattice]{xyplot}}, \code{\link{rlars}}, 
+#' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}}, 
 #' \code{\link{sparseLTSGrid}}
 #' 
 #' @example inst/doc/examples/example-critPlot.rlars.R
