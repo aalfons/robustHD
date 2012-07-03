@@ -3,6 +3,108 @@
 #         KU Leuven
 # ----------------------
 
+## supplement the coefficients in a model with other useful information
+## returns a data frame suitable for plotting with ggplot2
+
+coefify <- function(model, ...) UseMethod("coefify")
+
+coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
+    # prepare coefficients and labels
+    coef <- removeIntercept(t(coef(model, s=NULL)))
+    sigmaX <- model$sigmaX
+#    if(missing(labels)) labels <- defaultLabels(model)  # default labels
+    if(!isTRUE(zeros)) {
+        keep <- apply(coef != 0, 2, any)
+        coef <- coef[, keep, drop=FALSE]
+        sigmaX <- sigmaX[keep]
+        if(!is.null(labels)) labels <- labels[keep]
+    }
+    # standardize coefficients
+    coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
+    # prepare other information
+    m <- ncol(coef)           # number of variables
+    steps <- getSteps(model)  # step numbers
+    nsteps <- length(steps)   # number of steps
+    df <- model$df            # degrees of freedom
+    vn <- colnames(coef)      # variable names
+    # build data frame
+    coefData <- data.frame(step=rep.int(steps, m), 
+        df=rep.int(df, m), coefficient=as.numeric(coef), 
+        variable=rep(factor(vn, levels=vn), each=nsteps))
+    if(!is.null(labels)) 
+        coefData$label <- rep(as.character(labels), each=nsteps)
+    coefData
+}
+
+coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"), 
+        zeros = FALSE, labels, ...) {
+    # prepare coefficients and labels
+    fit <- match.arg(fit)
+    coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
+    zeros <- isTRUE(zeros)
+#    if(missing(labels)) labels <- defaultLabels(model)  # default labels
+    if(!zeros) {
+        keep <- apply(coef != 0, 2, any)
+        coef <- coef[, keep, drop=FALSE]
+        if(!is.null(labels)) labels <- labels[keep]
+    }
+    # check if predictor data is available to compute them
+    if(is.null(x <- model$x)) {
+        x <- try(model.matrix(model$terms), silent=TRUE)
+        if(inherits(x, "try-error")) 
+            stop("scale estimates of predictor variables not available")
+    }
+    x <- removeIntercept(x)
+    if(!zeros) x <- x[, keep, drop=FALSE]
+    # obtain scale estimates for predictors
+    n <- nrow(x)
+    sigmaX <- apply(x, 2, 
+        function(x) {
+            # standardize data
+            xs <- robStandardize(x, fallback=TRUE)
+            # detect good data points
+            ok <- which(abs(xs) < qnorm(0.9875))
+            nOk <- length(ok)
+            # compute consistency factor
+            if(nOk < n) {
+                qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
+                cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))
+            } else cdelta <- 1  # consistency factor not necessary
+            # compute standard deviation of good data points and multiply with 
+            # consistency factor
+            sd(x[ok]) * cdelta
+        })
+    # standardize coeffients
+    coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
+    # prepare other information
+    m <- ncol(coef)           # number of variables
+    lambda <- model$lambda    # tuning parameters
+    steps <- getSteps(model)  # step numbers
+    sMax <- length(steps)     # number of steps
+    df <- model$df            # degrees of freedom
+    vn <- colnames(coef)      # variable names
+    # build data frame
+    if(fit == "both") {
+        fits <- c("reweighted", "raw")
+        coefData <- data.frame(
+            fit=rep.int(rep(factor(fits, levels=fits), each=sMax), m), 
+            lambda=rep.int(lambda, 2*m), step=rep.int(steps, 2*m), 
+            df=rep.int(df, 2*m), coefficient=as.numeric(coef), 
+            variable=rep(factor(vn, levels=vn), each=2*sMax))
+        if(!is.null(labels)) 
+            coefData$label <- rep(as.character(labels), each=2*sMax)
+    } else {
+        coefData <- data.frame(
+            lambda=rep.int(lambda, m), step=rep.int(steps, m), 
+            df=rep.int(df, m), coefficient=as.numeric(coef), 
+            variable=rep(factor(vn, levels=vn), each=sMax))
+        if(!is.null(labels)) 
+            coefData$label <- rep(as.character(labels), each=sMax)
+    }
+    coefData
+}
+
+
 #' Plot a sequence of regression models
 #' 
 #' Produce a plot of the coefficients or values of the optimality criterion for 
@@ -104,49 +206,17 @@ coefPlot <- function(x, ...) UseMethod("coefPlot")
 #' @export
 
 coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE, 
-        grid = TRUE, labels, pos = 4, offset = 0.5, ...) {
+        size = c(0.5, 2, 4), labels, offset = 1, ...) {
     ## initializations
-    abscissa <- match.arg(abscissa)
-    coef <- coef(x, s=NULL)
-    remove <- match("(Intercept)", rownames(coef), nomatch = 0)
-    if(remove > 0) coef <- coef[-remove, , drop=FALSE]  # remove intercept
-    sigmaX <- x$sigmaX
     if(missing(labels)) labels <- defaultLabels(x)  # default labels
-    if(!isTRUE(zeros)) {
-        keep <- apply(coef != 0, 1, any)
-        coef <- coef[keep, , drop=FALSE]
-        sigmaX <- sigmaX[keep]
-        if(!is.null(labels)) labels <- labels[keep]
-    }
-    # standardize coefficients
-    coef <- sweep(coef, 1, sigmaX, "/", check.margin=FALSE)
-    ## build data.frame for lattice graphics
-    m <- nrow(coef)  # number of variables
-    xv <- switch(abscissa, step=getSteps(x), df=x$df)  # values for x-variable
-    vn <- rownames(coef)  # variable names
-    coefData <- data.frame(x=rep.int(xv, m), 
-        Variable=factor(rep(vn, each=length(xv)), levels=vn), 
-        Coefficient=as.numeric(t(coef)))
-    ## define local version of 'xyplot' with different default values
-    ## this also avoids error message if 'data' argument is supplied
-    localXyplot <- function(..., data, panel, main, xlab, ylab, type) {
-        if(missing(main)) main <- defaultMain()
-        if(missing(type)) type <- "b"
-        if(missing(xlab)) {
-            xlab <- switch(abscissa, step="Step", df="Degrees of freedom")
-        }
-        if(missing(ylab)) ylab <- "Standardized coefficients"
-        xyplot(..., data=coefData, panel=panelCoefPlot, 
-            main=main, xlab=xlab, ylab=ylab, type=type)
-    }
-    ## call 'xyplot'
-    # this produces a 'NOTE' during 'R CMD check':
-#    localXyplot(Coefficient~x, groups=Variable, grid=grid, 
-#        labels=labels, pos=pos, offset=offset, ...)
-    # this is ugly, but avoids the 'NOTE':
-    command <- paste("localXyplot(Coefficient~x, groups=Variable,", 
-        "grid=grid, labels=labels, pos=pos, offset=offset, ...)")
-    eval(parse(text=command))
+    ## extract coefficient data extended with other information
+    coefData <- coefify(x, zeros=zeros, labels=labels)
+    ## construct data frame for labels
+    maxStep <- max(coefData$step)
+    labelData <- coefData[coefData$step == maxStep, ]
+    ## call workhorse function
+    ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size, 
+        offset=offset, ...)
 }
 
 
@@ -155,102 +225,67 @@ coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE,
 #' @export
 
 coefPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
-        abscissa = c("step", "df"), zeros = FALSE, grid = TRUE, labels, 
-        pos = 4, offset = 0.5, ...) {
+        abscissa = c("step", "df"), zeros = FALSE, size = c(0.5, 2, 4), 
+        labels, offset = 1, ...) {
     ## initializations
-    object <- x
-    abscissa <- match.arg(abscissa)
     fit <- match.arg(fit)
-    coef <- coef(object, s=NULL, fit=fit)
-    remove <- match("(Intercept)", rownames(coef), nomatch = 0)
-    if(remove > 0) coef <- coef[-remove, , drop=FALSE]  # remove intercept
-    zeros <- isTRUE(zeros)
-    if(missing(labels)) labels <- defaultLabels(object)  # default labels
-    if(!zeros) {
-        keep <- apply(coef != 0, 1, any)
-        coef <- coef[keep, , drop=FALSE]
-        if(!is.null(labels)) labels <- labels[keep]
+    abscissa <- match.arg(abscissa)
+    if(missing(labels)) labels <- defaultLabels(x)  # default labels
+    ## extract coefficient data extended with other information
+    coefData <- coefify(x, fit=fit, zeros=zeros, labels=labels)
+    ## construct data frame for labels
+    maxX <- max(coefData[, abscissa])
+    labelData <- coefData[coefData[, abscissa] == maxX, ]
+    if(abscissa == "df") {
+        # maximum degree of freedom may occur in more than one step
+        # ensure that label is only drawn once for largest step number
+        by <- if(fit == "both") c("fit", "variable") else "variable"
+        keep <- split(rownames(labelData), labelData[, by])
+        keep <- sapply(keep, tail, 1)
+        labelData <- labelData[keep, ]
     }
-    ## standardize coeffients
-    # check if predictor data is available to compute them
-    if(is.null(x <- object$x)) {
-        x <- try(model.matrix(object$terms), silent=TRUE)
-        if(inherits(x, "try-error")) {
-            stop("scale estimates of predictor variables not available")
-        }
-    }
-    x <- removeIntercept(x)
-    if(!zeros) x <- x[, keep, drop=FALSE]
-    # obtain scale estimates for predictors
-    n <- nrow(x)
-    sigmaX <- apply(x, 2, 
-        function(x) {
-            xs <- robStandardize(x, fallback=TRUE)
-            ok <- which(abs(xs) < qnorm(0.9875))
-            nOk <- length(ok)
-            if(nOk < n) {
-                qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
-                cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))  # consistency factor
-            } else cdelta <- 1  # consistency factor not necessary
-            sd(x[ok]) * cdelta
-        })
-    # standardize
-    coef <- sweep(coef, 1, sigmaX, "/", check.margin=FALSE)
-    ## build data.frame for lattice graphics
-    m <- nrow(coef)  # number of variables
-    xv <- switch(abscissa, step=getSteps(object), df=object$df)  # values for x-variable
-    vn <- rownames(coef)  # variable names
+    ## call workhorse function
+    p <- ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size, 
+        offset=offset, ...)
     if(fit == "both") {
-        fits <- c("reweighted", "raw")
-        sMax <- length(xv)
-        coefData <- data.frame(Fit=factor(rep.int(rep(fits, each=sMax), m), levels=fits), 
-            x=rep.int(xv, 2*m), Variable=factor(rep(vn, each=2*sMax), levels=vn), 
-            Coefficient=as.numeric(t(coef)))
-    } else {
-        coefData <- data.frame(x=rep.int(xv, m), 
-            Variable=factor(rep(vn, each=length(xv)), levels=vn), 
-            Coefficient=as.numeric(t(coef)))
+        f <- as.formula(paste(".", "fit", sep="~"))
+        p <- p + facet_grid(f)
     }
-    ## define local version of 'xyplot' with different default values
-    ## this also avoids error message if 'data' argument is supplied
-    localXyplot <- function(..., data, panel, main, xlab, ylab, type) {
-        if(missing(main)) main <- defaultMain()
-        if(missing(type)) type <- "b"
-        if(missing(xlab)) {
-            xlab <- switch(abscissa, step="Step", df="Degrees of freedom")
-        }
-        if(missing(ylab)) ylab <- "Standardized coefficients"
-        xyplot(..., data=coefData, panel=panelCoefPlot, 
-            main=main, xlab=xlab, ylab=ylab, type=type)
-    }
-    ## call 'xyplot'
-    # this produces a 'NOTE' during 'R CMD check':
-#    conditional <- if(fit == "both") "Fit" else NULL
-#    form <- getFormula("Coefficient", "x", conditional)  # formula
-#    localXyplot(form, groups=Variable, grid=grid, 
-#        labels=labels, pos=pos, offset=offset, ...)
-    # this is ugly, but avoids the 'NOTE':
-    form <- "Coefficient ~ x"
-    if(fit == "both") form <- paste(form, "Fit", sep=" | ")
-    command <- paste("localXyplot(", form, ", groups=Variable,", 
-        "grid=grid, labels=labels, pos=pos, offset=offset, ...)")
-    eval(parse(text=command))
+    p
 }
 
 
-# panel function for coefficient plot
-panelCoefPlot <- function(x, y, grid = TRUE, labels = NULL, pos = 4, 
-        offset = 0.5, ...) {
-    steps <- unique(x)
-    if(isTRUE(grid)) panel.refline(v=steps)
-    panel.refline(h=0, lty="dotted")
-    panel.xyplot(x, y, ...)
-    if(!is.null(labels)) {
-        maxStep <- max(steps)
-        maxPos <- which(x == maxStep)
-        panel.text(x[maxPos], y[maxPos], labels=labels, 
-            col=rgb(0, 0, 0, alpha=0.3), pos=pos, offset=offset)
-    }
+## workhorse function
+ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"), 
+        zeros = FALSE, size = c(0.5, 2, 4), labels, offset = 1, ..., 
+        mapping, data, xlab, ylab) {
+    # initializations
+    abscissa <- match.arg(abscissa)
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 3-length(size))))[1:3]  # ensure length 3
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # define default axis labels
+    if(missing(xlab)) 
+        xlab <- switch(abscissa, step="Step", df="Degrees of freedom")
+    if(missing(ylab)) ylab <- "Standardized coefficients"
+    # define aesthetic mapping for plotting coefficients
+    coefMapping <- aes_string(x=abscissa, y="coefficient", color="variable")
+    # define aesthetic mapping for plotting x-axis grid and labels
+    offset <- paste(rep.int(" ", offset), collapse="")  # whitespace
+    labelData$label <- paste(offset, labelData$label, sep="")
+    labelMapping <- aes_string(x=abscissa, y="coefficient", label="label")
+    # draw minor grid lines for each step, but leave major grid lines and tick 
+    # marks pretty
+    gridX <- unique(coefData[, abscissa])
+    # create plot
+    ggplot(coefData) + 
+        geom_line(coefMapping, size=size[1], ...) + 
+        geom_point(coefMapping, size=size[2], ...) + 
+        geom_text(labelMapping, data=labelData, 
+            hjust=0, size=size[3], alpha=0.3) + 
+        scale_x_continuous(minor_breaks=gridX) + 
+        opts(legend.position="none") + 
+        labs(x=xlab, y=ylab)
 }
 
 # ----------------------

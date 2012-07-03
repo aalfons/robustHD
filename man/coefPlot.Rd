@@ -8,13 +8,13 @@
   coefPlot(x, ...)
 
   \method{coefPlot}{seqModel} (x,
-    abscissa = c("step", "df"), zeros = FALSE, grid = TRUE,
-    labels, pos = 4, offset = 0.5, ...)
+    abscissa = c("step", "df"), zeros = FALSE,
+    size = c(0.5, 2, 4), labels, offset = 1, ...)
 
   \method{coefPlot}{sparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"),
-    abscissa = c("step", "df"), zeros = FALSE, grid = TRUE,
-    labels, pos = 4, offset = 0.5, ...)
+    abscissa = c("step", "df"), zeros = FALSE,
+    size = c(0.5, 2, 4), labels, offset = 1, ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}

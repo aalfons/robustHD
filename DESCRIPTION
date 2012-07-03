@@ -9,6 +9,7 @@ Maintainer: Andreas Alfons
 Depends:
     Rcpp (>= 0.9.10),
     cvTools (>= 0.3.0),
+    ggplot2,
     lattice,
     MASS,
     robustbase (>= 0.6-0)
