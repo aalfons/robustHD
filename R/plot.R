@@ -407,48 +407,100 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
 
 fortify.sparseLTS <- function(model, data, 
     fit = c("reweighted", "raw", "both"), ...) {
-    # initializations
+    ## initializations
     fit <- match.arg(fit)
-    # construct data frame with all information for plotting
+    ## construct data frame with all information for plotting
     if(fit == "both") {
         fits <- c("reweighted", "raw")
-        # recursive call for each fit
+        ## recursive call for each fit
         reweighted <- fortify(model, fit="reweighted", ...)
         raw <- fortify(model, fit="raw", ...)
-        # combine data for QQ reference line
+        ## combine data for QQ reference line
         qql <- data.frame(fit=factor(fits, levels=fits), 
             rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
             row.names=NULL)
-        # combine results
+        ## combine data for cutoff chi-squared quantile
+        q <- data.frame(fit=factor(fits, levels=fits), 
+            rbind(attr(reweighted, "q"), attr(raw, "q")), 
+            row.names=NULL)
+        ## combine results
         n <- c(nrow(reweighted), nrow(raw))
         data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
             rbind(reweighted, raw), row.names=NULL)
         attr(data, "qqLine") <- qql
+        attr(data, "q") <- q
     } else {
-        # extract standardized residuals
+        ## extract standardized residuals
         residuals <- residuals(model, fit=fit, standardized=TRUE)
         n <- length(residuals)  # number of observations
-        # extract fitted values
+        ## extract fitted values
         # try() is necessary since raw fitted values are not stored
         fitted <- try(fitted(model, fit=fit))
         if(inherits(fitted, "try-error")) fitted <- rep.int(NA, n)
-        # compute theoretical quantiles and distances from QQ reference line
-        theoretical <- qqNorm(residuals)
-        qql <- qqLine(residuals)  # QQ reference line
-        qqd <- abs(residuals - qql$intercept - qql$slope * theoretical)
-        # TODO: compute robust Mahalanobis distances
-        rd <- rep.int(NA, n)
-        # extract outlier weights
+        ## extract outlier weights
         weights <- weights(model, fit=fit)
         class <- ifelse(weights == 0, "outlier", "good")
         class <- factor(class, levels=c("outlier", "good"))
-        # construct data frame
+        ## compute theoretical quantiles and distances from QQ reference line
+        theoretical <- qqNorm(residuals)
+        qql <- qqLine(residuals)  # QQ reference line
+        qqd <- abs(residuals - qql$intercept - qql$slope * theoretical)
+        ## compute MCD distances using significant variables
+        # extract predictor matrix
+        terms <- delete.response(model$terms)  # extract terms for model matrix
+        if(is.null(x <- model$x)) {
+            x <- try(model.matrix(terms), silent=TRUE)
+            if(inherits(x, "try-error")) stop("model data not available")
+        }
+        if(model$intercept) x <- removeIntercept(x)
+        # extract coefficients
+        coefficients <- coef(model, fit=fit)
+        if(model$intercept) coefficients <- removeIntercept(coefficients)
+        significant <- which(coefficients != 0)
+        p <- length(significant)
+        ok <- p > 0
+        if(ok) {
+            # adjust alpha since MCD computes subset size depending on n and p
+            h <- model$quan
+            n2 <- (n+p+1) %/% 2
+            alpha <- pmin((h - 2*n2 + n) / (2 * (n - n2)), 1)
+            # check fraction for subset size
+            if(alpha < 0.5) {
+                alpha <- 0.5
+                warning(sprintf("cannot compute MCD with h = %d; using h = %d", 
+                        object$quan, h.alpha.n(alpha, n, p)))
+            }
+            # compute distances
+            rd <- try({
+                    xs <- x[, significant, drop=FALSE]
+                    mcd <- covMcd(xs, alpha=alpha)
+                    if(fit == "reweighted") {
+                        center <- mcd$center
+                        cov <- mcd$cov
+                    } else {
+                        center <- mcd$raw.center
+                        cov <- mcd$raw.cov
+                    }
+                    sqrt(mahalanobis(xs, center, cov))
+                })
+            if(inherits(rd, "try-eror")) {
+                ok <- FALSE
+                warning("robust distances cannot be computed")
+            }
+        } else warning("all coefficients equal to 0")
+        if(!ok) rd <- rep.int(NA, n)
+        # take maximum of the distances in the x- and y-space, divided by the 
+        # respective other cutoff point
+        q <- sqrt(qchisq(0.975, p))
+        xyd <- pmax.int(abs(rd/2.5), abs(residuals/q))
+        ## construct data frame
         data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-            theoretical=theoretical, qqd=qqd, rd=rd, weight=weights, 
+            theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, weight=weights, 
             classification=class)
         attr(data, "qqLine") <- as.data.frame(qql)
+        attr(data, "q") <- data.frame(q=max(q, 2.5))
     }
-    # return data frame
+    ## return data frame
     data
 }
 
@@ -1063,7 +1115,6 @@ qqLine <- function(y) {
     list(intercept=intercept, slope=slope)
 }
 
-
 # ----------------------
 
 ## plot standardized residuals vs indices or fitted values
@@ -1123,5 +1174,61 @@ ggResidualPlot <- function(data, labelData = NULL,
     }
     p <- p + scale_y_continuous(breaks=breaks) + 
         opts(title=main) + labs(x=xlab, y=ylab)
+    p
+}
+
+# ----------------------
+
+## plot robust distances
+
+diagPlot <- function(x, data, ...) UseMethod("diagPlot")
+
+diagPlot.sparseLTS <- function(x, data, fit = c("reweighted", "raw", "both"), 
+       size = c(2, 4), id.n = NULL, ...) {
+    ## initializations
+    fit <- match.arg(fit)
+    if(missing(data)) data <- fortify(x, fit=fit)
+    ## extract data frame for vertical reference line
+    lineData <- attr(data, "q")
+    ## construct data frame for labels
+    labelData <- labelify(data, ord=data[, "xyd"], id.n=id.n)
+    ## call workhorse function
+    p <- ggDiagPlot(data, lineData, labelData, size=size, ...)
+    if(fit == "both") {
+        f <- as.formula(paste(".", "fit", sep="~"))
+        p <- p + facet_grid(f)
+    }
+    p
+}
+
+## workhorse function
+ggDiagPlot <- function(data, lineData = NULL, labelData = NULL, 
+        size = c(2, 4), ..., mapping, main, xlab, ylab) {
+    # initializations
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # define aesthetic mapping for QQ plot
+    mapping <- aes_string(x="rd", y="residual", color="classification")
+    # define default axis labels
+    if(missing(main)) main <- "Regression diagnostic plot"
+    if(missing(xlab)) xlab <- "Robust distance computed by MCD"
+    if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
+    # create plot
+    p <- ggplot(data) + 
+        geom_hline(aes(yintercept=-2.5), alpha=0.4) + 
+        geom_hline(aes(yintercept=2.5), alpha=0.4)
+    if(!is.null(lineData)) {
+        # add reference line
+        p <- p + geom_vline(aes_string(xintercept="q"), lineData, alpha=0.4)
+    }
+    p <- p + geom_point(mapping, size=size[1], ...) 
+    if(!is.null(labelData)) {
+        # add labels for observations with largest distances
+        labelMapping <- aes_string(x="rd", y="residual", label="index")
+        p <- p + geom_text(labelMapping, data=labelData, 
+            hjust=0, size=size[2], alpha=0.4)
+    }
+    p <- p + opts(title=main) + labs(x=xlab, y=ylab)
     p
 }
