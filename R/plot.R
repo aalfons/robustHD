@@ -279,7 +279,7 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
         geom_line(coefMapping, size=size[1], ...) + 
         geom_point(coefMapping, size=size[2], ...) + 
         geom_text(labelMapping, data=labelData, 
-            hjust=0, size=size[3], alpha=0.3) + 
+            hjust=0, size=size[3], alpha=0.4) + 
         scale_x_continuous(minor_breaks=gridX) + 
         opts(legend.position="none") + 
         labs(x=xlab, y=ylab)
@@ -411,14 +411,19 @@ fortify.sparseLTS <- function(model, data,
     fit <- match.arg(fit)
     # construct data frame with all information for plotting
     if(fit == "both") {
+        fits <- c("reweighted", "raw")
         # recursive call for each fit
         reweighted <- fortify(model, fit="reweighted", ...)
         raw <- fortify(model, fit="raw", ...)
+        # combine data for QQ reference line
+        qql <- data.frame(fit=factor(fits, levels=fits), 
+            rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
+            row.names=NULL)
         # combine results
-        fits <- c("reweighted", "raw")
         n <- c(nrow(reweighted), nrow(raw))
         data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
             rbind(reweighted, raw), row.names=NULL)
+        attr(data, "qqLine") <- qql
     } else {
         # extract standardized residuals
         residuals <- residuals(model, fit=fit, standardized=TRUE)
@@ -427,17 +432,45 @@ fortify.sparseLTS <- function(model, data,
         # try() is necessary since raw fitted values are not stored
         fitted <- try(fitted(model, fit=fit))
         if(inherits(fitted, "try-error")) fitted <- rep.int(NA, n)
+        # compute theoretical quantiles and distances from QQ reference line
+        theoretical <- qqNorm(residuals)
+        qql <- qqLine(residuals)  # QQ reference line
+        qqd <- abs(residuals - qql$intercept - qql$slope * theoretical)
         # TODO: compute robust Mahalanobis distances
+        rd <- rep.int(NA, n)
         # extract outlier weights
         weights <- weights(model, fit=fit)
         class <- ifelse(weights == 0, "outlier", "good")
         class <- factor(class, levels=c("outlier", "good"))
         # construct data frame
         data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-            theoretical=qqNorm(residuals), weight=weights, classification=class)
+            theoretical=theoretical, qqd=qqd, rd=rd, weight=weights, 
+            classification=class)
+        attr(data, "qqLine") <- as.data.frame(qql)
     }
     # return data frame
     data
+}
+
+
+## construct data frame for labels based on some order
+labelify <- function(data, ord, id.n = NULL) {
+    by <- intersect(names(data), "fit")
+    if(length(by) == 0) {
+        if(is.null(id.n)) id.n <- sum(data[, "weight"] == 0)
+        if(id.n < 1) return(NULL)
+        keep <- head(order(data[, ord], decreasing=TRUE), id.n)
+    } else {
+        keep <- tapply(seq_len(nrow(data)), data[, by, drop=FALSE], 
+            function(i) {
+                if(is.null(id.n)) id.n <- sum(data[i, "weight"] == 0)
+                if(id.n < 1) return(NULL)
+                largest <- head(order(data[i, ord], decreasing=TRUE), id.n)
+                i[largest]
+            })
+        keep <- unlist(keep)
+    }
+    data[keep, ]
 }
 
 
@@ -961,25 +994,19 @@ panel.label <- function(x, y, ord, lab, id.n, ...) {
 
 ## residual QQ plot
 
-qqPlot <- function(x, ...) UseMethod("qqPlot")
+rqqPlot <- function(x, data, ...) UseMethod("rqqPlot")
 
-qqPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
-        id.n = NULL, ...) {
+rqqPlot.sparseLTS <- function(x, data, fit = c("reweighted", "raw", "both"), 
+        size = c(2, 4), id.n = NULL, ...) {
     ## initializations
     fit <- match.arg(fit)
-    ## extract coefficient data extended with other information
-    qqData <- fortify(x, fit=fit)
+    if(missing(data)) data <- fortify(x, fit=fit)
+    ## extract data frame for reference line
+    lineData <- attr(data, "qqLine")
     ## construct data frame for labels
-    if(fit == "both") {
-        lineData <- aggregate(qqData[, "residual"], 
-            qqData[, "fit", drop=FALSE], qqLine)
-        lineData <- cbind(lineData[, "fit", drop=FALSE], lineData$x)
-    } else {
-        lineData <- qqLine(qqData[, "residual"])
-        lineData <- as.data.frame(t(lineData))
-    }
+    labelData <- labelify(data, ord="qqd", id.n=id.n)
     ## call workhorse function
-    p <- ggQQPlot(qqData, lineData, ...)
+    p <- ggRqqPlot(data, lineData, labelData, size=size, ...)
     if(fit == "both") {
         f <- as.formula(paste(".", "fit", sep="~"))
         p <- p + facet_grid(f)
@@ -987,27 +1014,36 @@ qqPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
     p
 }
 
-
 ## workhorse function
-ggQQPlot <- function(qqData, lineData, ..., mapping, data, distribution, 
-        xlab, ylab) {
-    # define aesthetic mappings for QQ plot and reference line
-    qqMapping <- aes_string(x="theoretical", y="residual", 
-        color="classification")
-    labelMapping <- aes_string(x="theoretical", y="residual", label="index")
-    lineMapping <- aes_string(intercept="intercept", slope="slope")
+ggRqqPlot <- function(data, lineData = NULL, labelData = NULL, 
+        size = c(2, 4), ..., mapping, main, xlab, ylab) {
+    # initializations
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # define aesthetic mapping for QQ plot
+    mapping <- aes_string(x="theoretical", y="residual", color="classification")
     # define default axis labels
+    if(missing(main)) main <- "Normal QQ plot"
     if(missing(xlab)) xlab <- "Quantiles of the standard normal distribution"
     if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
     # create plot
-    ggplot(qqData) + 
-        geom_abline(lineMapping, lineData, ...) + 
-        geom_point(qqMapping, ...) + 
-#        geom_text(labelMapping, hjust=0, size=4, alpha=0.3) + 
-        opts(title="Normal QQ plot") + 
-        labs(x=xlab, y=ylab)
+    p <- ggplot(data)
+    if(!is.null(lineData)) {
+        # add reference line
+        lineMapping <- aes_string(intercept="intercept", slope="slope")
+        p <- p + geom_abline(lineMapping, lineData, alpha=0.4)
+    }
+    p <- p + geom_point(mapping, size=size[1], ...) 
+    if(!is.null(labelData)) {
+        # add labels for observations with largest distances
+        labelMapping <- aes_string(x="theoretical", y="residual", label="index")
+        p <- p + geom_text(labelMapping, data=labelData, 
+            hjust=0, size=size[2], alpha=0.4)
+    }
+    p <- p + opts(title=main) + labs(x=xlab, y=ylab)
+    p
 }
-
 
 ## compute theoretical quantiles
 qqNorm <- function(y) {
@@ -1024,5 +1060,5 @@ qqLine <- function(y) {
     lx <- qnorm(prob)
     slope <- diff(ly) / diff(lx)
     intercept <- ly[1] - slope * lx[1]
-    c(intercept=intercept, slope=slope)
+    list(intercept=intercept, slope=slope)
 }
