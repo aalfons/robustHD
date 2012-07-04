@@ -3,6 +3,47 @@
 #         KU Leuven
 # ----------------------
 
+#' Plot a sequence of regression models
+#' 
+#' Produce a plot of the coefficients or values of the optimality criterion for 
+#' a sequence of regression models, such as submodels along a robust least 
+#' angle regression sequence, or sparse least trimmed squares regression models 
+#' for a grid of values for the penalty parameter.
+#' 
+#' @method plot seqModel
+#' @aliases plot.rlars plot.sparseLTSGrid
+#' 
+#' @param x  the model fit to be plotted.
+#' @param method  a character string specifying the type of plot.  Possible 
+#' values are \code{"coefficients"} to plot the coefficients from the submodels 
+#' via \code{\link{coefPlot}}, or \code{"crit"} to plot the values of the 
+#' optimality criterion for the submodels via \code{\link{critPlot}}.
+#' @param \dots  additional arguments to be passed down.
+#' 
+#' @return  
+#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link{coefPlot}}, \code{\link{critPlot}}, \code{\link{rlars}}, 
+#' \code{\link{sparseLTSGrid}}
+#' 
+#' @example inst/doc/examples/example-plot.rlars.R
+#' 
+#' @keywords hplot
+#' 
+#' @export
+
+plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
+    ## initializations
+    method <- match.arg(method)
+    ## call plot function
+    if(method == "coefficients") coefPlot(x, ...)
+    else critPlot(x, ...)
+}
+
+# ----------------------
+
 ## supplement the coefficients in a model with other useful information
 ## returns a data frame suitable for plotting with ggplot2
 
@@ -37,7 +78,7 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
 }
 
 coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"), 
-        zeros = FALSE, labels, ...) {
+    zeros = FALSE, labels, ...) {
     # prepare coefficients and labels
     fit <- match.arg(fit)
     coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
@@ -104,47 +145,6 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
     coefData
 }
 
-
-#' Plot a sequence of regression models
-#' 
-#' Produce a plot of the coefficients or values of the optimality criterion for 
-#' a sequence of regression models, such as submodels along a robust least 
-#' angle regression sequence, or sparse least trimmed squares regression models 
-#' for a grid of values for the penalty parameter.
-#' 
-#' @method plot seqModel
-#' @aliases plot.rlars plot.sparseLTSGrid
-#' 
-#' @param x  the model fit to be plotted.
-#' @param method  a character string specifying the type of plot.  Possible 
-#' values are \code{"coefficients"} to plot the coefficients from the submodels 
-#' via \code{\link{coefPlot}}, or \code{"crit"} to plot the values of the 
-#' optimality criterion for the submodels via \code{\link{critPlot}}.
-#' @param \dots  additional arguments to be passed down.
-#' 
-#' @return  
-#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
-#' 
-#' @author Andreas Alfons
-#' 
-#' @seealso \code{\link{coefPlot}}, \code{\link{critPlot}}, \code{\link{rlars}}, 
-#' \code{\link{sparseLTSGrid}}
-#' 
-#' @example inst/doc/examples/example-plot.rlars.R
-#' 
-#' @keywords hplot
-#' 
-#' @export
-
-plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
-    ## initializations
-    method <- match.arg(method)
-    ## call plot function
-    if(method == "coefficients") coefPlot(x, ...)
-    else critPlot(x, ...)
-}
-
-# ----------------------
 
 #' Coefficient plot of a sequence of regression models
 #' 
@@ -399,6 +399,47 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
 }
 
 # ----------------------
+
+## supplement the fitted values and residuals of a model with other useful 
+## information for diagnostic plots
+## argument 'data' is currently ignored
+## returns a data frame suitable for plotting with ggplot2
+
+fortify.sparseLTS <- function(model, data, 
+    fit = c("reweighted", "raw", "both"), ...) {
+    # initializations
+    fit <- match.arg(fit)
+    # construct data frame with all information for plotting
+    if(fit == "both") {
+        # recursive call for each fit
+        reweighted <- fortify(model, fit="reweighted", ...)
+        raw <- fortify(model, fit="raw", ...)
+        # combine results
+        fits <- c("reweighted", "raw")
+        n <- c(nrow(reweighted), nrow(raw))
+        data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
+            rbind(reweighted, raw), row.names=NULL)
+    } else {
+        # extract standardized residuals
+        residuals <- residuals(model, fit=fit, standardized=TRUE)
+        n <- length(residuals)  # number of observations
+        # extract fitted values
+        # try() is necessary since raw fitted values are not stored
+        fitted <- try(fitted(model, fit=fit))
+        if(inherits(fitted, "try-error")) fitted <- rep.int(NA, n)
+        # TODO: compute robust Mahalanobis distances
+        # extract outlier weights
+        weights <- weights(model, fit=fit)
+        class <- ifelse(weights == 0, "outlier", "good")
+        class <- factor(class, levels=c("outlier", "good"))
+        # construct data frame
+        data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
+            theoretical=qqNorm(residuals), weight=weights, classification=class)
+    }
+    # return data frame
+    data
+}
+
 
 #' Diagnostic plots for sparse LTS regression models
 #' 
@@ -844,7 +885,6 @@ panel.diag <- function(x, y, weights, df, id.n = NULL, ...) {
     panel.label(x, y, ord=ord, id.n=id.n, ...)
 }
 
-
 # ----------------------
 
 ## utilities for plot functions
@@ -915,4 +955,74 @@ panel.label <- function(x, y, ord, lab, id.n, ...) {
         ## b) additionaly to pos specify offset=0.2 (fraction of a character)
         panel.text(x[which], y[which], labels=lab, pos = 4, offset = 0.2, ...)
     }
+}
+
+# ----------------------
+
+## residual QQ plot
+
+qqPlot <- function(x, ...) UseMethod("qqPlot")
+
+qqPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
+        id.n = NULL, ...) {
+    ## initializations
+    fit <- match.arg(fit)
+    ## extract coefficient data extended with other information
+    qqData <- fortify(x, fit=fit)
+    ## construct data frame for labels
+    if(fit == "both") {
+        lineData <- aggregate(qqData[, "residual"], 
+            qqData[, "fit", drop=FALSE], qqLine)
+        lineData <- cbind(lineData[, "fit", drop=FALSE], lineData$x)
+    } else {
+        lineData <- qqLine(qqData[, "residual"])
+        lineData <- as.data.frame(t(lineData))
+    }
+    ## call workhorse function
+    p <- ggQQPlot(qqData, lineData, ...)
+    if(fit == "both") {
+        f <- as.formula(paste(".", "fit", sep="~"))
+        p <- p + facet_grid(f)
+    }
+    p
+}
+
+
+## workhorse function
+ggQQPlot <- function(qqData, lineData, ..., mapping, data, distribution, 
+        xlab, ylab) {
+    # define aesthetic mappings for QQ plot and reference line
+    qqMapping <- aes_string(x="theoretical", y="residual", 
+        color="classification")
+    labelMapping <- aes_string(x="theoretical", y="residual", label="index")
+    lineMapping <- aes_string(intercept="intercept", slope="slope")
+    # define default axis labels
+    if(missing(xlab)) xlab <- "Quantiles of the standard normal distribution"
+    if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
+    # create plot
+    ggplot(qqData) + 
+        geom_abline(lineMapping, lineData, ...) + 
+        geom_point(qqMapping, ...) + 
+#        geom_text(labelMapping, hjust=0, size=4, alpha=0.3) + 
+        opts(title="Normal QQ plot") + 
+        labs(x=xlab, y=ylab)
+}
+
+
+## compute theoretical quantiles
+qqNorm <- function(y) {
+    # TODO: NA handling
+    n <- length(y)                # number of observations
+    prob <- ppoints(n)            # probabilities
+    qnorm(prob)[order(order(y))]  # theoretical quantiles in original order
+}
+
+## compute intercept and slope of reference line
+qqLine <- function(y) {
+    prob <- c(0.25, 0.75)
+    ly <- quantile(y, prob, na.rm=TRUE, names=FALSE)
+    lx <- qnorm(prob)
+    slope <- diff(ly) / diff(lx)
+    intercept <- ly[1] - slope * lx[1]
+    c(intercept=intercept, slope=slope)
 }
