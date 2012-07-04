@@ -459,13 +459,13 @@ labelify <- function(data, ord, id.n = NULL) {
     if(length(by) == 0) {
         if(is.null(id.n)) id.n <- sum(data[, "weight"] == 0)
         if(id.n < 1) return(NULL)
-        keep <- head(order(data[, ord], decreasing=TRUE), id.n)
+        keep <- head(order(ord, decreasing=TRUE), id.n)
     } else {
         keep <- tapply(seq_len(nrow(data)), data[, by, drop=FALSE], 
             function(i) {
                 if(is.null(id.n)) id.n <- sum(data[i, "weight"] == 0)
                 if(id.n < 1) return(NULL)
-                largest <- head(order(data[i, ord], decreasing=TRUE), id.n)
+                largest <- head(order(ord[i], decreasing=TRUE), id.n)
                 i[largest]
             })
         keep <- unlist(keep)
@@ -1004,7 +1004,7 @@ rqqPlot.sparseLTS <- function(x, data, fit = c("reweighted", "raw", "both"),
     ## extract data frame for reference line
     lineData <- attr(data, "qqLine")
     ## construct data frame for labels
-    labelData <- labelify(data, ord="qqd", id.n=id.n)
+    labelData <- labelify(data, ord=data[, "qqd"], id.n=id.n)
     ## call workhorse function
     p <- ggRqqPlot(data, lineData, labelData, size=size, ...)
     if(fit == "both") {
@@ -1061,4 +1061,67 @@ qqLine <- function(y) {
     slope <- diff(ly) / diff(lx)
     intercept <- ly[1] - slope * lx[1]
     list(intercept=intercept, slope=slope)
+}
+
+
+# ----------------------
+
+## plot standardized residuals vs indices or fitted values
+
+residualPlot <- function(x, data, ...) UseMethod("residualPlot")
+
+residualPlot.sparseLTS <- function(x, data, 
+        fit = c("reweighted", "raw", "both"), 
+        abscissa = c("index", "fitted"), 
+        size = c(2, 4), id.n = NULL, ...) {
+    ## initializations
+    fit <- match.arg(fit)
+    if(missing(data)) data <- fortify(x, fit=fit)
+    ## construct data frame for labels
+    labelData <- labelify(data, ord=abs(data[, "residual"]), id.n=id.n)
+    ## call workhorse function
+    p <- ggResidualPlot(data, labelData, abscissa=abscissa, size=size, ...)
+    if(fit == "both") {
+        f <- as.formula(paste(".", "fit", sep="~"))
+        p <- p + facet_grid(f)
+    }
+    p
+}
+
+## workhorse function
+ggResidualPlot <- function(data, labelData = NULL, 
+        abscissa = c("index", "fitted"), size = c(2, 4), 
+        ..., mapping, main, xlab, ylab) {
+    # initializations
+    abscissa <- match.arg(abscissa)
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # define aesthetic mapping for QQ plot
+    mapping <- aes_string(x=abscissa, y="residual", color="classification")
+    # define default axis labels
+    if(missing(main)) {
+        postfix <- switch(abscissa, index="indices", fitted="fitted values")
+        main <- paste("Residuals vs", postfix)
+    }
+    if(missing(xlab)) {
+        xlab <- switch(abscissa, index="Index", fitted="Fitted value")
+    }
+    if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
+    # ensure that horizontal grid line is drawn at 0
+    breaks <- union(pretty(data[, "residual"]), 0)
+    # create plot
+    p <- ggplot(data) + 
+        geom_hline(aes(yintercept=-2.5), alpha=0.4) + 
+        geom_hline(aes(yintercept=2.5), alpha=0.4) + 
+        geom_point(mapping, size=size[1], ...) 
+    if(!is.null(labelData)) {
+        # add labels for observations with largest distances
+        labelMapping <- aes_string(x=abscissa, y="residual", label="index")
+        p <- p + geom_text(labelMapping, data=labelData, 
+            hjust=0, size=size[2], alpha=0.4)
+    }
+    p <- p + scale_y_continuous(breaks=breaks) + 
+        opts(title=main) + labs(x=xlab, y=ylab)
+    p
 }
