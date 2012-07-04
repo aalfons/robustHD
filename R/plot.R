@@ -406,7 +406,7 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
 ## returns a data frame suitable for plotting with ggplot2
 
 fortify.sparseLTS <- function(model, data, 
-    fit = c("reweighted", "raw", "both"), ...) {
+        fit = c("reweighted", "raw", "both"), ...) {
     ## initializations
     fit <- match.arg(fit)
     ## construct data frame with all information for plotting
@@ -430,13 +430,11 @@ fortify.sparseLTS <- function(model, data,
         attr(data, "qqLine") <- qql
         attr(data, "q") <- q
     } else {
+        ## extract fitted values
+        fitted <- fitted(model, fit=fit)
         ## extract standardized residuals
         residuals <- residuals(model, fit=fit, standardized=TRUE)
         n <- length(residuals)  # number of observations
-        ## extract fitted values
-        # try() is necessary since raw fitted values are not stored
-        fitted <- try(fitted(model, fit=fit))
-        if(inherits(fitted, "try-error")) fitted <- rep.int(NA, n)
         ## extract outlier weights
         weights <- weights(model, fit=fit)
         class <- ifelse(weights == 0, "outlier", "good")
@@ -468,7 +466,7 @@ fortify.sparseLTS <- function(model, data,
             if(alpha < 0.5) {
                 alpha <- 0.5
                 warning(sprintf("cannot compute MCD with h = %d; using h = %d", 
-                        object$quan, h.alpha.n(alpha, n, p)))
+                        model$quan, h.alpha.n(alpha, n, p)))
             }
             # compute distances
             rd <- try({
