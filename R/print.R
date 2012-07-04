@@ -20,7 +20,7 @@ print.seqModel <- function(x, zeros = FALSE, ...) {
 }
 
 #' @S3method print grplars
-print.grplars <- function(x, ...) {
+print.grplars <- function(x, zeros = FALSE, ...) {
     # print function call
     if(!is.null(call <- x$call)) {
         cat("\nCall:\n")
@@ -35,7 +35,7 @@ print.grplars <- function(x, ...) {
     print(active, ...)
     # print coefficients of optimal LARS submodel
     cat("\nCoefficients of optimal LARS submodel:\n")
-    print(coef(x, zeros=FALSE), ...)
+    print(coef(x, zeros=zeros), ...)
     # return object invisibly
     invisible(x)
 }
