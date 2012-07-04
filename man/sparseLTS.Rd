@@ -185,6 +185,9 @@
   estimates of the raw fit (including the intercept if
   \code{intercept} is \code{TRUE}).}
 
+  \item{raw.fitted.values}{a numeric vector containing the
+  fitted values of the response of the raw fit.}
+
   \item{raw.residuals}{a numeric vector containing the
   residuals of the raw fit.}
 
