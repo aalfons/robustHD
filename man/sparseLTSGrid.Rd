@@ -122,6 +122,10 @@
   corresponding raw fit (including the intercept if
   \code{intercept} is \code{TRUE}).}
 
+  \item{raw.fitted.values}{a numeric matrix in which each
+  column contains the fitted values of the response of the
+  corresponding raw fit.}
+
   \item{raw.residuals}{a numeric matrix in which each
   column contains the residuals of the corresponding raw
   fit.}

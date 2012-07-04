@@ -6,6 +6,8 @@ Changes in robustHD version 0.2.0
 
 Changes in robustHD version 0.1.1
 
+    + sparseLTS() and sparseLTSGrid() now store raw fitted values.
+
     + Parallel computing for sparseLTS() now available via OpenMP.
 
     + rlars() is now using C++ code for variable sequencing.

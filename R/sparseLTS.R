@@ -111,6 +111,8 @@
 #' reweighted model fit, i.e., the number of nonzero coefficient estimates.
 #' @returnItem raw.coefficients  a numeric vector of coefficient estimates of 
 #' the raw fit (including the intercept if \code{intercept} is \code{TRUE}).  
+#' @returnItem raw.fitted.values  a numeric vector containing the fitted values 
+#' of the response of the raw fit.
 #' @returnItem raw.residuals  a numeric vector containing the residuals of 
 #' the raw fit.
 #' @returnItem raw.center  a numeric value giving the robust center estimate of 
@@ -337,6 +339,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         lambda=lambda, intercept=intercept, alpha=alpha, quan=h, 
         cnp2=cdelta, weights=weights, df=df, 
         raw.coefficients=copyColnames(raw.fit$coefficients, x), 
+        raw.fitted.values=y-raw.fit$residuals,
         raw.residuals=copyNames(raw.fit$residuals, y), 
         raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta, 
         raw.weights=raw.weights)
@@ -422,6 +425,8 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' @returnItem raw.coefficients  a numeric matrix in which each column contains 
 #' the coefficient estimates of the corresponding raw fit (including the 
 #' intercept if \code{intercept} is \code{TRUE}).  
+#' @returnItem raw.fitted.values  a numeric matrix in which each column 
+#' contains the fitted values of the response of the corresponding raw fit.
 #' @returnItem raw.residuals  a numeric matrix in which each column contains 
 #' the residuals of the corresponding raw fit.
 #' @returnItem raw.center  a numeric vector giving the robust center estimates 
@@ -576,6 +581,7 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     weights <- sapply(fit, weights, fit="reweighted")
     df <- sapply(fit, function(x) x$df)
     raw.coef <- sapply(fit, coef, fit="raw")
+    raw.fitted <- sapply(fit, fitted, fit="raw")
     raw.residuals <- sapply(fit, residuals, fit="raw")
     raw.center <- sapply(fit, function(x) x$raw.center)
     raw.scale <- sapply(fit, function(x) x$raw.scale)
@@ -586,10 +592,11 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         fitted.values=fitted, residuals=residuals, center=center, 
         scale=scale, lambda=lambda, intercept=intercept, alpha=alpha, 
         quan=quan, cnp2=cnp2, weights=weights, df=df, 
-        raw.coefficients=raw.coef, raw.residuals=raw.residuals, 
-        raw.center=raw.center, raw.scale=raw.scale, raw.cnp2=raw.cnp2, 
-        raw.weights=raw.weights, crit=crit, critValues=critValues, 
-        sOpt=sOpt, raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
+        raw.coefficients=raw.coef, raw.fitted.values=raw.fitted, 
+        raw.residuals=raw.residuals, raw.center=raw.center, 
+        raw.scale=raw.scale, raw.cnp2=raw.cnp2, raw.weights=raw.weights, 
+        crit=crit, critValues=critValues, sOpt=sOpt, 
+        raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
     if(isTRUE(model)) {
         if(intercept) x <- addIntercept(x)
         fit$x <- x

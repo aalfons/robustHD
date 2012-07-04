@@ -4,7 +4,7 @@
 # ----------------------
 
 #' @S3method print seqModel
-print.seqModel <- function(x, zeros = TRUE, ...) {
+print.seqModel <- function(x, zeros = FALSE, ...) {
     # print function call
     if(!is.null(call <- x$call)) {
         cat("\nCall:\n")
@@ -68,7 +68,7 @@ print.tslars <- function(x, ...) {
 }
 
 #' @S3method print rlars
-print.rlars <- function(x, ...) {
+print.rlars <- function(x, zeros = FALSE, ...) {
     # print function call
     if(!is.null(call <- x$call)) {
         cat("\nCall:\n")
@@ -83,14 +83,14 @@ print.rlars <- function(x, ...) {
     print(active, ...)
     # print coefficients of optimal LARS submodel
     cat("\nCoefficients of optimal LARS submodel:\n")
-    print(coef(x, zeros=FALSE), ...)
+    print(coef(x, zeros=zeros), ...)
     # return object invisibly
     invisible(x)
 }
 
 #' @S3method print sparseLTS
 print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
-        zeros = TRUE, ...) {
+        zeros = FALSE, ...) {
     # initializations
     fit <- match.arg(fit)
     # print function call
@@ -123,7 +123,7 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
 
 #' @S3method print sparseLTSGrid
 print.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
-        zeros = TRUE, ...) {
+        zeros = FALSE, ...) {
     # initializations
     fit <- match.arg(fit)
     # print function call
