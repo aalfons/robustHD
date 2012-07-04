@@ -78,33 +78,12 @@ fitted.seqModel <- function(object, s, ...) {
 
 fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), 
         ...) {
-    # inititializations
     fit <- match.arg(fit)
-    if(fit != "reweighted") {
-        # fitted values of raw estimator are not stored in the object
-        # check if predictor data is available to compute them
-        if(is.null(x <- object$x)) {
-            x <- try(model.matrix(object$terms), silent=TRUE)
-            if(inherits(x, "try-error")) {
-                if(fit == "raw") {
-                    stop("fitted values of raw estimator not available")
-                } else {
-                    fit <- "reweighted"
-                    warning("fitted values of raw estimator not available")
-                }
-            }
-        }
-    } 
-    # retrieve fitted values
-    if(fit == "reweighted") {
-        object$fitted.values
-    } else {
-        # compute raw fitted values
-        raw.fitted <- copyNames(drop(x %*% object$raw.coefficients), object$y)
-        if(fit == "raw") {
-            raw.fitted
-        } else cbind(reweighted=object$fitted.values, raw=raw.fitted)
-    }
+    switch(fit,
+        reweighted=object$fitted.values,
+        raw=object$raw.fitted.values,
+        both=cbind(reweighted=object$fitted.values, 
+            raw=object$raw.fitted.values))
 }
 
 
@@ -117,34 +96,19 @@ fitted.sparseLTSGrid <- function(object, s,
         ...) {
     ## initializations
     fit <- match.arg(fit)
-    if(fit != "reweighted") {
-        # fitted values of raw estimator are not stored in the object
-        # check if predictor data is available to compute them
-        if(is.null(x <- object$x)) {
-            x <- try(model.matrix(object$terms), silent=TRUE)
-            if(inherits(x, "try-error")) {
-                if(fit == "raw") {
-                    stop("fitted values of raw estimator not available")
-                } else {
-                    fit <- "reweighted"
-                    warning("fitted values of raw estimator not available")
-                }
-            }
-        }
-    } 
     ## extract fitted values
     if(fit == "reweighted") {
         fitted <- object$fitted.values
+    } else if(fit == "raw") {
+        fitted <- object$raw.fitted.values
     } else {
-        fitted <- copyNames(x %*% object$raw.coefficients, object$y)
-        if(fit == "both") {
-            fitted <- list(reweighted=object$fitted.values, raw=fitted)
-            fitted <- mapply(function(x, n) {
-                    colnames(x) <- paste(n, colnames(x), sep=".")
-                    x
-                }, fitted, names(fitted), SIMPLIFY=FALSE)
-            fitted <- do.call(cbind, fitted)
-        }
+        fitted <- list(reweighted=object$fitted.values, 
+            raw=object$raw.fitted.values)
+        fitted <- mapply(function(x, n) {
+                colnames(x) <- paste(n, colnames(x), sep=".")
+                x
+            }, fitted, names(fitted), SIMPLIFY=FALSE)
+        fitted <- do.call(cbind, fitted)
     }
     ## check selected steps and extract corresponding fitted values
     sMax <- length(object$lambda)
