@@ -53,7 +53,6 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
     # prepare coefficients and labels
     coef <- removeIntercept(t(coef(model, s=NULL)))
     sigmaX <- model$sigmaX
-#    if(missing(labels)) labels <- defaultLabels(model)  # default labels
     if(!isTRUE(zeros)) {
         keep <- apply(coef != 0, 2, any)
         coef <- coef[, keep, drop=FALSE]
@@ -78,12 +77,11 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
 }
 
 coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"), 
-    zeros = FALSE, labels, ...) {
+        zeros = FALSE, labels, ...) {
     # prepare coefficients and labels
     fit <- match.arg(fit)
     coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
     zeros <- isTRUE(zeros)
-#    if(missing(labels)) labels <- defaultLabels(model)  # default labels
     if(!zeros) {
         keep <- apply(coef != 0, 2, any)
         coef <- coef[, keep, drop=FALSE]
@@ -400,179 +398,6 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
 
 # ----------------------
 
-## supplement the fitted values and residuals of a model with other useful 
-## information for diagnostic plots
-## argument 'data' is currently ignored
-## returns a data frame suitable for plotting with ggplot2
-
-fortify.sparseLTS <- function(model, data, 
-        fit = c("reweighted", "raw", "both"), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## construct data frame with all information for plotting
-    if(fit == "both") {
-        fits <- c("reweighted", "raw")
-        ## recursive call for each fit
-        reweighted <- fortify(model, fit="reweighted")
-        raw <- fortify(model, fit="raw")
-        ## combine data for Q-Q reference line
-        qql <- data.frame(fit=factor(fits, levels=fits), 
-            rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
-            row.names=NULL)
-        ## combine data for cutoff chi-squared quantile
-        q <- data.frame(fit=factor(fits, levels=fits), 
-            rbind(attr(reweighted, "q"), attr(raw, "q")), 
-            row.names=NULL)
-        ## combine results
-        n <- c(nrow(reweighted), nrow(raw))
-        data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
-            rbind(reweighted, raw), row.names=NULL)
-        attr(data, "qqLine") <- qql
-        attr(data, "q") <- q
-    } else {
-        ## extract fitted values
-        fitted <- fitted(model, fit=fit)
-        ## extract standardized residuals
-        residuals <- residuals(model, fit=fit, standardized=TRUE)
-        n <- length(residuals)  # number of observations
-        ## extract outlier weights
-        weights <- weights(model, fit=fit)
-        ## compute theoretical quantiles and distances from Q-Q reference line
-        theoretical <- qqNorm(residuals)
-        qql <- qqLine(residuals)  # Q-Q reference line
-        qqd <- abs(residuals - qql$intercept - qql$slope * theoretical)
-        ## compute MCD distances using significant variables
-        # extract predictor matrix
-        terms <- delete.response(model$terms)  # extract terms for model matrix
-        ok <- TRUE
-        if(is.null(x <- model$x)) {
-            x <- try(model.matrix(terms), silent=TRUE)
-            if(inherits(x, "try-error")) {
-                ok <- FALSE
-                warning("model data not available")
-            }
-        }
-        if(ok) {
-            if(model$intercept) x <- removeIntercept(x)
-            # extract coefficients
-            coefficients <- coef(model, fit=fit)
-            if(model$intercept) coefficients <- removeIntercept(coefficients)
-            significant <- which(coefficients != 0)
-            p <- length(significant)
-            if(p == 0) {
-                ok <- FALSE
-                warning("all coefficients equal to 0")
-            }
-        }
-        if(ok) {
-            # adjust alpha since MCD computes subset size depending on n and p
-            h <- model$quan
-            n2 <- (n+p+1) %/% 2
-            alpha <- pmin((h - 2*n2 + n) / (2 * (n - n2)), 1)
-            # check fraction for subset size
-            if(alpha < 0.5) {
-                alpha <- 0.5
-                warning(sprintf("cannot compute MCD with h = %d; using h = %d", 
-                        model$quan, h.alpha.n(alpha, n, p)))
-            }
-            # compute distances
-            rd <- try({
-                    xs <- x[, significant, drop=FALSE]
-                    mcd <- covMcd(xs, alpha=alpha)
-                    if(fit == "reweighted") {
-                        center <- mcd$center
-                        cov <- mcd$cov
-                    } else {
-                        center <- mcd$raw.center
-                        cov <- mcd$raw.cov
-                    }
-                    sqrt(mahalanobis(xs, center, cov))
-                })
-            if(inherits(rd, "try-eror")) {
-                ok <- FALSE
-                warning("robust distances cannot be computed")
-            }
-        }
-        if(!ok) rd <- rep.int(NA, n)
-        # take maximum of the distances in the x- and y-space, divided by the 
-        # respective other cutoff point
-        q <- sqrt(qchisq(0.975, p))
-        xyd <- pmax.int(abs(rd/2.5), abs(residuals/q))
-        ## construct indicator variables for leverage points
-        leverage <- rd > q
-        ## classify data points
-        class <- ifelse(weights == 0, "outlier", "good")
-        class <- factor(class, levels=c("outlier", "good"))
-        ## construct data frame
-        data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-            theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, weight=weights, 
-            leverage=leverage, classification=class)
-        attr(data, "qqLine") <- as.data.frame(qql)
-        attr(data, "q") <- data.frame(q=max(q, 2.5))
-    }
-    ## return data frame
-    data
-}
-
-fortify.sparseLTSGrid <- function(model, data, s, 
-        fit = c("reweighted", "raw", "both"), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    steps <- getSteps(model)
-    lambda <- model$lambda
-    # check the steps to extract
-    bothOpt <- FALSE
-    if(missing(s)) {
-        if(fit == "both") {
-            s <- unique(c(model$sOpt, model$raw.sOpt))
-            bothOpt <- length(s) == 2
-        } else s <- switch(fit, reweighted=model$sOpt, raw=model$raw.sOpt)
-    } else if(is.null(s)) s <- steps 
-    else {
-        sMax <- length(steps)
-        s <- checkSteps(s, sMin=1, sMax=sMax)
-    }
-    ## extract data for the requested steps
-    if(bothOpt) {
-        # extract the data from the respecitve optimal lambda
-        fits <- c("reweighted", "raw")
-        ## recursive call for each fit
-        reweighted <- fortify(subset(model, s=s[1]), fit="reweighted")
-        raw <- fortify(subset(model, s=s[2]), fit="raw")
-        ## combine data for Q-Q reference line
-        qql <- data.frame(fit=factor(fits, levels=fits), 
-            rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
-            row.names=NULL)
-        ## combine data for cutoff chi-squared quantile
-        q <- data.frame(fit=factor(fits, levels=fits), 
-            rbind(attr(reweighted, "q"), attr(raw, "q")), 
-            row.names=NULL)
-        ## combine results
-        n <- c(nrow(reweighted), nrow(raw))
-        data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
-            rbind(reweighted, raw), row.names=NULL)
-        attr(data, "qqLine") <- qql
-        attr(data, "q") <- q
-    } else if(length(s) == 1) {
-        # extract the data from the selected step
-        data <- fortify(subset(model, s=s), fit=fit)
-    } else {
-        # extract the data from each requested step
-        data <- lapply(s, function(s) fortify(subset(model, s=s), fit=fit))
-        qql <- lapply(data, attr, which="qqLine")
-        q <- lapply(data, attr, which="q")
-        # combine data from the steps
-        data <- cbind(step=rep.int(s, sapply(data, nrow)), do.call(rbind, data))
-        qql <- cbind(step=rep.int(s, sapply(qql, nrow)), do.call(rbind, qql))
-        q <- cbind(step=rep.int(s, sapply(q, nrow)), do.call(rbind, q))
-        attr(data, "qqLine") <- qql
-        attr(data, "q") <- q
-    }
-    ## return data frame
-    data
-}
-
-
 ## construct data frame for labels based on some order
 labelify <- function(data, which, id.n = NULL) {
     # initializations
@@ -701,80 +526,9 @@ diagnosticPlot <- function(x, ...) UseMethod("diagnosticPlot")
 #' @export
 
 diagnosticPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
-        which = c("all", "rqq","rindex", "rfit", "rdiag"),
-        ask = (which == "all"), size = c(2, 4), id.n = NULL, ...) {
-    # initializations
-    fit <- match.arg(fit)
-    which <- match.arg(which)
-    scale <- switch(fit, reweighted=x$scale, raw=x$raw.scale, 
-        both=c(reweighted=x$scale, raw=x$raw.scale))
-    if(all(scale <= 0)) {
-        stop("plots not available (residual scale equal to 0)")
-    }
-    data <- fortify(x, fit=fit)  # all information required for plotting
-    # call functions for selected plots
-    if(which == "all") {
-        devAskNewPage(ask)  # ask for new page (if requested)
-        # residual Q-Q plot
-        tmp <- try(rqqPlot(x, data, fit=fit, size=size, id.n=id.n, ...), 
-            silent=TRUE)
-        if(inherits(tmp, "try-error")) {
-            warn <- gsub("Error in", "In", tmp)
-            warning(warn, call.=FALSE)
-        } else {
-            print(tmp)
-            res <- list(rqq=tmp)
-        }
-        # residuals vs indices plot
-        tmp <- try(residualPlot(x, data, fit=fit, abscissa="index", 
-                size=size, id.n=id.n, ...), silent=TRUE)
-        if(inherits(tmp, "try-error")) {
-            warn <- gsub("Error in", "In", tmp)
-            warning(warn, call.=FALSE)
-        } else {
-            print(tmp)
-            res$rindex <- tmp
-        }
-        # residuals vs fitted plot
-        tmp <- try(residualPlot(x, data, fit=fit, abscissa="fitted", 
-                size=size, id.n=id.n, ...), silent=TRUE)
-        if(inherits(tmp, "try-error")) {
-            warn <- gsub("Error in", "In", tmp)
-            warning(warn, call.=FALSE)
-        } else {
-            print(tmp)
-            res$rfit <- tmp
-        }
-        # regression diagnostic plot
-        tmp <- try(rdiagPlot(x, data, fit=fit, size=size, id.n=id.n, ...), 
-            silent=TRUE)
-        if(inherits(tmp, "try-error")) {
-            warn <- gsub("Error in", "In", tmp)
-            warning(warn, call.=FALSE)
-        } else {
-            print(tmp)
-            res$rdiag <- tmp
-        }
-    } else if(which == "rqq") {
-        # residual Q-Q plot
-        res <- rqqPlot(x, data, fit=fit, size=size, id.n=id.n, ...)
-        print(res)
-    } else if(which == "rindex") {
-        # residuals vs indices plot
-        res <- residualPlot(x, data, fit=fit, abscissa="index", 
-            size=size, id.n=id.n, ...)
-        print(res)
-    } else if(which == "rfit") {
-        # residuals vs fitted plot
-        res <- residualPlot(x, data, fit=fit, abscissa="fitted", 
-            size=size, id.n=id.n, ...)
-        print(res)
-    } else if(which == "rdiag") {
-        # regression diagnostic plot
-        res <- rdiagPlot(x, data, fit=fit, size=size, id.n=id.n, ...)
-        print(res)
-    }
-    invisible(res)
+        ...) {
+    # call default method with all information required for plotting
+    diagnosticPlot(fortify(x, fit=fit), ...)
 }
 
 
@@ -782,40 +536,89 @@ diagnosticPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
 #' @method diagnosticPlot sparseLTSGrid
 #' @export
 
-# TODO: allow to select which submodels to plot
-diagnosticPlot.sparseLTSGrid <- function(x, ...) {
+diagnosticPlot.sparseLTSGrid <- function(x, s, 
+        fit = c("reweighted", "raw", "both"), ...) {
+    # call default method with all information required for plotting
+    diagnosticPlot(fortify(x, s=s, fit=fit), ...)
+}
+
+
+#' @rdname diagnosticPlot
+#' @method diagnosticPlot default
+#' @export
+
+diagnosticPlot.default <- function(x, 
+        which = c("all", "rqq","rindex", "rfit", "rdiag"),
+        ask = (which == "all"), facets = attr(x, "facets"), 
+        size = c(2, 4), id.n = NULL, ...) {
     # initializations
-    s <- x$sOpt
-    raw.s <- x$raw.sOpt
-    lambda <- unname(x$lambda)
-    if(s == raw.s) {
-        lambda <- lambda[s]
-    } else lambda <- c(reweighted=lambda[s], raw=lambda[raw.s])
-    # this is a bit of a hack: create an object of class "sparseLTS" that 
-    # contains the information of the optimal model for the reweighted 
-    # estimator and the optimal model for the raw estimator
-    x$coefficients <- coef(x, s=s, fit="reweighted")
-    x$fitted.values <- fitted(x, s=s, fit="reweighted")
-    x$residuals <- residuals(x, s=s, fit="reweighted")
-    x$weights <- weights(x, s=s, fit="reweighted")
-    x$raw.coefficients <- coef(x, s=raw.s, fit="raw")
-    x$raw.fitted.values <- fitted(x, s=raw.s, fit="raw")
-    x$raw.residuals <- residuals(x, s=raw.s, fit="raw")
-    x$raw.weights <- weights(x, s=raw.s, fit="raw")
-    x$best <- x$best[, raw.s]
-    x$objective <- unname(x$objective[raw.s])
-    x$center <- unname(x$center[s])
-    x$scale <- unname(x$scale[s])
-    x$lambda <- lambda
-    x$cnp2 <- unname(x$cnp2[s])
-    x$df <- unname(x$df[s])
-    x$raw.center <- unname(x$raw.center[raw.s])
-    x$raw.scale <- unname(x$raw.scale[raw.s])
-    x$raw.cnp2 <- unname(x$raw.cnp2[raw.s])
-    x$crit <- x$critValues <- x$sOpt <- x$raw.critValues <- x$raw.sOpt <- NULL
-    class(x) <- "sparseLTS"
-    # call the method for class "sparseLTS"
-    diagnosticPlot(x, ...)
+    which <- match.arg(which)
+    size <- as.numeric(size)
+    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+    # call functions for selected plots
+    if(which == "all") {
+        devAskNewPage(ask)  # ask for new page (if requested)
+        # residual Q-Q plot
+        p <- try(rqqPlot(x, facets=facets, size=size, id.n=id.n, ...), 
+            silent=TRUE)
+        if(inherits(p, "try-error")) {
+            warn <- gsub("Error in", "In", p)
+            warning(warn, call.=FALSE)
+        } else {
+            print(p)
+            res <- list(rqq=p)
+        }
+        # residuals vs indices plot
+        p <- try(residualPlot(x, abscissa="index", facets=facets, 
+                size=size, id.n=id.n, ...), silent=TRUE)
+        if(inherits(p, "try-error")) {
+            warn <- gsub("Error in", "In", p)
+            warning(warn, call.=FALSE)
+        } else {
+            print(p)
+            res$rindex <- p
+        }
+        # residuals vs fitted plot
+        p <- try(residualPlot(x, abscissa="fitted", facets=facets, 
+                size=size, id.n=id.n, ...), silent=TRUE)
+        if(inherits(p, "try-error")) {
+            warn <- gsub("Error in", "In", p)
+            warning(warn, call.=FALSE)
+        } else {
+            print(p)
+            res$rfit <- p
+        }
+        # regression diagnostic plot
+        p <- try(rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...), 
+            silent=TRUE)
+        if(inherits(p, "try-error")) {
+            warn <- gsub("Error in", "In", p)
+            warning(warn, call.=FALSE)
+        } else {
+            print(p)
+            res$rdiag <- p
+        }
+    } else if(which == "rqq") {
+        # residual Q-Q plot
+        res <- rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
+        print(res)
+    } else if(which == "rindex") {
+        # residuals vs indices plot
+        res <- residualPlot(x, abscissa="index", facets=facets, 
+            size=size, id.n=id.n, ...)
+        print(res)
+    } else if(which == "rfit") {
+        # residuals vs fitted plot
+        res <- residualPlot(x, abscissa="fitted", facets=facets, 
+            size=size, id.n=id.n, ...)
+        print(res)
+    } else if(which == "rdiag") {
+        # regression diagnostic plot
+        res <- rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
+        print(res)
+    }
+    invisible(res)
 }
 
 
@@ -827,37 +630,15 @@ plot.sparseLTS <- function(x, ...) diagnosticPlot(x, ...)
 
 # ----------------------
 
-## residual Q-Q plot
-
-rqqPlot <- function(x, data, ...) UseMethod("rqqPlot")
-
-rqqPlot.sparseLTS <- function(x, data, fit = c("reweighted", "raw", "both"), 
-        size = c(2, 4), id.n = NULL, ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## extract data frame for reference line
-    lineData <- attr(data, "qqLine")
-    ## construct data frame for labels
-    labelData <- labelify(data, which="qqd", id.n=id.n)
-    ## call workhorse function
-    p <- ggRqqPlot(data, lineData, labelData, size=size, ...)
-    if(fit == "both") {
-        f <- as.formula(paste(".", "fit", sep="~"))
-        p <- p + facet_grid(f)
-    }
-    p
-}
-
-## workhorse function
-ggRqqPlot <- function(data, lineData = NULL, labelData = NULL, 
-        size = c(2, 4), ..., mapping, main, xlab, ylab) {
-    # initializations
-    size <- as.numeric(size)
-    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
-    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+rqqPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4), 
+        id.n = NULL, main, xlab, ylab, ..., mapping) {
     # define aesthetic mapping for Q-Q plot
     mapping <- aes_string(x="theoretical", y="residual", color="classification")
-    # define default axis labels
+    # extract data frame for reference line
+    lineData <- attr(data, "qqLine")
+    # construct data frame for labels
+    labelData <- labelify(data, which="qqd", id.n=id.n)
+    # define default title and axis labels
     if(missing(main)) main <- "Normal Q-Q plot"
     if(missing(xlab)) xlab <- "Quantiles of the standard normal distribution"
     if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
@@ -876,6 +657,11 @@ ggRqqPlot <- function(data, lineData = NULL, labelData = NULL,
             hjust=0, size=size[2], alpha=0.4)
     }
     p <- p + opts(title=main) + labs(x=xlab, y=ylab)
+    if(!is.null(facets)) {
+        # split plot into different panels
+        if(length(facets) == 2) p <- p + facet_wrap(facets) 
+        else p <- p + facet_grid(facets)
+    }
     p
 }
 
@@ -901,37 +687,16 @@ qqLine <- function(y) {
 
 ## plot standardized residuals vs indices or fitted values
 
-residualPlot <- function(x, data, ...) UseMethod("residualPlot")
-
-residualPlot.sparseLTS <- function(x, data, 
-        fit = c("reweighted", "raw", "both"), 
-        abscissa = c("index", "fitted"), 
-        size = c(2, 4), id.n = NULL, ...) {
+residualPlot <- function(data, abscissa = c("index", "fitted"), 
+        facets = attr(data, "facets"), size = c(2, 4), id.n = NULL, 
+        main, xlab, ylab, ..., mapping) {
     ## initializations
-    fit <- match.arg(fit)
+    abscissa <- match.arg(abscissa)
+    # define aesthetic mapping for residual plot
+    mapping <- aes_string(x=abscissa, y="residual", color="classification")
     ## construct data frame for labels
     labelData <- labelify(data, which="residual", id.n=id.n)
-    ## call workhorse function
-    p <- ggResidualPlot(data, labelData, abscissa=abscissa, size=size, ...)
-    if(fit == "both") {
-        f <- as.formula(paste(".", "fit", sep="~"))
-        p <- p + facet_grid(f)
-    }
-    p
-}
-
-## workhorse function
-ggResidualPlot <- function(data, labelData = NULL, 
-        abscissa = c("index", "fitted"), size = c(2, 4), 
-        ..., mapping, main, xlab, ylab) {
-    # initializations
-    abscissa <- match.arg(abscissa)
-    size <- as.numeric(size)
-    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
-    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
-    # define aesthetic mapping for Q-Q plot
-    mapping <- aes_string(x=abscissa, y="residual", color="classification")
-    # define default axis labels
+    # define default title and axis labels
     if(missing(main)) {
         postfix <- switch(abscissa, index="indices", fitted="fitted values")
         main <- paste("Residuals vs", postfix)
@@ -955,46 +720,33 @@ ggResidualPlot <- function(data, labelData = NULL,
     }
     p <- p + scale_y_continuous(breaks=breaks) + 
         opts(title=main) + labs(x=xlab, y=ylab)
+    if(!is.null(facets)) {
+        # split plot into different panels
+        if(length(facets) == 2) p <- p + facet_wrap(facets) 
+        else p <- p + facet_grid(facets)
+    }
     p
 }
 
 # ----------------------
 
-## plot robust distances
+## plot robust distances (regression diagnostic plot)
 
-rdiagPlot <- function(x, data, ...) UseMethod("rdiagPlot")
-
-rdiagPlot.sparseLTS <- function(x, data, fit = c("reweighted", "raw", "both"), 
-       size = c(2, 4), id.n = NULL, ...) {
+rdiagPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4), 
+        id.n = NULL, main, xlab, ylab, ..., mapping) {
     ## initializations
-    fit <- match.arg(fit)
-    if(fit == "both") 
-        onlyNA <- tapply(is.na(data[, "rd"]), data[, "fit", drop=FALSE], all)
+    by <- intersect(c("step", "fit"), names(data))
+    if(length(by) > 0) 
+        onlyNA <- tapply(is.na(data[, "rd"]), data[, by, drop=FALSE], all)
     else onlyNA <- all(is.na(data[, "rd"]))
     if(any(onlyNA)) stop("robust distances not available")
+    # define aesthetic mapping for regression diagnostic plot
+    mapping <- aes_string(x="rd", y="residual", color="classification")
     ## extract data frame for vertical reference line
     lineData <- attr(data, "q")
     ## construct data frame for labels
     labelData <- labelify(data, which="xyd", id.n=id.n)
-    ## call workhorse function
-    p <- ggRdiagPlot(data, lineData, labelData, size=size, ...)
-    if(fit == "both") {
-        f <- as.formula(paste(".", "fit", sep="~"))
-        p <- p + facet_grid(f)
-    }
-    p
-}
-
-## workhorse function
-ggRdiagPlot <- function(data, lineData = NULL, labelData = NULL, 
-        size = c(2, 4), ..., mapping, main, xlab, ylab) {
-    # initializations
-    size <- as.numeric(size)
-    size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
-    size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
-    # define aesthetic mapping for Q-Q plot
-    mapping <- aes_string(x="rd", y="residual", color="classification")
-    # define default axis labels
+    # define default title and axis labels
     if(missing(main)) main <- "Regression diagnostic plot"
     if(missing(xlab)) xlab <- "Robust distance computed by MCD"
     if(missing(ylab)) ylab <- "Standardized sparse LTS residual"
@@ -1014,5 +766,10 @@ ggRdiagPlot <- function(data, lineData = NULL, labelData = NULL,
             hjust=0, size=size[2], alpha=0.4)
     }
     p <- p + opts(title=main) + labs(x=xlab, y=ylab)
+    if(!is.null(facets)) {
+        # split plot into different panels
+        if(length(facets) == 2) p <- p + facet_wrap(facets) 
+        else p <- p + facet_grid(facets)
+    }
     p
 }

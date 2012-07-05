@@ -32,6 +32,7 @@ Collate:
     'fastLasso.R'
     'fitModels.R'
     'fitted.R'
+    'fortify.R'
     'initialSubsets.R'
     'lambda0.R'
     'plot.R'

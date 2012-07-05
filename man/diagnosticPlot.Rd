@@ -1,5 +1,6 @@
 \name{diagnosticPlot}
 \alias{diagnosticPlot}
+\alias{diagnosticPlot.default}
 \alias{diagnosticPlot.sparseLTS}
 \alias{diagnosticPlot.sparseLTSGrid}
 \alias{plot.sparseLTS}
@@ -8,12 +9,15 @@
   diagnosticPlot(x, ...)
 
   \method{diagnosticPlot}{sparseLTS} (x,
-    fit = c("reweighted", "raw", "both"),
-    which = c("all", "rqq", "rindex", "rfit", "rdiag"),
-    ask = (which == "all"), size = c(2, 4), id.n = NULL,
-    ...)
+    fit = c("reweighted", "raw", "both"), ...)
 
-  \method{diagnosticPlot}{sparseLTSGrid} (x, ...)
+  \method{diagnosticPlot}{sparseLTSGrid} (x, s,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{diagnosticPlot}{default} (x,
+    which = c("all", "rqq", "rindex", "rfit", "rdiag"),
+    ask = (which == "all"), facets = attr(x, "facets"),
+    size = c(2, 4), id.n = NULL, ...)
 
   \method{plot}{sparseLTS} (x, ...)
 }
