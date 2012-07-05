@@ -10,6 +10,7 @@
 ## returns a data frame suitable for plotting with ggplot2
 
 #' @S3method fortify sparseLTS
+#' @import ggplot2
 fortify.sparseLTS <- function(model, data, 
         fit = c("reweighted", "raw", "both"), ...) {
     ## initializations
