@@ -1,5 +1,7 @@
-Changes in robustHD version 0.1.1
+Changes in robustHD version 0.2.0
 
+    + Graphics now based on ggplot2 instead of lattice.
+    
     + Print methods for "sparseLTS" and "sparseLTSGrid" now only show non-zero 
       coefficients by default; also added argument to print method for "rlars".
     

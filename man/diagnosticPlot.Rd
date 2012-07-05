@@ -10,7 +10,8 @@
   \method{diagnosticPlot}{sparseLTS} (x,
     fit = c("reweighted", "raw", "both"),
     which = c("all", "rqq", "rindex", "rfit", "rdiag"),
-    ask = (which == "all"), id.n = NULL, ...)
+    ask = (which == "all"), size = c(2, 4), id.n = NULL,
+    ...)
 
   \method{diagnosticPlot}{sparseLTSGrid} (x, ...)
 
@@ -43,6 +44,9 @@
   \code{\link[grDevices]{devAskNewPage}}). The default is
   to ask if all plots are requested and not ask otherwise.}
 
+  \item{size}{a numeric vector of length two giving the
+  point and label size, respectively.}
+
   \item{id.n}{an integer giving the number of the most
   extreme observations to be identified by a label.  The
   default is to use the number of identified outliers,
@@ -56,13 +60,13 @@
   passed down to the \code{"sparseLTS"} method.  For the
   \code{"sparseLTS"} method of \code{diagnosticPlot},
   additional arguments to be passed down to
-  \code{\link[lattice]{xyplot}}.  For the
+  \code{\link[ggplot2]{geom_point}}.  For the
   \code{"sparseLTS"} method of \code{plot}, additional
   arguments to be passed down to \code{diagnosticPlot}.}
 }
 \value{
   If only one plot is requested, an object of class
-  \code{"trellis"} (see \code{\link[lattice]{xyplot}}),
+  \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}),
   otherwise a list of such objects.
 }
 \description{
@@ -144,7 +148,7 @@ diagnosticPlot(fitGrid)
 diagnosticPlot(fitGrid, fit = "both")
 }
 \author{
-  Andreas Alfons, partly based on code by Valentin Todorov
+  Andreas Alfons
 }
 \seealso{
   \code{\link[graphics]{plot}},
