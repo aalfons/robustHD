@@ -243,8 +243,8 @@ coefPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
     p <- ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size, 
         offset=offset, ...)
     if(fit == "both") {
-        f <- as.formula(paste(".", "fit", sep="~"))
-        p <- p + facet_grid(f)
+        # split plot into different panels
+        p <- p + facet_grid(. ~ fit)
     }
     p
 }
@@ -252,8 +252,8 @@ coefPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
 
 ## workhorse function
 ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"), 
-        zeros = FALSE, size = c(0.5, 2, 4), labels, offset = 1, ..., 
-        mapping, data, xlab, ylab) {
+        zeros = FALSE, size = c(0.5, 2, 4), labels, offset = 1, 
+        main = NULL, xlab, ylab, ..., mapping, data) {
     # initializations
     abscissa <- match.arg(abscissa)
     size <- as.numeric(size)
@@ -279,7 +279,7 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
         geom_text(labelMapping, data=labelData, 
             hjust=0, size=size[3], alpha=0.4) + 
         scale_x_continuous(minor_breaks=gridX) + 
-        opts(legend.position="none") + 
+        opts(legend.position="none", title=main) + 
         labs(x=xlab, y=ylab)
 }
 
@@ -364,8 +364,8 @@ critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
     ## call workhorse function
     p <- ggCritPlot(critData, abscissa="lambda", size=size, ...)
     if(fit == "both") {
-        f <- as.formula(paste(".", "fit", sep="~"))
-        p <- p + facet_grid(f)
+        # split plot into different panels
+        p <- p + facet_grid(. ~ fit)
     }
     p
 }
@@ -373,7 +373,7 @@ critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
 
 ## workhorse function
 ggCritPlot <- function(critData, abscissa = c("step", "lambda"), 
-        size = c(0.5, 2), ..., mapping, data, xlab, ylab) {
+        size = c(0.5, 2), main = NULL, xlab, ylab, ..., mapping, data) {
     # initializations
     abscissa <- match.arg(abscissa)
     crit <- setdiff(names(critData), c("fit", "step", "lambda"))
@@ -393,7 +393,7 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
         geom_line(size=size[1], ...) + 
         geom_point(size=size[2], ...) + 
         scale_x_continuous(minor_breaks=gridX) + 
-        labs(x=xlab, y=ylab)
+        opts(title=main) + labs(x=xlab, y=ylab)
 }
 
 # ----------------------
