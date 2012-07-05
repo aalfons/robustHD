@@ -65,8 +65,9 @@ weights.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method weights sparseLTSGrid
 #' @export
 
-weights.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
-        ...) {
+weights.sparseLTSGrid <- function(object, s, 
+        fit = c("reweighted", "raw", "both"), 
+        drop = TRUE, ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract weights
@@ -97,7 +98,7 @@ weights.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) weights <- weights[, s]  # weights for selected steps
+    if(!is.null(s)) weights <- weights[, s, drop=drop]  # selected steps
     ## return weights
     weights
 }

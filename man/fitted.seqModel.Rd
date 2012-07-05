@@ -3,7 +3,7 @@
 \alias{fitted.seqModel}
 \title{Extract fitted values from a sequence of regression models}
 \usage{
-  \method{fitted}{seqModel} (object, s, ...)
+  \method{fitted}{seqModel} (object, s, drop = TRUE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract fitted

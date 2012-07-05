@@ -135,25 +135,30 @@ getCallFun <- function(args) {
 ## get a component (coefficients, fitted values, residuals, ...) for certain 
 ## steps of the model sequence
 ## the component is assumed to be a matrix
+# generic function
 getComponent <- function(x, component, s, ...) UseMethod("getComponent")
-getComponent.seqModel <- function(x, component, s, ...) {
+# method for class "seqModel"
+getComponent.seqModel <- function(x, component, s, drop = TRUE, ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=1, sMax=ncol(comp))  # check steps
-        comp <- comp[, s]  # extract selected steps
+        comp <- comp[, s, drop=drop]  # extract selected steps
     }
     comp
 }
-getComponent.rlars <- getComponent.grplars <- function(x, component, s, ...) {
+# method for classes "rlars" and "grplars"
+getComponent.rlars <- getComponent.grplars <- function(x, component, s, 
+        drop = TRUE, ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=0, sMax=ncol(comp)-1)  # check steps
-        comp <- comp[, s + 1]  # extract selected steps
+        comp <- comp[, s + 1, drop=drop]  # extract selected steps
     }
     comp
 }
+# TODO: method for class "sparseLTSGrid"
 
 ## get the control object for model functions
 #' @import robustbase MASS

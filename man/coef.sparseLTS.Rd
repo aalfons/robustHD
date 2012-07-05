@@ -9,7 +9,7 @@
 
   \method{coef}{sparseLTSGrid} (object, s,
     fit = c("reweighted", "raw", "both"), zeros = TRUE,
-    ...)
+    drop = TRUE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

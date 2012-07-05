@@ -3,7 +3,8 @@
 \alias{residuals.seqModel}
 \title{Extract residuals from a sequence of regression models}
 \usage{
-  \method{residuals}{seqModel} (object, s, ...)
+  \method{residuals}{seqModel} (object, s, drop = TRUE,
+    ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

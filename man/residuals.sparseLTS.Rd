@@ -9,7 +9,7 @@
 
   \method{residuals}{sparseLTSGrid} (object, s,
     fit = c("reweighted", "raw", "both"),
-    standardized = FALSE, ...)
+    standardized = FALSE, drop = TRUE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

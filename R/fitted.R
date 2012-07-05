@@ -33,8 +33,8 @@
 #' 
 #' @export
 
-fitted.seqModel <- function(object, s, ...) {
-    getComponent(object, "fitted.values", s=s, ...)
+fitted.seqModel <- function(object, s, drop = TRUE, ...) {
+    getComponent(object, "fitted.values", s=s, drop=drop, ...)
 }
 
 
@@ -93,7 +93,7 @@ fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 
 fitted.sparseLTSGrid <- function(object, s, 
         fit = c("reweighted", "raw", "both"), 
-        ...) {
+        drop = TRUE, ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract fitted values
@@ -125,7 +125,7 @@ fitted.sparseLTSGrid <- function(object, s,
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) fitted <- fitted[, s]  # fitted values for selected steps
+    if(!is.null(s)) fitted <- fitted[, s, drop=drop]  # selected steps
     ## return fitted values
     fitted
 }

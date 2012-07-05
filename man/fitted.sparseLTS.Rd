@@ -7,7 +7,7 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{fitted}{sparseLTSGrid} (object, s,
-    fit = c("reweighted", "raw", "both"), ...)
+    fit = c("reweighted", "raw", "both"), drop = TRUE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract fitted

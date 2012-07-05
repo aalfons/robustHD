@@ -33,8 +33,8 @@
 #' 
 #' @export
 
-residuals.seqModel <- function(object, s, ...) {
-    getComponent(object, "residuals", s=s, ...)
+residuals.seqModel <- function(object, s, drop = TRUE, ...) {
+    getComponent(object, "residuals", s=s, drop=drop, ...)
 }
 
 
@@ -108,7 +108,7 @@ residuals.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 
 residuals.sparseLTSGrid <- function(object, s, 
         fit = c("reweighted", "raw", "both"), 
-        standardized = FALSE, ...) {
+        standardized = FALSE, drop = TRUE, ...) {
     ## initializations
     fit <- match.arg(fit)
     standardized <- isTRUE(standardized)
@@ -140,7 +140,7 @@ residuals.sparseLTSGrid <- function(object, s,
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) residuals <- residuals[, s]  # residuals for selected steps
+    if(!is.null(s)) residuals <- residuals[, s, drop=drop]  # selected steps
     ## if requested, standardize residuals
     if(standardized) {
         # extract center and scale estimates

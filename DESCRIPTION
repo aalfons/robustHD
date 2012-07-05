@@ -42,6 +42,7 @@ Collate:
     'rlars.R'
     'sparseLTS.R'
     'standardize.R'
+    'subset.R'
     'test.R'
     'utils.R'
     'weights.R'

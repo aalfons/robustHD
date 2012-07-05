@@ -35,9 +35,9 @@
 #' 
 #' @export
 
-coef.seqModel <- function(object, s, zeros = TRUE, ...) {
+coef.seqModel <- function(object, s, zeros = TRUE, drop = TRUE, ...) {
     ## extract coefficients
-    coef <- getComponent(object, "coefficients", s=s, ...)
+    coef <- getComponent(object, "coefficients", s=s, drop=drop, ...)
     ## if requested, drop zero coefficients in case of a single step
     if(!isTRUE(zeros)) {
         if(is.null(dim(coef))) {
@@ -117,7 +117,7 @@ coef.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @export
 
 coef.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
-        zeros = TRUE, ...) {
+        zeros = TRUE, drop = TRUE, ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract coefficients
@@ -148,8 +148,8 @@ coef.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"),
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) coef <- coef[, s]  # coefficients for selected steps
-    ## if requested, drop zero coefficients in case of a single step
+    if(!is.null(s)) coef <- coef[, s, drop=drop]  # selected steps
+    ## if requested, drop zero coefficients
     if(!isTRUE(zeros)) {
         if(is.null(dim(coef))) {
             coef <- coef[coef != 0]

@@ -413,8 +413,8 @@ fortify.sparseLTS <- function(model, data,
     if(fit == "both") {
         fits <- c("reweighted", "raw")
         ## recursive call for each fit
-        reweighted <- fortify(model, fit="reweighted", ...)
-        raw <- fortify(model, fit="raw", ...)
+        reweighted <- fortify(model, fit="reweighted")
+        raw <- fortify(model, fit="raw")
         ## combine data for Q-Q reference line
         qql <- data.frame(fit=factor(fits, levels=fits), 
             rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
@@ -514,12 +514,70 @@ fortify.sparseLTS <- function(model, data,
     data
 }
 
+fortify.sparseLTSGrid <- function(model, data, s, 
+        fit = c("reweighted", "raw", "both"), ...) {
+    ## initializations
+    fit <- match.arg(fit)
+    steps <- getSteps(model)
+    lambda <- model$lambda
+    # check the steps to extract
+    bothOpt <- FALSE
+    if(missing(s)) {
+        if(fit == "both") {
+            s <- unique(c(model$sOpt, model$raw.sOpt))
+            bothOpt <- length(s) == 2
+        } else s <- switch(fit, reweighted=model$sOpt, raw=model$raw.sOpt)
+    } else if(is.null(s)) s <- steps 
+    else {
+        sMax <- length(steps)
+        s <- checkSteps(s, sMin=1, sMax=sMax)
+    }
+    ## extract data for the requested steps
+    if(bothOpt) {
+        # extract the data from the respecitve optimal lambda
+        fits <- c("reweighted", "raw")
+        ## recursive call for each fit
+        reweighted <- fortify(subset(model, s=s[1]), fit="reweighted")
+        raw <- fortify(subset(model, s=s[2]), fit="raw")
+        ## combine data for Q-Q reference line
+        qql <- data.frame(fit=factor(fits, levels=fits), 
+            rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
+            row.names=NULL)
+        ## combine data for cutoff chi-squared quantile
+        q <- data.frame(fit=factor(fits, levels=fits), 
+            rbind(attr(reweighted, "q"), attr(raw, "q")), 
+            row.names=NULL)
+        ## combine results
+        n <- c(nrow(reweighted), nrow(raw))
+        data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
+            rbind(reweighted, raw), row.names=NULL)
+        attr(data, "qqLine") <- qql
+        attr(data, "q") <- q
+    } else if(length(s) == 1) {
+        # extract the data from the selected step
+        data <- fortify(subset(model, s=s), fit=fit)
+    } else {
+        # extract the data from each requested step
+        data <- lapply(s, function(s) fortify(subset(model, s=s), fit=fit))
+        qql <- lapply(data, attr, which="qqLine")
+        q <- lapply(data, attr, which="q")
+        # combine data from the steps
+        data <- cbind(step=rep.int(s, sapply(data, nrow)), do.call(rbind, data))
+        qql <- cbind(step=rep.int(s, sapply(qql, nrow)), do.call(rbind, qql))
+        q <- cbind(step=rep.int(s, sapply(q, nrow)), do.call(rbind, q))
+        attr(data, "qqLine") <- qql
+        attr(data, "q") <- q
+    }
+    ## return data frame
+    data
+}
+
 
 ## construct data frame for labels based on some order
 labelify <- function(data, which, id.n = NULL) {
     # initializations
     if(isTRUE(id.n < 1)) return(NULL)
-    by <- intersect(names(data), "fit")
+    by <- intersect(c("step", "fit"), names(data))
     ord <- data[, which]
     if(which == "residual") ord <- abs(ord)
     if(is.null(id.n)) {
@@ -741,7 +799,7 @@ diagnosticPlot.sparseLTSGrid <- function(x, ...) {
     x$residuals <- residuals(x, s=s, fit="reweighted")
     x$weights <- weights(x, s=s, fit="reweighted")
     x$raw.coefficients <- coef(x, s=raw.s, fit="raw")
-    x$raw.fitted.values <- fitted(x, s=s, fit="raw")
+    x$raw.fitted.values <- fitted(x, s=raw.s, fit="raw")
     x$raw.residuals <- residuals(x, s=raw.s, fit="raw")
     x$raw.weights <- weights(x, s=raw.s, fit="raw")
     x$best <- x$best[, raw.s]
