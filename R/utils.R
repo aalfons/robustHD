@@ -158,7 +158,42 @@ getComponent.rlars <- getComponent.grplars <- function(x, component, s,
     }
     if(isTRUE(drop)) drop(comp) else comp
 }
-# TODO: method for class "sparseLTSGrid"
+# method for class "sparseLTSGrid"
+getComponent.sparseLTSGrid <- function(x, component, s, 
+        fit = c("reweighted", "raw", "both"), drop = !is.null(s), ...) {
+    # initializations
+    fit <- match.arg(fit)
+    if(fit != "reweighted") raw.component <- paste("raw", component, sep=".")
+    # extract component
+    if(fit == "reweighted") comp <- x[[component]]
+    else if(fit == "raw") comp <- x[[raw.component]]
+    else {
+        comp <- list(reweighted=x[[component]], raw=x[[raw.component]])
+        comp <- mapply(function(x, n) {
+                colnames(x) <- paste(n, colnames(x), sep=".")
+                x
+            }, comp, names(comp), SIMPLIFY=FALSE)
+        comp <- do.call(cbind, comp)
+    }
+    # check selected steps and extract corresponding coefficients
+    sMax <- length(x$lambda)
+    if(missing(s)) {
+        s <- switch(fit, reweighted=x$sOpt, raw=x$raw.sOpt, 
+            both=c(reweighted=x$sOpt, raw=sMax+x$raw.sOpt))
+    } else if(!is.null(s)) {
+        if(fit == "both" && is.list(s)) {
+            s <- rep(s, length.out=2)
+            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
+            s <- c(s[[1]], sMax+s[[2]])
+        } else {
+            s <- checkSteps(s, sMin=1, sMax=sMax)
+            if(fit == "both") s <- c(s, sMax+s)
+        }
+    }
+    # extract selected steps
+    if(!is.null(s)) comp <- comp[, s, drop=FALSE]
+    if(isTRUE(drop)) drop(comp) else comp
+}
 
 ## get the control object for model functions
 #' @import robustbase MASS

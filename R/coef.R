@@ -37,11 +37,10 @@ coef.seqModel <- function(object, s, zeros = TRUE, drop = !is.null(s), ...) {
     ## extract coefficients
     if(missing(s) && missing(drop)) drop <- TRUE
     coef <- getComponent(object, "coefficients", s=s, drop=drop, ...)
-    ## if requested, drop zero coefficients in case of a single step
+    ## if requested, omit zero coefficients
     if(!isTRUE(zeros)) {
-        if(is.null(dim(coef))) {
-            coef <- coef[coef != 0]
-        } else {
+        if(is.null(dim(coef))) coef <- coef[coef != 0]
+        else {
             keep <- apply(coef != 0, 1, any)
             coef <- coef[keep, , drop=FALSE]
         }
@@ -91,20 +90,20 @@ coef.seqModel <- function(object, s, zeros = TRUE, drop = !is.null(s), ...) {
 
 coef.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), 
         zeros = TRUE, ...) {
+    ## extract coefficients
     fit <- match.arg(fit)
     coef <- switch(fit,
-        reweighted=object$coefficients,
-        raw=object$raw.coefficients,
+        reweighted=object$coefficients, raw=object$raw.coefficients,
         both=cbind(reweighted=object$coefficients, raw=object$raw.coefficients))
+    ## if requested, omit zero coefficients
     if(!isTRUE(zeros)) {
-        # drop zero coefficients
-        if(is.null(dim(coef))) {
-            coef <- coef[coef != 0]
-        } else {
+        if(is.null(dim(coef))) coef <- coef[coef != 0]
+        else {
             keep <- apply(coef != 0, 1, any)
             coef <- coef[keep, , drop=FALSE]
         }
     }
+    ## return coefficients
     coef
 }
 
@@ -113,45 +112,16 @@ coef.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method coef sparseLTSGrid
 #' @export
 
-coef.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
+coef.sparseLTSGrid <- function(object, s, 
+        fit = c("reweighted", "raw", "both"), 
         zeros = TRUE, drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
     ## extract coefficients
-    if(fit == "reweighted") {
-        coef <- object$coefficients
-    } else if(fit == "raw") {
-        coef <- object$raw.coefficients
-    } else {
-        coef <- list(reweighted=object$coefficients, raw=object$raw.coefficients)
-        coef <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, coef, names(coef), SIMPLIFY=FALSE)
-        coef <- do.call(cbind, coef)
-    }
-    ## check selected steps and extract corresponding coefficients
-    sMax <- length(object$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) coef <- coef[, s, drop=FALSE]  # selected steps
-    if(isTRUE(drop)) coef <- drop(coef)
-    ## if requested, drop zero coefficients
+    if(missing(s) && missing(drop)) drop <- TRUE
+    coef <- getComponent(object, "coefficients", s=s, fit=fit, drop=drop, ...)
+    ## if requested, omit zero coefficients
     if(!isTRUE(zeros)) {
-        if(is.null(dim(coef))) {
-            coef <- coef[coef != 0]
-        } else {
+        if(is.null(dim(coef))) coef <- coef[coef != 0]
+        else {
             keep <- apply(coef != 0, 1, any)
             coef <- coef[keep, , drop=FALSE]
         }

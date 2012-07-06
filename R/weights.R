@@ -64,37 +64,9 @@ wt.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), ...) {
 #' @method wt sparseLTSGrid
 #' @export
 
-wt.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
+wt.sparseLTSGrid <- function(object, s, 
+        fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## extract weights
-    if(fit == "reweighted") wt <- object$wt
-    else if(fit == "raw") wt <- object$raw.wt
-    else {
-        wt <- list(reweighted=object$wt, raw=object$raw.wt)
-        wt <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, wt, names(wt), SIMPLIFY=FALSE)
-        wt <- do.call(cbind, wt)
-    }
-    ## check selected steps and extract corresponding weights
-    sMax <- length(object$lambda)
-    if(missing(s)) 
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) wt <- wt[, s, drop=FALSE]  # selected steps
-    ## return weights
-    if(isTRUE(drop)) drop(wt) else wt
+    if(missing(s) && missing(drop)) drop <- TRUE
+    getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
 }

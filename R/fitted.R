@@ -76,9 +76,7 @@ fitted.seqModel <- function(object, s, drop = !is.null(s), ...) {
 fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), 
         ...) {
     fit <- match.arg(fit)
-    switch(fit,
-        reweighted=object$fitted.values,
-        raw=object$raw.fitted.values,
+    switch(fit, reweighted=object$fitted.values, raw=object$raw.fitted.values,
         both=cbind(reweighted=object$fitted.values, 
             raw=object$raw.fitted.values))
 }
@@ -91,38 +89,6 @@ fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 fitted.sparseLTSGrid <- function(object, s, 
         fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## extract fitted values
-    if(fit == "reweighted") {
-        fitted <- object$fitted.values
-    } else if(fit == "raw") {
-        fitted <- object$raw.fitted.values
-    } else {
-        fitted <- list(reweighted=object$fitted.values, 
-            raw=object$raw.fitted.values)
-        fitted <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, fitted, names(fitted), SIMPLIFY=FALSE)
-        fitted <- do.call(cbind, fitted)
-    }
-    ## check selected steps and extract corresponding fitted values
-    sMax <- length(object$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) fitted <- fitted[, s, drop=FALSE]  # selected steps
-    ## return fitted values
-    if(isTRUE(drop)) drop(fitted) else fitted
+    if(missing(s) && missing(drop)) drop <- TRUE
+    getComponent(object, "fitted.values", s=s, fit=fit, drop=drop, ...)
 }
