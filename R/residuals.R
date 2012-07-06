@@ -14,14 +14,12 @@
 #' @param object  the model fit from which to extract residuals.
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract the residuals (the default is to use the optimal submodel).
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one step.
 #' @param \dots  additional arguments are currently ignored.
 #' 
 #' @return  
-#' If only one submodel is requested, a numeric vector containing the 
-#' corresponding residuals.
-#' 
-#' If multiple submodels are requested, a numeric matrix in which each column 
-#' contains the residuals of the corresponding submodel.
+#' A numeric vector or matrix containing the requested residuals.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -33,7 +31,8 @@
 #' 
 #' @export
 
-residuals.seqModel <- function(object, s, drop = TRUE, ...) {
+residuals.seqModel <- function(object, s, drop = !is.null(s), ...) {
+    if(missing(s) && missing(drop)) drop <- TRUE
     getComponent(object, "residuals", s=s, drop=drop, ...)
 }
 
@@ -58,14 +57,12 @@ residuals.seqModel <- function(object, s, drop = TRUE, ...) {
 #' estimator, or \code{"both"} for the residuals from both estimators.
 #' @param standardized  a logical indicating whether the residuals should be 
 #' standardized (the default is \code{FALSE}).
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one model.
 #' @param \dots  currently ignored.
 #' 
 #' @return  
-#' If (standardized) residuals for only one model are requested, they are 
-#' returned in the form of a numeric vector.
-#' 
-#' Otherwise a numeric matrix is returned in which each column contains the 
-#' (standardized) residuals of the corresponding model.
+#' A numeric vector or matrix containing the requested (standardized) residuals.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -108,7 +105,7 @@ residuals.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 
 residuals.sparseLTSGrid <- function(object, s, 
         fit = c("reweighted", "raw", "both"), 
-        standardized = FALSE, drop = TRUE, ...) {
+        standardized = FALSE, drop = !is.null(s), ...) {
     ## initializations
     fit <- match.arg(fit)
     standardized <- isTRUE(standardized)
@@ -140,7 +137,8 @@ residuals.sparseLTSGrid <- function(object, s,
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) residuals <- residuals[, s, drop=drop]  # selected steps
+    if(!is.null(s)) residuals <- residuals[, s, drop=FALSE]  # selected steps
+    if(isTRUE(drop)) residuals <- drop(residuals)
     ## if requested, standardize residuals
     if(standardized) {
         # extract center and scale estimates

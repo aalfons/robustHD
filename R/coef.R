@@ -15,15 +15,13 @@
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract coefficients (the default is to use the optimal submodel).
 #' @param zeros  a logical indicating whether to keep zero coefficients 
-#' (\code{TRUE}, the default) or to drop them (\code{FALSE}).
+#' (\code{TRUE}, the default) or to omit them (\code{FALSE}).
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one step.
 #' @param \dots  additional arguments are currently ignored.
 #' 
 #' @return  
-#' If only one submodel is requested, a numeric vector containing the 
-#' corresponding regression coefficients.
-#' 
-#' If multiple submodels are requested, a numeric matrix in which each column 
-#' contains the regression coefficients of the corresponding submodel.
+#' A numeric vector or matrix containing the requested regression coefficients.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -35,8 +33,9 @@
 #' 
 #' @export
 
-coef.seqModel <- function(object, s, zeros = TRUE, drop = TRUE, ...) {
+coef.seqModel <- function(object, s, zeros = TRUE, drop = !is.null(s), ...) {
     ## extract coefficients
+    if(missing(s) && missing(drop)) drop <- TRUE
     coef <- getComponent(object, "coefficients", s=s, drop=drop, ...)
     ## if requested, drop zero coefficients in case of a single step
     if(!isTRUE(zeros)) {
@@ -71,15 +70,13 @@ coef.seqModel <- function(object, s, zeros = TRUE, drop = TRUE, ...) {
 #' from the reweighted estimator, \code{"raw"} for the coefficients from the 
 #' raw estimator, or \code{"both"} for the coefficients from both estimators.
 #' @param zeros  a logical indicating whether to keep zero coefficients 
-#' (\code{TRUE}, the default) or to drop them (\code{FALSE}).
+#' (\code{TRUE}, the default) or to omit them (\code{FALSE}).
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one model.
 #' @param \dots  currently ignored.
 #' 
 #' @return  
-#' If coefficients for only one model are requested, they are returned in the 
-#' form of a numeric vector.
-#' 
-#' Otherwise a numeric matrix is returned in which each column contains the 
-#' coefficients of the corresponding model.
+#' A numeric vector or matrix containing the requested regression coefficients.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -117,7 +114,7 @@ coef.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @export
 
 coef.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
-        zeros = TRUE, drop = TRUE, ...) {
+        zeros = TRUE, drop = !is.null(s), ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract coefficients
@@ -148,7 +145,8 @@ coef.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"),
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) coef <- coef[, s, drop=drop]  # selected steps
+    if(!is.null(s)) coef <- coef[, s, drop=FALSE]  # selected steps
+    if(isTRUE(drop)) coef <- drop(coef)
     ## if requested, drop zero coefficients
     if(!isTRUE(zeros)) {
         if(is.null(dim(coef))) {

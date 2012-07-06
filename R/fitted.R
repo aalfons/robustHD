@@ -14,14 +14,12 @@
 #' @param object  the model fit from which to extract fitted values.
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' extract the fitted values (the default is to use the optimal submodel).
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one step.
 #' @param \dots  additional arguments are currently ignored.
 #' 
 #' @return  
-#' If only one submodel is requested, a numeric vector containing the 
-#' corresponding fitted values.
-#' 
-#' If multiple submodels are requested, a numeric matrix in which each column 
-#' contains the fitted values of the corresponding submodel.
+#' A numeric vector or matrix containing the requested fitted values.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -33,7 +31,8 @@
 #' 
 #' @export
 
-fitted.seqModel <- function(object, s, drop = TRUE, ...) {
+fitted.seqModel <- function(object, s, drop = !is.null(s), ...) {
+    if(missing(s) && missing(drop)) drop <- TRUE
     getComponent(object, "fitted.values", s=s, drop=drop, ...)
 }
 
@@ -56,14 +55,12 @@ fitted.seqModel <- function(object, s, drop = TRUE, ...) {
 #' Possible values are \code{"reweighted"} (the default) for the fitted values 
 #' from the reweighted estimator, \code{"raw"} for the fitted values from the 
 #' raw estimator, or \code{"both"} for the fitted values from both estimators.
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one model.
 #' @param \dots  currently ignored.
 #' 
 #' @return  
-#' If fitted values for only one model are requested, they are returned in the 
-#' form of a numeric vector.
-#' 
-#' Otherwise a numeric matrix is returned in which each column contains the 
-#' fitted values of the corresponding model.
+#' A numeric vector or matrix containing the requested fitted values.
 #' 
 #' @author Andreas Alfons
 #' 
@@ -93,7 +90,7 @@ fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 
 fitted.sparseLTSGrid <- function(object, s, 
         fit = c("reweighted", "raw", "both"), 
-        drop = TRUE, ...) {
+        drop = !is.null(s), ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract fitted values
@@ -125,7 +122,7 @@ fitted.sparseLTSGrid <- function(object, s,
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) fitted <- fitted[, s, drop=drop]  # selected steps
+    if(!is.null(s)) fitted <- fitted[, s, drop=FALSE]  # selected steps
     ## return fitted values
-    fitted
+    if(isTRUE(drop)) drop(fitted) else fitted
 }

@@ -3,8 +3,8 @@
 \alias{residuals.seqModel}
 \title{Extract residuals from a sequence of regression models}
 \usage{
-  \method{residuals}{seqModel} (object, s, drop = TRUE,
-    ...)
+  \method{residuals}{seqModel} (object, s,
+    drop = !is.null(s), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract
@@ -14,15 +14,14 @@
   submodels for which to extract the residuals (the default
   is to use the optimal submodel).}
 
+  \item{drop}{a logical indicating whether to reduce the
+  dimension to a vector in case of only one step.}
+
   \item{\dots}{additional arguments are currently ignored.}
 }
 \value{
-  If only one submodel is requested, a numeric vector
-  containing the corresponding residuals.
-
-  If multiple submodels are requested, a numeric matrix in
-  which each column contains the residuals of the
-  corresponding submodel.
+  A numeric vector or matrix containing the requested
+  residuals.
 }
 \description{
   Extract residuals from a sequence of regression models

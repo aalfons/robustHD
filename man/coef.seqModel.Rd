@@ -4,7 +4,7 @@
 \title{Extract coefficients from a sequence of regression models}
 \usage{
   \method{coef}{seqModel} (object, s, zeros = TRUE,
-    drop = TRUE, ...)
+    drop = !is.null(s), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract
@@ -15,18 +15,17 @@
   is to use the optimal submodel).}
 
   \item{zeros}{a logical indicating whether to keep zero
-  coefficients (\code{TRUE}, the default) or to drop them
+  coefficients (\code{TRUE}, the default) or to omit them
   (\code{FALSE}).}
+
+  \item{drop}{a logical indicating whether to reduce the
+  dimension to a vector in case of only one step.}
 
   \item{\dots}{additional arguments are currently ignored.}
 }
 \value{
-  If only one submodel is requested, a numeric vector
-  containing the corresponding regression coefficients.
-
-  If multiple submodels are requested, a numeric matrix in
-  which each column contains the regression coefficients of
-  the corresponding submodel.
+  A numeric vector or matrix containing the requested
+  regression coefficients.
 }
 \description{
   Extract coefficients from a sequence of regression models

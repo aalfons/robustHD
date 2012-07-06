@@ -7,7 +7,8 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{weights}{sparseLTSGrid} (object, s,
-    fit = c("reweighted", "raw", "both"), drop = TRUE, ...)
+    fit = c("reweighted", "raw", "both"),
+    drop = !is.null(s), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract outlier
@@ -32,15 +33,14 @@
   \code{"both"} for the outlier weights from both
   estimators.}
 
+  \item{drop}{a logical indicating whether to reduce the
+  dimension to a vector in case of only one model.}
+
   \item{\dots}{currently ignored.}
 }
 \value{
-  If weights indicating outliers are requested for only one
-  model, they are returned in the form of a numeric vector.
-
-  Otherwise a numeric matrix is returned in which each
-  column contains weights indicating outliers from the
-  corresponding model.
+  A numeric vector or matrix containing the requested
+  outlier weights.
 }
 \description{
   Extract binary weights that indicate outliers from sparse

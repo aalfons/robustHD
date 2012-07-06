@@ -55,6 +55,8 @@ fitted.seqModel         Extract fitted values from a sequence of
                         regression models
 fitted.sparseLTS        Extract fitted values from sparse LTS
                         regression models
+fortify.sparseLTS       Convert a sparse LTS regression model into a
+                        data frame for plotting
 lambda0                 Penalty parameter for sparse LTS regression
 plot.seqModel           Plot a sequence of regression models
 predict.seqModel        Predict from a sequence of regression models

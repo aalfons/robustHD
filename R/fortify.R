@@ -9,8 +9,63 @@
 ## argument 'data' is currently ignored
 ## returns a data frame suitable for plotting with ggplot2
 
-#' @S3method fortify sparseLTS
+#' Convert a sparse LTS regression model into a data frame for plotting
+#' 
+#' Supplement the fitted values and residuals of a sparse least trimmed squared 
+#' model with other useful information for diagnostic plots.
+#' 
+#' @method fortify sparseLTS
+#' 
+#' @param model  the model fit to be converted.
+#' @param data  currently ignored.
+#' @param s  an integer vector giving the indices of the models to be 
+#' converted.  The default is to use the optimal model for each of the 
+#' requested fits.
+#' @param fit  a character string specifying which fit to convert.  Possible 
+#' values are \code{"reweighted"} (the default) to convert the reweighted fit, 
+#' \code{"raw"} to convert the raw fit, or \code{"both"} to convert both fits.
+#' @param \dots  currently ignored.
+#' 
+#' @return  A data frame containing the columns listed below, as well as 
+#' additional information stored in the attributes \code{"qqLine"} (intercepts 
+#' and slopes of the respective reference lines to be displayed in residual Q-Q 
+#' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff 
+#' points for detecting leverage points), and \code{"facets"} (default faceting 
+#' formulas for the diagnostic plots).
+#' @returnItem step  the indices of the models (only returned if more than one 
+#' model is requested).
+#' @returnItem fit  the model fits (only returned if both the reweighted 
+#' and raw fit are requested).
+#' @returnItem index  the indices of the observations.
+#' @returnItem fitted  the fitted values.
+#' @returnItem residual  the standardized residuals.
+#' @returnItem theoretical  the corresponding theoretical quantiles from the 
+#' standard normal distribution.
+#' @returnItem qqd  the absolute distances from a reference line through the 
+#' first and third sample and theoretical quartiles.
+#' @returnItem rd  the robust Mahalanobis distances computed via the MCD (see 
+#' \code{\link[robustbase]{covMcd}}).
+#' @returnItem xyd  the pairwise maxima of the absolute values of the 
+#' standardized residuals and the robust Mahalanobis distances, divided by the 
+#' respective other outlier detection cutoff point.
+#' @returnItem weight  the weights indicating regression outliers.
+#' @returnItem leverage  logicals indicating leverage points (i.e., outliers in 
+#' the predictor space).
+#' @returnItem classification  a factor with levels \code{"outlier"} 
+#' (regression outliers) and \code{"good"} (data points following the model).
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link[ggplot2]{fortify}}, \code{\link{diagnosticPlot}}, 
+#' \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
+#' 
+#' @example inst/doc/examples/example-fortify.R
+#' 
+#' @keywords utilities
+#' 
 #' @import ggplot2
+#' @export
+
 fortify.sparseLTS <- function(model, data, 
         fit = c("reweighted", "raw", "both"), ...) {
     ## initializations
@@ -124,7 +179,11 @@ fortify.sparseLTS <- function(model, data,
     data
 }
 
-#' @S3method fortify sparseLTSGrid
+
+#' @rdname fortify.sparseLTS
+#' @method fortify sparseLTSGrid
+#' @export 
+
 fortify.sparseLTSGrid <- function(model, data, s, 
         fit = c("reweighted", "raw", "both"), ...) {
     ## initializations

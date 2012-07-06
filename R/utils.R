@@ -138,25 +138,25 @@ getCallFun <- function(args) {
 # generic function
 getComponent <- function(x, component, s, ...) UseMethod("getComponent")
 # method for class "seqModel"
-getComponent.seqModel <- function(x, component, s, drop = TRUE, ...) {
+getComponent.seqModel <- function(x, component, s, drop = !is.null(s), ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=1, sMax=ncol(comp))  # check steps
-        comp <- comp[, s, drop=drop]  # extract selected steps
+        comp <- comp[, s, drop=FALSE]  # extract selected steps
     }
-    comp
+    if(isTRUE(drop)) drop(comp) else comp
 }
 # method for classes "rlars" and "grplars"
 getComponent.rlars <- getComponent.grplars <- function(x, component, s, 
-        drop = TRUE, ...) {
+        drop = !is.null(s), ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=0, sMax=ncol(comp)-1)  # check steps
-        comp <- comp[, s + 1, drop=drop]  # extract selected steps
+        comp <- comp[, s + 1, drop=FALSE]  # extract selected steps
     }
-    comp
+    if(isTRUE(drop)) drop(comp) else comp
 }
 # TODO: method for class "sparseLTSGrid"
 
