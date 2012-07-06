@@ -103,10 +103,10 @@
 #' estimates.
 #' @returnItem cnp2  a numeric value giving the consistency factor applied to 
 #' the scale estimate of the reweighted residuals.
-#' @returnItem weights  an integer vector containing binary weights that 
-#' indicate outliers, i.e., the weights are \eqn{1} for observations with 
-#' reasonably small reweighted residuals and \eqn{0} for observations with 
-#' large reweighted residuals.
+#' @returnItem wt  an integer vector containing binary weights that indicate 
+#' outliers, i.e., the weights are \eqn{1} for observations with reasonably 
+#' small reweighted residuals and \eqn{0} for observations with large 
+#' reweighted residuals.
 #' @returnItem df  an integer giving the degrees of freedom of the obtained 
 #' reweighted model fit, i.e., the number of nonzero coefficient estimates.
 #' @returnItem raw.coefficients  a numeric vector of coefficient estimates of 
@@ -121,7 +121,7 @@
 #' the raw residuals.
 #' @returnItem raw.cnp2  a numeric value giving the consistency factor applied 
 #' to the scale estimate of the raw residuals.
-#' @returnItem raw.weights  an integer vector containing binary weights that 
+#' @returnItem raw.wt  an integer vector containing binary weights that 
 #' indicate outliers of the raw fit, i.e., the weights used for the reweighted 
 #' fit.
 #' @returnItem x  the predictor matrix (if \code{model} is \code{TRUE}).
@@ -147,7 +147,7 @@
 #' @seealso \code{\link{sparseLTSGrid}}, \code{\link{coef.sparseLTS}}, 
 #' \code{\link{fitted.sparseLTS}}, \code{\link{plot.sparseLTS}}, 
 #' \code{\link{predict.sparseLTS}}, \code{\link{residuals.sparseLTS}}, 
-#' \code{\link{weights.sparseLTS}}, \code{\link[robustbase]{ltsReg}}
+#' \code{\link{wt.sparseLTS}}, \code{\link[robustbase]{ltsReg}}
 #' 
 #' @example inst/doc/examples/example-sparseLTS.R
 #' 
@@ -294,14 +294,14 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     s <- fit$scale * cdelta
     ## compute 0/1 weights identifying outliers
     ok <- abs((fit$residuals - fit$center)/s) <= q  # good observations
-    raw.weights <- as.integer(ok)
+    raw.wt <- as.integer(ok)
     
     ## compute reweighted estimator
     # keep information on raw estimator
     raw.fit <- fit
     raw.cdelta <- cdelta
     raw.s <- s
-    nOk <- sum(raw.weights)  # number of good observations
+    nOk <- sum(raw.wt)  # number of good observations
     # compute reweighted estimate
     fit <- fastLasso(x, y, lambda=lambda, subset=which(ok), 
         intercept=intercept, eps=eps, use.Gram=use.Gram)
@@ -323,10 +323,10 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
         cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))  # consistency factor
     } else cdelta <- 1  # consistency factor not necessary
-    center <- sum(raw.weights*fit$residuals)/nOk
+    center <- sum(raw.wt*fit$residuals)/nOk
     centeredResiduals <- fit$residuals - center
-    s <- sqrt(sum(raw.weights*centeredResiduals^2)/(nOk-1)) * cdelta
-    weights <- as.integer(abs(centeredResiduals/s) <= q)
+    s <- sqrt(sum(raw.wt*centeredResiduals^2)/(nOk-1)) * cdelta
+    wt <- as.integer(abs(centeredResiduals/s) <= q)
     
     ## compute degrees of freedom (number of nonzero parameters)
     df <- modelDf(fit$coefficients, tol)
@@ -337,12 +337,12 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         fitted.values=copyNames(fit$fitted.values, y), 
         residuals=copyNames(fit$residuals, y), center=center, scale=s, 
         lambda=lambda, intercept=intercept, alpha=alpha, quan=h, 
-        cnp2=cdelta, weights=weights, df=df, 
+        cnp2=cdelta, wt=wt, df=df, 
         raw.coefficients=copyColnames(raw.fit$coefficients, x), 
         raw.fitted.values=y-raw.fit$residuals,
         raw.residuals=copyNames(raw.fit$residuals, y), 
         raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta, 
-        raw.weights=raw.weights)
+        raw.wt=raw.wt)
     if(isTRUE(model)) {
         fit$x <- x
         fit$y <- y
@@ -415,7 +415,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' estimates.
 #' @returnItem cnp2  a numeric vector giving the consistency factors applied to 
 #' the scale estimates of the residuals from the reweighted fits.
-#' @returnItem weights  an integer matrix in which each column contains binary 
+#' @returnItem wt  an integer matrix in which each column contains binary 
 #' weights that indicate outliers from the corresponding reweighted fit, i.e., 
 #' the weights are \eqn{1} for observations with reasonably small reweighted 
 #' residuals and \eqn{0} for observations with large reweighted residuals.
@@ -435,9 +435,9 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' the residuals from the raw fits.
 #' @returnItem raw.cnp2  a numeric vector giving the consistency factors 
 #' applied to the scale estimates of the residuals from the raw fits.
-#' @returnItem raw.weights  an integer matrix in which each column contains 
-#' binary weights that indicate outliers of the corresponding raw fit, i.e., 
-#' the weights used for the reweighted fits.
+#' @returnItem raw.wt  an integer matrix in which each column contains binary 
+#' weights that indicate outliers of the corresponding raw fit, i.e., the 
+#' weights used for the reweighted fits.
 #' @returnItem crit  a character string specifying the optimality criterion used 
 #' for selecting the optimal model.
 #' @returnItem critValues  a numeric vector containing the values of the 
@@ -470,7 +470,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' \code{\link{diagnosticPlot}}, 
 #' \code{\link[=predict.sparseLTS]{predict.sparseLTSGrid}}, 
 #' \code{\link[=residuals.sparseLTS]{residuals.sparseLTSGrid}}, 
-#' \code{\link[=weights.sparseLTS]{weights.sparseLTSGrid}}, 
+#' \code{\link[=wt.sparseLTS]{wt.sparseLTSGrid}}, 
 #' 
 #' @example inst/doc/examples/example-sparseLTSGrid.R
 #' 
@@ -578,7 +578,7 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     alpha <- fit[[1]]$alpha
     quan <- fit[[1]]$quan
     cnp2 <- sapply(fit, function(x) x$cnp2)
-    weights <- sapply(fit, weights, fit="reweighted")
+    wt <- sapply(fit, wt, fit="reweighted")
     df <- sapply(fit, function(x) x$df)
     raw.coef <- sapply(fit, coef, fit="raw")
     raw.fitted <- sapply(fit, fitted, fit="raw")
@@ -586,16 +586,15 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     raw.center <- sapply(fit, function(x) x$raw.center)
     raw.scale <- sapply(fit, function(x) x$raw.scale)
     raw.cnp2 <- sapply(fit, function(x) x$raw.cnp2)
-    raw.weights <- sapply(fit, weights, fit="raw")
+    raw.wt <- sapply(fit, wt, fit="raw")
     # construct return object
     fit <- list(best=best, objective=objective, coefficients=coef, 
         fitted.values=fitted, residuals=residuals, center=center, 
         scale=scale, lambda=lambda, intercept=intercept, alpha=alpha, 
-        quan=quan, cnp2=cnp2, weights=weights, df=df, 
-        raw.coefficients=raw.coef, raw.fitted.values=raw.fitted, 
-        raw.residuals=raw.residuals, raw.center=raw.center, 
-        raw.scale=raw.scale, raw.cnp2=raw.cnp2, raw.weights=raw.weights, 
-        crit=crit, critValues=critValues, sOpt=sOpt, 
+        quan=quan, cnp2=cnp2, wt=wt, df=df, raw.coefficients=raw.coef, 
+        raw.fitted.values=raw.fitted, raw.residuals=raw.residuals, 
+        raw.center=raw.center, raw.scale=raw.scale, raw.cnp2=raw.cnp2, 
+        raw.wt=raw.wt, crit=crit, critValues=critValues, sOpt=sOpt, 
         raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
     if(isTRUE(model)) {
         if(intercept) x <- addIntercept(x)

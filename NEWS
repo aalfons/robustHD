@@ -2,8 +2,11 @@ Changes in robustHD version 0.2.0
 
     + Graphics now based on ggplot2 instead of lattice.
     
-    + coef(), fitted(), residuals() and weights() methods now have argument 
+    + coef(), fitted(), residuals() and wt() methods now have argument 
       'drop' to control whether to reduce the dimension if possible.
+    
+    + Renamed components 'weight' and 'raw.weights' of sparse LTS models to 
+      'wt' and 'raw.wt', and renamed the accessor function accordingly to wt().
     
     + Print methods for "sparseLTS" and "sparseLTSGrid" now only show non-zero 
       coefficients by default; also added argument to print method for "rlars".

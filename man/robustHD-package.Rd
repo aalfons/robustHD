@@ -74,9 +74,9 @@ robustHD-package        Robust methods for high-dimensional data
 sparseLTS               Sparse least trimmed squares regression
 sparseLTSGrid           Sparse least trimmed squares regression
 standardize             Data standardization
-weights.sparseLTS       Extract outlier weights from sparse LTS
-                        regression models
 winsorize               Data cleaning by winsorization
+wt                      Extract outlier weights from sparse LTS
+                        regression models
 }
 }
 \author{

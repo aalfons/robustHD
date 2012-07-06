@@ -1,12 +1,15 @@
-\name{weights.sparseLTS}
-\alias{weights.sparseLTS}
-\alias{weights.sparseLTSGrid}
+\name{wt}
+\alias{wt}
+\alias{wt.sparseLTS}
+\alias{wt.sparseLTSGrid}
 \title{Extract outlier weights from sparse LTS regression models}
 \usage{
-  \method{weights}{sparseLTS} (object,
+  wt(object, ...)
+
+  \method{wt}{sparseLTS} (object,
     fit = c("reweighted", "raw", "both"), ...)
 
-  \method{weights}{sparseLTSGrid} (object, s,
+  \method{wt}{sparseLTSGrid} (object, s,
     fit = c("reweighted", "raw", "both"),
     drop = !is.null(s), ...)
 }
@@ -73,25 +76,24 @@ x[i,] <- x[i,] + 5              # bad leverage points
 # fit model
 fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
 # extract outlier weights
-weights(fit)
-weights(fit, fit = "both")
+wt(fit)
+wt(fit, fit = "both")
 
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
 fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
 # extract outlier weights
-weights(fitGrid)
-weights(fitGrid, fit = "both")
-weights(fitGrid, s = NULL)
-weights(fitGrid, fit = "both", s = NULL)
+wt(fitGrid)
+wt(fitGrid, fit = "both")
+wt(fitGrid, s = NULL)
+wt(fitGrid, fit = "both", s = NULL)
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link[stats]{weights}}, \code{\link{sparseLTS}},
-  \code{\link{sparseLTSGrid}}
+  \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
 }
 \keyword{regression}
 

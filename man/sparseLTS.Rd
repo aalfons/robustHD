@@ -171,11 +171,11 @@
   applied to the scale estimate of the reweighted
   residuals.}
 
-  \item{weights}{an integer vector containing binary
-  weights that indicate outliers, i.e., the weights are
-  \eqn{1} for observations with reasonably small reweighted
-  residuals and \eqn{0} for observations with large
-  reweighted residuals.}
+  \item{wt}{an integer vector containing binary weights
+  that indicate outliers, i.e., the weights are \eqn{1} for
+  observations with reasonably small reweighted residuals
+  and \eqn{0} for observations with large reweighted
+  residuals.}
 
   \item{df}{an integer giving the degrees of freedom of the
   obtained reweighted model fit, i.e., the number of
@@ -201,9 +201,9 @@
   factor applied to the scale estimate of the raw
   residuals.}
 
-  \item{raw.weights}{an integer vector containing binary
-  weights that indicate outliers of the raw fit, i.e., the
-  weights used for the reweighted fit.}
+  \item{raw.wt}{an integer vector containing binary weights
+  that indicate outliers of the raw fit, i.e., the weights
+  used for the reweighted fit.}
 
   \item{x}{the predictor matrix (if \code{model} is
   \code{TRUE}).}
@@ -267,7 +267,7 @@ coef(fit, zeros = FALSE)
   \code{\link{plot.sparseLTS}},
   \code{\link{predict.sparseLTS}},
   \code{\link{residuals.sparseLTS}},
-  \code{\link{weights.sparseLTS}},
+  \code{\link{wt.sparseLTS}},
   \code{\link[robustbase]{ltsReg}}
 }
 \keyword{regression}

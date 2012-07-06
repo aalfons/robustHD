@@ -14,11 +14,11 @@ subset.sparseLTSGrid <- function(x, s = NULL, drop = TRUE, ...) {
     x$coefficients <- coef(x, s=s, fit="reweighted", drop=drop)
     x$fitted.values <- fitted(x, s=s, fit="reweighted", drop=drop)
     x$residuals <- residuals(x, s=s, fit="reweighted", drop=drop)
-    x$weights <- weights(x, s=s, fit="reweighted", drop=drop)
+    x$wt <- wt(x, s=s, fit="reweighted", drop=drop)
     x$raw.coefficients <- coef(x, s=s, fit="raw", drop=drop)
     x$raw.fitted.values <- fitted(x, s=s, fit="raw", drop=drop)
     x$raw.residuals <- residuals(x, s=s, fit="raw", drop=drop)
-    x$raw.weights <- weights(x, s=s, fit="raw", drop=drop)
+    x$raw.wt <- wt(x, s=s, fit="raw", drop=drop)
     x$best <- x$best[, s, drop=drop]
     x$objective <- x$objective[s]
     x$center <- x$center[s]

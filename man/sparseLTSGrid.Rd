@@ -106,8 +106,8 @@
   factors applied to the scale estimates of the residuals
   from the reweighted fits.}
 
-  \item{weights}{an integer matrix in which each column
-  contains binary weights that indicate outliers from the
+  \item{wt}{an integer matrix in which each column contains
+  binary weights that indicate outliers from the
   corresponding reweighted fit, i.e., the weights are
   \eqn{1} for observations with reasonably small reweighted
   residuals and \eqn{0} for observations with large
@@ -140,7 +140,7 @@
   factors applied to the scale estimates of the residuals
   from the raw fits.}
 
-  \item{raw.weights}{an integer matrix in which each column
+  \item{raw.wt}{an integer matrix in which each column
   contains binary weights that indicate outliers of the
   corresponding raw fit, i.e., the weights used for the
   reweighted fits.}
@@ -221,7 +221,7 @@ coef(fitGrid, zeros = FALSE)
   \code{\link{diagnosticPlot}},
   \code{\link[=predict.sparseLTS]{predict.sparseLTSGrid}},
   \code{\link[=residuals.sparseLTS]{residuals.sparseLTSGrid}},
-  \code{\link[=weights.sparseLTS]{weights.sparseLTSGrid}},
+  \code{\link[=wt.sparseLTS]{wt.sparseLTSGrid}},
 }
 \keyword{multivariate}
 \keyword{robust}
