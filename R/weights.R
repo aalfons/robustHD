@@ -28,14 +28,12 @@ weights.rlm <- function(object, ...) object$w
 #' weights indicating outliers from the reweighted fit, \code{"raw"} for 
 #' weights indicating outliers from the raw fit, or \code{"both"} for the 
 #' outlier weights from both estimators.
+#' @param drop  a logical indicating whether to reduce the dimension to a 
+#' vector in case of only one model.
 #' @param \dots  currently ignored.
 #' 
 #' @return  
-#' If weights indicating outliers are requested for only one model, they are 
-#' returned in the form of a numeric vector.
-#' 
-#' Otherwise a numeric matrix is returned in which each column contains weights 
-#' indicating outliers from the corresponding model.
+#' A numeric vector or matrix containing the requested outlier weights.
 #' 
 #' @note The weights are \eqn{1} for observations with reasonably small 
 #' residuals and \eqn{0} for observations with large residuals.
@@ -65,8 +63,9 @@ weights.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method weights sparseLTSGrid
 #' @export
 
-weights.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"), 
-        ...) {
+weights.sparseLTSGrid <- function(object, s, 
+        fit = c("reweighted", "raw", "both"), 
+        drop = !is.null(s), ...) {
     ## initializations
     fit <- match.arg(fit)
     ## extract weights
@@ -97,7 +96,7 @@ weights.sparseLTSGrid <- function(object, s, fit = c("reweighted", "raw", "both"
             if(fit == "both") s <- c(s, sMax+s)
         }
     }
-    if(!is.null(s)) weights <- weights[, s]  # weights for selected steps
+    if(!is.null(s)) weights <- weights[, s, drop=FALSE]  # selected steps
     ## return weights
-    weights
+    if(isTRUE(drop)) drop(weights) else weights
 }

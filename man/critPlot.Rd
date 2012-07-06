@@ -10,12 +10,13 @@
 \usage{
   critPlot(x, ...)
 
-  \method{critPlot}{seqModel} (x, ...)
+  \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
   \method{critPlot}{tslars} (x, p, ...)
 
   \method{critPlot}{sparseLTSGrid} (x,
-    fit = c("reweighted", "raw", "both"), ...)
+    fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
+    ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}
@@ -30,17 +31,20 @@
   fits, \code{"raw"} for the raw fits, or \code{"both"} for
   both estimators.}
 
+  \item{size}{a numeric vector of length two giving the
+  line width and the point size, respectively.}
+
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
   \code{"tslars"} method, additional arguments to be passed
   down to the \code{"seqModel"} method.  For the
   \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
   additional arguments to be passed down to
-  \code{\link[lattice]{xyplot}}.}
+  \code{\link[ggplot2]{geom_point}}.}
 }
 \value{
-  An object of class \code{"trellis"} (see
-  \code{\link[lattice]{xyplot}}).
+  An object of class \code{"ggplot"} (see
+  \code{\link[ggplot2]{ggplot}}).
 }
 \description{
   Produce a plot of the values of the optimality criterion
@@ -75,7 +79,7 @@ critPlot(fit)
   Andreas Alfons
 }
 \seealso{
-  \code{\link[lattice]{xyplot}}, \code{\link{rlars}},
+  \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}},
   \code{\link{grplars}}, \code{\link{rgrplars}},
   \code{\link{tslarsP}}, \code{\link{rtslarsP}},
   \code{\link{tslars}}, \code{\link{rtslars}},

@@ -141,25 +141,30 @@ getCallFun <- function(args) {
 ## get a component (coefficients, fitted values, residuals, ...) for certain 
 ## steps of the model sequence
 ## the component is assumed to be a matrix
+# generic function
 getComponent <- function(x, component, s, ...) UseMethod("getComponent")
-getComponent.seqModel <- function(x, component, s, ...) {
+# method for class "seqModel"
+getComponent.seqModel <- function(x, component, s, drop = !is.null(s), ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=1, sMax=ncol(comp))  # check steps
-        comp <- comp[, s]  # extract selected steps
+        comp <- comp[, s, drop=FALSE]  # extract selected steps
     }
-    comp
+    if(isTRUE(drop)) drop(comp) else comp
 }
-getComponent.rlars <- getComponent.grplars <- function(x, component, s, ...) {
+# method for classes "rlars" and "grplars"
+getComponent.rlars <- getComponent.grplars <- function(x, component, s, 
+        drop = !is.null(s), ...) {
     comp <- x[[component]]      # extract the specified component
     if(missing(s)) s <- x$sOpt  # use the optimal step size as default
     if(!is.null(s)) {
         s <- checkSteps(s, sMin=0, sMax=ncol(comp)-1)  # check steps
-        comp <- comp[, s + 1]  # extract selected steps
+        comp <- comp[, s + 1, drop=FALSE]  # extract selected steps
     }
-    comp
+    if(isTRUE(drop)) drop(comp) else comp
 }
+# TODO: method for class "sparseLTSGrid"
 
 ## get the number of processor cores
 getNumProcs <- function() .Call("R_getNumProcs", PACKAGE="robustHD")

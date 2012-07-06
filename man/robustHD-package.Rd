@@ -14,13 +14,14 @@ Robust methods for high-dimensional data, in particular linear
 \tabular{ll}{
 Package: \tab robustHD\cr
 Type: \tab Package\cr
-Version: \tab 0.2.0\cr
-Date: \tab 2012-05-23\cr
+Version: \tab 0.3.0\cr
+Date: \tab 2012-07-05\cr
 Depends: \tab 
 Rcpp (>= 0.9.10),
 cvTools (>= 0.3.0),
-lattice,
+ggplot2,
 MASS,
+parallel,
 robustbase (>= 0.6-0)\cr
 Imports: \tab 
 RcppArmadillo (>= 0.3.0),
@@ -57,6 +58,8 @@ fitted.seqModel         Extract fitted values from a sequence of
                         regression models
 fitted.sparseLTS        Extract fitted values from sparse LTS
                         regression models
+fortify.sparseLTS       Convert a sparse LTS regression model into a
+                        data frame for plotting
 grplars                 Groupwise least angle regression
 lambda0                 Penalty parameter for sparse LTS regression
 plot.seqModel           Plot a sequence of regression models
