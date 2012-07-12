@@ -25,7 +25,7 @@
 #' and slopes of the respective reference lines to be displayed in residual Q-Q 
 #' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff 
 #' points for detecting leverage points), and \code{"facets"} (default faceting 
-#' formulas for the diagnostic plots).
+#' formula for the diagnostic plots).
 #' @returnItem step  the indices of the models (only returned if more than one 
 #' model is requested).
 #' @returnItem fit  the model fits (only returned if both the reweighted 

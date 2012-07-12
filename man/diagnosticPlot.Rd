@@ -55,7 +55,7 @@
   \code{\link[grDevices]{devAskNewPage}}). The default is
   to ask if all plots are requested and not ask otherwise.}
 
-  \item{facets}{faceting formula to override the default
+  \item{facets}{a faceting formula to override the default
   behavior.  If supplied, \code{\link[ggplot2]{facet_wrap}}
   or \code{\link[ggplot2]{facet_grid}} is called depending
   on whether the formula is one-sided or two-sided.}

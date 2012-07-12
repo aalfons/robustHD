@@ -492,7 +492,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' @param ask  a logical indicating whether the user should be asked before 
 #' each plot (see \code{\link[grDevices]{devAskNewPage}}). The default is to 
 #' ask if all plots are requested and not ask otherwise.
-#' @param facets  faceting formula to override the default behavior.  If 
+#' @param facets  a faceting formula to override the default behavior.  If 
 #' supplied, \code{\link[ggplot2]{facet_wrap}} or 
 #' \code{\link[ggplot2]{facet_grid}} is called depending on whether the formula 
 #' is one-sided or two-sided.

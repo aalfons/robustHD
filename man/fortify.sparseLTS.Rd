@@ -33,7 +33,7 @@
   reference lines to be displayed in residual Q-Q plots),
   \code{"q"} (quantiles of the Mahalanobis distribution
   used as cutoff points for detecting leverage points), and
-  \code{"facets"} (default faceting formulas for the
+  \code{"facets"} (default faceting formula for the
   diagnostic plots).
 
   \item{step}{the indices of the models (only returned if
