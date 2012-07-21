@@ -70,7 +70,7 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
     # build data frame
     coefData <- data.frame(step=rep.int(steps, m), 
         df=rep.int(df, m), coefficient=as.numeric(coef), 
-        variable=rep(factor(vn, levels=vn), each=nsteps))
+        variable=factor(rep(vn, each=nsteps), levels=vn))
     if(!is.null(labels)) 
         coefData$label <- rep(as.character(labels), each=nsteps)
     coefData
@@ -126,17 +126,17 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
     if(fit == "both") {
         fits <- c("reweighted", "raw")
         coefData <- data.frame(
-            fit=rep.int(rep(factor(fits, levels=fits), each=sMax), m), 
+            fit=rep.int(factor(rep(fits, each=sMax), levels=fits), m), 
             lambda=rep.int(lambda, 2*m), step=rep.int(steps, 2*m), 
             df=rep.int(df, 2*m), coefficient=as.numeric(coef), 
-            variable=rep(factor(vn, levels=vn), each=2*sMax))
+            variable=factor(rep(vn, each=2*sMax), levels=vn))
         if(!is.null(labels)) 
             coefData$label <- rep(as.character(labels), each=2*sMax)
     } else {
         coefData <- data.frame(
             lambda=rep.int(lambda, m), step=rep.int(steps, m), 
             df=rep.int(df, m), coefficient=as.numeric(coef), 
-            variable=rep(factor(vn, levels=vn), each=sMax))
+            variable=factor(rep(vn, each=sMax), levels=vn))
         if(!is.null(labels)) 
             coefData$label <- rep(as.character(labels), each=sMax)
     }
@@ -353,7 +353,7 @@ critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
     if(fit == "both") {
         fits <- c("reweighted", "raw")
         sMax <- length(lambda)
-        critData <- data.frame(rep(factor(fits, levels=fits), each=sMax), 
+        critData <- data.frame(factor(rep(fits, each=sMax), levels=fits), 
             rep.int(lambda, 2), c(x$critValues, x$raw.critValues))
         names(critData) <- c("fit", "lambda", crit)
     } else {
