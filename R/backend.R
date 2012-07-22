@@ -38,32 +38,7 @@ registerBackend <- function() {
     putBackendEnv("armadillo", .CallRobustHD)
 }
 
-## get function to call C++ back end
-#getBackend <- function(which = c("eigen", "armadillo")) {
-#    which <- match.arg(which)
-#    if(which == "eigen") {
-#        ## use RcppEigen back end if possible
-#        # check if RcppEigen back end is installed
-#        ok <- isTRUE("sparseLTSEigen" %in% .packages(all.available=TRUE))
-#        # check platform (RcppEigen back end does not work with 32-bit Windows)
-#        ok <- ok && !isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386")
-#        # if everything is ok so far, check if RcppEigen back end is loaded
-#        if(ok) {
-#            ok <- isTRUE("sparseLTSEigen" %in% .packages())
-#            if(!ok) {
-#                warning("RcppEigen back end is not loaded; ", 
-#                    "using built-in RcppArmadillo back end")
-#            }
-#        } else {
-#            warning("RcppEigen back end is not available; ", 
-#                "using built-in RcppArmadillo back end")
-#        }
-#        # use RcppArmadillo back end if RcppEigen back end cannot be used
-#        if(!ok) which <- "armadillo"
-#    }
-#    # set built-in Armadillo back end
-#    getBackendEnv(which)
-#}
+# get function to call C++ back end
 getBackend <- function() {
     # if the RcppEigen back end is registered, check the platform
     # (RcppEigen back end does not work with 32-bit Windows)

@@ -18,12 +18,6 @@ addIntercept <- function(x, check = FALSE) {
 }
 
 ## remove intercept column from design matrix
-#removeIntercept <- function(x, pos) {
-#    if(missing(pos)) {
-#        pos <- match("(Intercept)", colnames(x), nomatch = 0)
-#        if(pos > 0) x[, -pos, drop=FALSE] else x
-#    } else x[, -pos, drop=FALSE]
-#}
 removeIntercept <- function(x, pos) {
     haveVector <- is.null(dim(x))
     if(missing(pos)) {
