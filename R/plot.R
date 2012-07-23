@@ -574,6 +574,7 @@ diagnosticPlot.default <- function(x,
         if(inherits(p, "try-error")) {
             warn <- gsub("Error in", "In", p)
             warning(warn, call.=FALSE)
+            res <- list()
         } else {
             print(p)
             res <- list(rqq=p)
@@ -608,26 +609,22 @@ diagnosticPlot.default <- function(x,
             print(p)
             res$rdiag <- p
         }
+        invisible(res)
     } else if(which == "rqq") {
         # residual Q-Q plot
-        res <- rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
-        print(res)
+        rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
     } else if(which == "rindex") {
         # residuals vs indices plot
-        res <- residualPlot(x, abscissa="index", facets=facets, 
+        residualPlot(x, abscissa="index", facets=facets, 
             size=size, id.n=id.n, ...)
-        print(res)
     } else if(which == "rfit") {
         # residuals vs fitted plot
-        res <- residualPlot(x, abscissa="fitted", facets=facets, 
+        residualPlot(x, abscissa="fitted", facets=facets, 
             size=size, id.n=id.n, ...)
-        print(res)
     } else if(which == "rdiag") {
         # regression diagnostic plot
-        res <- rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
-        print(res)
+        rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
     }
-    invisible(res)
 }
 
 
