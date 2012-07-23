@@ -21,6 +21,7 @@ Rcpp (>= 0.9.10),
 cvTools (>= 0.3.0),
 ggplot2,
 MASS,
+perry,
 robustbase (>= 0.6-0)\cr
 Imports: \tab 
 RcppArmadillo (>= 0.3.0),

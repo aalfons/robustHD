@@ -11,6 +11,7 @@ Depends:
     cvTools (>= 0.3.0),
     ggplot2,
     MASS,
+    perry,
     robustbase (>= 0.6-0)
 Imports:
     RcppArmadillo (>= 0.3.0),
@@ -35,10 +36,10 @@ Collate:
     'fortify.R'
     'initialSubsets.R'
     'lambda0.R'
+    'perry.R'
     'plot.R'
     'predict.R'
     'print.R'
-    'repCV.R'
     'residuals.R'
     'rlars.R'
     'sparseLTS.R'

@@ -522,7 +522,7 @@ sparseLTSGrid.formula <- function(formula, data, ...) {
 
 sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
         crit = "BIC", ..., model = TRUE) {
-    ## initializations
+    # initializations
     call <- match.call()
     call[[1]] <- as.name("sparseLTSGrid")
     if(missing(lambda)) {
@@ -551,42 +551,48 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         lambda <- lambda * lambda0(x, y, ...)
     }
     crit <- match.arg(crit)
-    # fit sparse LTS models along supplied grid
-    fit <- lapply(lambda, 
-        function(l, ...) {
-            sparseLTS(x, y, lambda=l, mode="lambda", ..., model=FALSE)
-        }, ...)
-    # select the optimal reweighted and raw model via BIC
+    # fit models and find optimal lambda
     if(crit == "BIC") {
+        # fit sparse LTS models along supplied grid
+        fit <- lapply(lambda, 
+            function(l, ...) {
+                sparseLTS(x, y, lambda=l, mode="lambda", ..., model=FALSE)
+            }, ...)
+        # select the optimal reweighted and raw model via BIC
         critValues <- sapply(fit, BIC, fit="both")
         raw.critValues <- critValues["raw",]
         critValues <- critValues["reweighted",]
         sOpt <- which.min(critValues)
         raw.sOpt <- which.min(raw.critValues)
+        # combine information from the models into suitable data structures
+        names(fit) <- seq_along(lambda)
+        best <- sapply(fit, function(x) x$best)
+        objective <- sapply(fit, function(x) x$objective)
+        coef <- sapply(fit, coef, fit="reweighted")
+        fitted <- sapply(fit, fitted, fit="reweighted")
+        residuals <- sapply(fit, residuals, fit="reweighted")
+        center <- sapply(fit, function(x) x$center)
+        scale <- sapply(fit, function(x) x$scale)
+        lambda <- sapply(fit, function(x) x$lambda)
+        intercept <- fit[[1]]$intercept
+        alpha <- fit[[1]]$alpha
+        quan <- fit[[1]]$quan
+        cnp2 <- sapply(fit, function(x) x$cnp2)
+        wt <- sapply(fit, wt, fit="reweighted")
+        df <- sapply(fit, function(x) x$df)
+        raw.coef <- sapply(fit, coef, fit="raw")
+        raw.fitted <- sapply(fit, fitted, fit="raw")
+        raw.residuals <- sapply(fit, residuals, fit="raw")
+        raw.center <- sapply(fit, function(x) x$raw.center)
+        raw.scale <- sapply(fit, function(x) x$raw.scale)
+        raw.cnp2 <- sapply(fit, function(x) x$raw.cnp2)
+        raw.wt <- sapply(fit, wt, fit="raw")
+    } else if(crit == "PE") {
+        # select the optimal reweighted and raw model via prediction error
+        # fit sparse LTS models for optimal lambdas
+        # combine information from the models into suitable data structures
+        stop("not implemented yet")
     }
-    # combine information from the models into suitable data structures
-    names(fit) <- seq_along(lambda)
-    best <- sapply(fit, function(x) x$best)
-    objective <- sapply(fit, function(x) x$objective)
-    coef <- sapply(fit, coef, fit="reweighted")
-    fitted <- sapply(fit, fitted, fit="reweighted")
-    residuals <- sapply(fit, residuals, fit="reweighted")
-    center <- sapply(fit, function(x) x$center)
-    scale <- sapply(fit, function(x) x$scale)
-    lambda <- sapply(fit, function(x) x$lambda)
-    intercept <- fit[[1]]$intercept
-    alpha <- fit[[1]]$alpha
-    quan <- fit[[1]]$quan
-    cnp2 <- sapply(fit, function(x) x$cnp2)
-    wt <- sapply(fit, wt, fit="reweighted")
-    df <- sapply(fit, function(x) x$df)
-    raw.coef <- sapply(fit, coef, fit="raw")
-    raw.fitted <- sapply(fit, fitted, fit="raw")
-    raw.residuals <- sapply(fit, residuals, fit="raw")
-    raw.center <- sapply(fit, function(x) x$raw.center)
-    raw.scale <- sapply(fit, function(x) x$raw.scale)
-    raw.cnp2 <- sapply(fit, function(x) x$raw.cnp2)
-    raw.wt <- sapply(fit, wt, fit="raw")
     # construct return object
     fit <- list(best=best, objective=objective, coefficients=coef, 
         fitted.values=fitted, residuals=residuals, center=center, 

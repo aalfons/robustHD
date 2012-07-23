@@ -17,5 +17,4 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit and evaluate sparse LTS model
 fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-cv <- repCV(fit)
-cv
+repCV(fit)
