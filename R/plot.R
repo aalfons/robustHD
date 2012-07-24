@@ -78,9 +78,12 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
 
 coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"), 
         zeros = FALSE, labels, ...) {
-    # prepare coefficients and labels
+    # initializations
     fit <- match.arg(fit)
-    coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
+    coef <- coef(model, s=NULL, fit=fit)
+    df <- if(fit == "reweighted") model$df else apply(coef, 2, modelDf)
+    # prepare coefficients and labels
+    coef <- removeIntercept(t(coef))
     zeros <- isTRUE(zeros)
     if(!zeros) {
         keep <- apply(coef != 0, 2, any)
@@ -120,7 +123,6 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
     lambda <- model$lambda    # tuning parameters
     steps <- getSteps(model)  # step numbers
     sMax <- length(steps)     # number of steps
-    df <- model$df            # degrees of freedom
     vn <- colnames(coef)      # variable names
     # build data frame
     if(fit == "both") {
@@ -128,7 +130,7 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
         coefData <- data.frame(
             fit=rep.int(factor(rep(fits, each=sMax), levels=fits), m), 
             lambda=rep.int(lambda, 2*m), step=rep.int(steps, 2*m), 
-            df=rep.int(df, 2*m), coefficient=as.numeric(coef), 
+            df=rep.int(df, m), coefficient=as.numeric(coef), 
             variable=factor(rep(vn, each=2*sMax), levels=vn))
         if(!is.null(labels)) 
             coefData$label <- rep(as.character(labels), each=2*sMax)
