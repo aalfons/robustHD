@@ -1,4 +1,5 @@
 \name{coef.sparseLTS}
+\alias{coef.optSparseLTSGrid}
 \alias{coef.sparseLTS}
 \alias{coef.sparseLTSGrid}
 \title{Extract coefficients from sparse LTS regression models}
@@ -7,9 +8,13 @@
     fit = c("reweighted", "raw", "both"), zeros = TRUE,
     ...)
 
-  \method{coef}{sparseLTSGrid} (object, s,
+  \method{coef}{sparseLTSGrid} (object, s = NA,
     fit = c("reweighted", "raw", "both"), zeros = TRUE,
     drop = !is.null(s), ...)
+
+  \method{coef}{optSparseLTSGrid} (object,
+    fit = c("reweighted", "raw", "both"), zeros = TRUE,
+    ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

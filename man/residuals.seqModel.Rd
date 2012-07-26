@@ -1,10 +1,13 @@
 \name{residuals.seqModel}
+\alias{residuals.optSeqModel}
 \alias{residuals.rlars}
 \alias{residuals.seqModel}
 \title{Extract residuals from a sequence of regression models}
 \usage{
-  \method{residuals}{seqModel} (object, s,
+  \method{residuals}{seqModel} (object, s = NA,
     drop = !is.null(s), ...)
+
+  \method{residuals}{optSeqModel} (object, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

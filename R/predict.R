@@ -43,7 +43,7 @@
 #' 
 #' @export
 
-predict.seqModel <- function(object, newdata, s, ...) {
+predict.seqModel <- function(object, newdata, s = NA, ...) {
     ## initializations
     coef <- coef(object, s=s, ...)  # extract coefficients
     # extract or check new data
@@ -76,6 +76,42 @@ predict.seqModel <- function(object, newdata, s, ...) {
     out <- newdata %*% coef
     if(is.null(d)) out <- drop(out)
     out
+}
+
+
+#' @rdname predict.seqModel
+#' @method predict optSeqModel
+#' @export
+
+predict.optSeqModel <- function(object, newdata, ...) {
+    ## initializations
+    coef <- coef(object, ...)  # extract coefficients
+    # extract or check new data
+    terms <- delete.response(object$terms)  # extract terms for model matrix
+    if(missing(newdata) || is.null(newdata)) {
+        if(is.null(newdata <- object$x)) {
+            newdata <- try(model.matrix(terms), silent=TRUE)
+            if(inherits(newdata, "try-error")) stop("model data not available")
+        }
+    } else {
+        # interpret vector as row
+        if(is.null(dim(newdata))) newdata <- t(newdata)
+        # check dimensions if model was not specified with a formula, 
+        # otherwise use the terms object to extract model matrix
+        if(is.null(terms)) {
+            newdata <- as.matrix(newdata)
+            # add a column of ones to the new data matrix 
+            # (unless it already contains intercept column)
+            newdata <- addIntercept(newdata, check=TRUE)
+            # check dimensions of new data
+            p <- length(coef)
+            if(ncol(newdata) != p) {
+                stop(sprintf("new data must have %d columns", p))
+            }
+        } else newdata <- model.matrix(terms, as.data.frame(newdata))
+    }
+    ## compute predictions (ensure that a vector is returned)
+    drop(newdata %*% coef)
 }
 
 
@@ -168,7 +204,7 @@ predict.sparseLTS <- function(object, newdata,
 #' @method predict sparseLTSGrid
 #' @export
 
-predict.sparseLTSGrid <- function(object, newdata, s, 
+predict.sparseLTSGrid <- function(object, newdata, s = NA, 
         fit = c("reweighted", "raw", "both"), ...) {
     ## initializations
     coef <- coef(object, s=s, fit=fit)  # extract coefficients
@@ -202,3 +238,10 @@ predict.sparseLTSGrid <- function(object, newdata, s,
     if(is.null(d)) out <- drop(out)
     out
 }
+
+
+#' @rdname predict.sparseLTS
+#' @method predict optSparseLTSGrid
+#' @export
+
+predict.optSparseLTSGrid <- predict.sparseLTS

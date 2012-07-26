@@ -61,7 +61,8 @@ checkSMax <- function(sMax, n, p) {
 
 ## check steps for coef(), fitted(), residuals(), predict(), ... methods
 checkSteps <- function(s, sMin, sMax) {
-    if(!is.numeric(s) || length(s) == 0 || any(s < sMin) || any(s > sMax)) {
+    if(!is.numeric(s) || length(s) == 0 || any(!is.finite(s)) || 
+            any(s < sMin) || any(s > sMax)) {
         stop(sprintf("invalid step, must be between %d and %d", sMin, sMax))
     }
     s
@@ -83,9 +84,11 @@ copyColnames <- function(x, from) {
 
 ## utility function to get default labels for plot
 defaultLabels <- function(x) UseMethod("defaultLabels")
+
 defaultLabels.seqModel <- function(x) {
     as.character(seq_along(removeIntercept(coef(x))))
 }
+
 defaultLabels.grplars <- function(x) {
     assign <- x$assign
     labels <- split(as.character(assign), assign)
@@ -96,8 +99,23 @@ defaultLabels.grplars <- function(x) {
     unsplit(labels, assign)
 }
 
+defaultLabels.sparseLTSGrid <- defaultLabels.seqModel
+
 ## utility function to get default main plot title
 defaultMain <- function() "Coefficient path" 
+
+## drop dimension in case of matrix with one column
+dropCol <- function(x) {
+    d <- dim(x)
+    if(is.null(d[2]) || d[2] != 1) x
+    else if(d[1] == 1) {
+        # drop() drops all names for a 1x1 matrix
+        names <- rownames(x)
+        x <- drop(x)
+        names(x) <- names
+        x
+    } else drop(x)
+}
 
 ## find argument names of functions
 #findArgNames <- function(..., removeDots = TRUE) {
@@ -126,69 +144,6 @@ getCallFun <- function(args) {
     else function(..., fun, args) do.call(fun, c(list(...), args))
 }
 
-## get a component (coefficients, fitted values, residuals, ...) for certain 
-## steps of the model sequence
-## the component is assumed to be a matrix
-# generic function
-getComponent <- function(x, component, s, ...) UseMethod("getComponent")
-# method for class "seqModel"
-getComponent.seqModel <- function(x, component, s, drop = !is.null(s), ...) {
-    comp <- x[[component]]      # extract the specified component
-    if(missing(s)) s <- x$sOpt  # use the optimal step size as default
-    if(!is.null(s)) {
-        s <- checkSteps(s, sMin=1, sMax=ncol(comp))  # check steps
-        comp <- comp[, s, drop=FALSE]  # extract selected steps
-    }
-    if(isTRUE(drop)) drop(comp) else comp
-}
-# method for classes "rlars" and "grplars"
-getComponent.rlars <- getComponent.grplars <- function(x, component, s, 
-        drop = !is.null(s), ...) {
-    comp <- x[[component]]      # extract the specified component
-    if(missing(s)) s <- x$sOpt  # use the optimal step size as default
-    if(!is.null(s)) {
-        s <- checkSteps(s, sMin=0, sMax=ncol(comp)-1)  # check steps
-        comp <- comp[, s + 1, drop=FALSE]  # extract selected steps
-    }
-    if(isTRUE(drop)) drop(comp) else comp
-}
-# method for class "sparseLTSGrid"
-getComponent.sparseLTSGrid <- function(x, component, s, 
-        fit = c("reweighted", "raw", "both"), drop = !is.null(s), ...) {
-    # initializations
-    fit <- match.arg(fit)
-    if(fit != "reweighted") raw.component <- paste("raw", component, sep=".")
-    # extract component
-    if(fit == "reweighted") comp <- x[[component]]
-    else if(fit == "raw") comp <- x[[raw.component]]
-    else {
-        comp <- list(reweighted=x[[component]], raw=x[[raw.component]])
-        comp <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, comp, names(comp), SIMPLIFY=FALSE)
-        comp <- do.call(cbind, comp)
-    }
-    # check selected steps and extract corresponding coefficients
-    sMax <- length(x$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=x$sOpt, raw=x$raw.sOpt, 
-            both=c(reweighted=x$sOpt, raw=sMax+x$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    # extract selected steps
-    if(!is.null(s)) comp <- comp[, s, drop=FALSE]
-    if(isTRUE(drop)) drop(comp) else comp
-}
-
 ## get the control object for model functions
 #' @import robustbase MASS
 getRegControl <- function(fun) {
@@ -214,9 +169,9 @@ getRegControl <- function(fun) {
 ## get steps of model sequence
 getSteps <- function(x) UseMethod("getSteps")
 
-getSteps.seqModel <- function(x) seq_along(x$df)
+getSteps.seqModel <- function(x) seq_along(x$df) - 1
 
-getSteps.rlars <- getSteps.grplars <- function(x) seq_along(x$df) - 1
+getSteps.sparseLTSGrid <- function(x) seq_along(x$lambda)
 
 ## compute coefficients of hyperplane through data points
 hyperplane <- function(x) {
@@ -233,7 +188,7 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
     length(which(abs(beta) > tol))
 }
 
-# find indices of h smallest observations
+## find indices of h smallest observations
 partialOrder <- function(x, h) {
     # call C++ function
     callBackend <- getBackend()

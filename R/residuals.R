@@ -31,10 +31,16 @@
 #' 
 #' @export
 
-residuals.seqModel <- function(object, s, drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
+residuals.seqModel <- function(object, s = NA, drop = !is.null(s), ...) {
     getComponent(object, "residuals", s=s, drop=drop, ...)
 }
+
+
+#' @rdname residuals.seqModel
+#' @method residuals optSeqModel
+#' @export
+
+residuals.optSeqModel <- function(object, ...) object$residuals
 
 
 #' Extract residuals from sparse LTS regression models
@@ -102,11 +108,10 @@ residuals.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method residuals sparseLTSGrid
 #' @export
 
-residuals.sparseLTSGrid <- function(object, s, 
+residuals.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         standardized = FALSE, drop = !is.null(s), ...) {
     ## extract residuals
-    if(missing(s) && missing(drop)) drop <- TRUE
     residuals <- getComponent(object, "residuals", s=s, fit=fit, drop=drop, ...)
     ## if requested, standardize residuals
     if(isTRUE(standardized)) {
@@ -136,3 +141,10 @@ residuals.sparseLTSGrid <- function(object, s,
     ## return residuals
     residuals
 }
+
+
+#' @rdname residuals.sparseLTS
+#' @method residuals optSparseLTSGrid
+#' @export
+
+residuals.optSparseLTSGrid <- residuals.sparseLTS

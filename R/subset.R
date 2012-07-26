@@ -19,7 +19,7 @@ subset.sparseLTSGrid <- function(x, s = NULL, drop = TRUE, ...) {
     x$raw.fitted.values <- fitted(x, s=s, fit="raw", drop=drop)
     x$raw.residuals <- residuals(x, s=s, fit="raw", drop=drop)
     x$raw.wt <- wt(x, s=s, fit="raw", drop=drop)
-    x$best <- x$best[, s, drop=drop]
+    x$best <- getBest(x, s=s, drop=drop)
     x$objective <- x$objective[s]
     x$center <- x$center[s]
     x$scale <- x$scale[s]

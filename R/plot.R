@@ -42,6 +42,27 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
     else critPlot(x, ...)
 }
 
+
+#' @rdname plot.seqModel
+#' @method plot optSeqModel
+#' @export 
+
+plot.optSeqModel <- function(x, ...) critPlot(x, ...)
+
+
+#' @rdname plot.seqModel
+#' @method plot sparseLTSGrid
+#' @export 
+
+plot.sparseLTSGrid <- plot.seqModel
+
+
+#' @rdname plot.seqModel
+#' @method plot optSparseLTSGrid
+#' @export 
+
+plot.optSparseLTSGrid <- plot.optSeqModel
+
 # ----------------------
 
 ## supplement the coefficients in a model with other useful information
@@ -341,6 +362,31 @@ critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
 
 
 #' @rdname critPlot
+#' @method critPlot optSeqModel
+#' @export 
+
+critPlot.optSeqModel <- function(x, ...) {
+    ## local plot function for prediction error results to override defaults
+    localPlot <- function(x, method = c("line", "dot", "box", "density"), ...) {
+        # initializations
+        if(x$splits$R == 1) {
+            choices <- eval(formals()[["method"]])
+            if(identical(method, choices)) method <- "line"
+            else method <- match.arg(method, c("line", "dot"))
+        } else method <- match.arg(method)
+        # call plot() methed for prediction error results
+        p <- plot(x, method=method, ...)
+        if(method != "density") {
+            p <- p + scale_x_continuous(minor_breaks=fits(x))
+        }
+        p
+    }
+    ## call local plot function
+    localPlot(x$critValues, ...)
+}
+
+
+#' @rdname critPlot
 #' @method critPlot sparseLTSGrid
 #' @export
 
@@ -370,6 +416,34 @@ critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
         p <- p + facet_grid(. ~ fit)
     }
     p
+}
+
+
+#' @rdname critPlot
+#' @method critPlot optSparseLTSGrid
+#' @export 
+
+critPlot.optSparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
+        ...) {
+    ## local plot function for prediction error results to override defaults
+    localPlot <- function(x, method = c("line", "dot", "box", "density"), 
+            fit = select, select = "reweighted", ...) {
+        # initializations
+        if(x$splits$R == 1) {
+            choices <- eval(formals()[["method"]])
+            if(identical(method, choices)) method <- "line"
+            else method <- match.arg(method, c("line", "dot"))
+        } else method <- match.arg(method)
+        # call plot() methed for prediction error results
+        plot(x, method=method, select=fit, ...)
+    }
+    ## call local plot function
+    if(missing(fit)) localPlot(x$critValues, ...)
+    else {
+        fit <- match.arg(fit)
+        if(fit == "both") fit <- NULL
+        localPlot(x$critValues, fit=fit, ...)
+    }
 }
 
 
@@ -552,6 +626,13 @@ diagnosticPlot.sparseLTSGrid <- function(x, s,
     # call default method with all information required for plotting
     diagnosticPlot(fortify(x, s=s, fit=fit), ...)
 }
+
+
+#' @rdname diagnosticPlot
+#' @method diagnosticPlot optSparseLTSGrid
+#' @export
+
+diagnosticPlot.optSparseLTSGrid <- diagnosticPlot.sparseLTS
 
 
 #' @rdname diagnosticPlot

@@ -1,4 +1,5 @@
 \name{fitted.sparseLTS}
+\alias{fitted.optSparseLTSGrid}
 \alias{fitted.sparseLTS}
 \alias{fitted.sparseLTSGrid}
 \title{Extract fitted values from sparse LTS regression models}
@@ -6,9 +7,12 @@
   \method{fitted}{sparseLTS} (object,
     fit = c("reweighted", "raw", "both"), ...)
 
-  \method{fitted}{sparseLTSGrid} (object, s,
+  \method{fitted}{sparseLTSGrid} (object, s = NA,
     fit = c("reweighted", "raw", "both"),
     drop = !is.null(s), ...)
+
+  \method{fitted}{optSparseLTSGrid} (object,
+    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract fitted

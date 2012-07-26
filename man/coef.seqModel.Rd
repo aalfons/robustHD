@@ -1,10 +1,13 @@
 \name{coef.seqModel}
+\alias{coef.optSeqModel}
 \alias{coef.rlars}
 \alias{coef.seqModel}
 \title{Extract coefficients from a sequence of regression models}
 \usage{
-  \method{coef}{seqModel} (object, s, zeros = TRUE,
+  \method{coef}{seqModel} (object, s = NA, zeros = TRUE,
     drop = !is.null(s), ...)
+
+  \method{coef}{optSeqModel} (object, zeros = TRUE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

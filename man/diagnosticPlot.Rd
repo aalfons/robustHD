@@ -1,6 +1,7 @@
 \name{diagnosticPlot}
 \alias{diagnosticPlot}
 \alias{diagnosticPlot.default}
+\alias{diagnosticPlot.optSparseLTSGrid}
 \alias{diagnosticPlot.sparseLTS}
 \alias{diagnosticPlot.sparseLTSGrid}
 \alias{plot.sparseLTS}
@@ -12,6 +13,9 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{diagnosticPlot}{sparseLTSGrid} (x, s,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{diagnosticPlot}{optSparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{diagnosticPlot}{default} (x,

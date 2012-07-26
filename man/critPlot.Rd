@@ -1,5 +1,7 @@
 \name{critPlot}
 \alias{critPlot}
+\alias{critPlot.optSeqModel}
+\alias{critPlot.optSparseLTSGrid}
 \alias{critPlot.rlars}
 \alias{critPlot.seqModel}
 \alias{critPlot.sparseLTSGrid}
@@ -9,9 +11,14 @@
 
   \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
+  \method{critPlot}{optSeqModel} (x, ...)
+
   \method{critPlot}{sparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
     ...)
+
+  \method{critPlot}{optSparseLTSGrid} (x,
+    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}

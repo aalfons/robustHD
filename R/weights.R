@@ -64,9 +64,15 @@ wt.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), ...) {
 #' @method wt sparseLTSGrid
 #' @export
 
-wt.sparseLTSGrid <- function(object, s, 
+wt.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
     getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
 }
+
+
+#' @rdname wt
+#' @method wt optSparseLTSGrid
+#' @export
+
+wt.optSparseLTSGrid <- wt.sparseLTS

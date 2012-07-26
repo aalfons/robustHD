@@ -1,4 +1,5 @@
 \name{residuals.sparseLTS}
+\alias{residuals.optSparseLTSGrid}
 \alias{residuals.sparseLTS}
 \alias{residuals.sparseLTSGrid}
 \title{Extract residuals from sparse LTS regression models}
@@ -7,9 +8,13 @@
     fit = c("reweighted", "raw", "both"),
     standardized = FALSE, ...)
 
-  \method{residuals}{sparseLTSGrid} (object, s,
+  \method{residuals}{sparseLTSGrid} (object, s = NA,
     fit = c("reweighted", "raw", "both"),
     standardized = FALSE, drop = !is.null(s), ...)
+
+  \method{residuals}{optSparseLTSGrid} (object,
+    fit = c("reweighted", "raw", "both"),
+    standardized = FALSE, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract

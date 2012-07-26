@@ -1,5 +1,6 @@
 \name{wt}
 \alias{wt}
+\alias{wt.optSparseLTSGrid}
 \alias{wt.sparseLTS}
 \alias{wt.sparseLTSGrid}
 \title{Extract outlier weights from sparse LTS regression models}
@@ -9,9 +10,12 @@
   \method{wt}{sparseLTS} (object,
     fit = c("reweighted", "raw", "both"), ...)
 
-  \method{wt}{sparseLTSGrid} (object, s,
+  \method{wt}{sparseLTSGrid} (object, s = NA,
     fit = c("reweighted", "raw", "both"),
     drop = !is.null(s), ...)
+
+  \method{wt}{optSparseLTSGrid} (object,
+    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract outlier

@@ -1,4 +1,5 @@
 \name{predict.sparseLTS}
+\alias{predict.optSparseLTSGrid}
 \alias{predict.sparseLTS}
 \alias{predict.sparseLTSGrid}
 \title{Predict from sparse LTS regression models}
@@ -6,7 +7,10 @@
   \method{predict}{sparseLTS} (object, newdata,
     fit = c("reweighted", "raw", "both"), ...)
 
-  \method{predict}{sparseLTSGrid} (object, newdata, s,
+  \method{predict}{sparseLTSGrid} (object, newdata, s = NA,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{predict}{optSparseLTSGrid} (object, newdata,
     fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{

@@ -8,7 +8,6 @@ Maintainer: Andreas Alfons
     <andreas.alfons@econ.kuleuven.be>
 Depends:
     Rcpp (>= 0.9.10),
-    cvTools (>= 0.3.0),
     ggplot2,
     MASS,
     perry,
@@ -25,13 +24,12 @@ Description: Robust methods for high-dimensional data, in particular linear
 License: GPL (>= 2)
 LazyLoad: yes
 Collate:
+    'accessors.R'
     'AIC.R'
     'backend.R'
     'coef.R'
     'corHuber.R'
-    'cv.R'
     'fastLasso.R'
-    'fitModels.R'
     'fitted.R'
     'fortify.R'
     'initialSubsets.R'
@@ -42,6 +40,7 @@ Collate:
     'print.R'
     'residuals.R'
     'rlars.R'
+    'seqModel.R'
     'sparseLTS.R'
     'standardize.R'
     'subset.R'

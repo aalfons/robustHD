@@ -12,8 +12,11 @@
   \method{rlars}{default} (x, y, sMax = NA,
     centerFun = median, scaleFun = mad, const = 2,
     prob = 0.95, fit = TRUE, regFun = lmrob,
-    regArgs = list(), crit = "BIC", ncores = 1,
-    model = TRUE, tol = .Machine$double.eps^0.5, ...)
+    regArgs = list(), crit = c("BIC", "PE"),
+    splits = foldControl(), cost = rtmspe,
+    costArgs = list(), selectBest = c("hastie", "min"),
+    seFactor = 1, ncores = 1, model = TRUE,
+    tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -172,8 +175,7 @@ y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit robust LARS model
-fit <- rlars(x, y)
-coef(fit, zeros = FALSE)
+rlars(x, y)
 }
 \author{
   Andreas Alfons, based on code by Jafar A. Khan, Stefan

@@ -245,3 +245,10 @@ fortify.sparseLTSGrid <- function(model, data, s,
     ## return data frame
     data
 }
+
+
+#' @rdname fortify.sparseLTS
+#' @method fortify optSparseLTSGrid
+#' @export 
+
+fortify.optSparseLTSGrid <- fortify.sparseLTS

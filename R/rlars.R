@@ -151,8 +151,9 @@ rlars.formula <- function(formula, data, ...) {
 
 rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
         const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
-        crit = "BIC", ncores = 1, model = TRUE, tol = .Machine$double.eps^0.5, 
-        ...) {
+        crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
+        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
+        ncores = 1, model = TRUE, tol = .Machine$double.eps^0.5, ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rlars")
@@ -166,7 +167,6 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     # check regression function
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
-    crit <- match.arg(crit)
     ncores <- rep(ncores, length.out=1)
     if(is.na(ncores)) {
         ncores <- 0  # use all available cores
@@ -186,9 +186,10 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         x <- addIntercept(x)
         # call function to fit models along the sequence
         s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
-        out <- fitModels(x, y, s=s, robust=TRUE, regFun=regFun, 
-            useFormula=regControl$useFormula, regArgs=regArgs, 
-            active=active, crit=crit, class="rlars")
+        out <- seqModel(x, y, active=active, s=s, robust=TRUE, regFun=regFun, 
+            useFormula=regControl$useFormula, regArgs=regArgs, crit=crit, 
+            splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
+            seFactor=seFactor)
         # add center and scale estimates
         out$muY <- attr(z, "center")
         out$sigmaY <- attr(z, "scale")
@@ -200,6 +201,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
             out$y <- y
         }
         out$call <- call  # add call to return object
+        class(out) <- c("rlars", class(out))
         out
     } else active
 }

@@ -107,7 +107,6 @@ AIC.sparseLTS <- function(object, ..., fit = c("reweighted", "raw", "both"),
 
 #' @rdname AIC.sparseLTS
 #' @method BIC sparseLTS
-#' @import stats
 #' @export
 
 BIC.sparseLTS <- function(object, ...) {
@@ -118,7 +117,6 @@ BIC.sparseLTS <- function(object, ...) {
 
 #' @rdname AIC.sparseLTS
 #' @method AIC sparseLTSGrid
-#' @import stats
 #' @export
 
 AIC.sparseLTSGrid <- function(object, ..., 
@@ -144,7 +142,6 @@ AIC.sparseLTSGrid <- function(object, ...,
 
 #' @rdname AIC.sparseLTS
 #' @method BIC sparseLTSGrid
-#' @import stats
 #' @export
 
 BIC.sparseLTSGrid <- function(object, ...) {
@@ -152,3 +149,16 @@ BIC.sparseLTSGrid <- function(object, ...) {
     AIC(object, ..., k=log(n))            # call AIC method with penalty for BIC
 }
 
+
+#' @rdname AIC.sparseLTS
+#' @method AIC optSparseLTSGrid
+#' @export
+
+AIC.optSparseLTSGrid <- AIC.sparseLTS
+
+
+#' @rdname AIC.sparseLTS
+#' @method BIC optSparseLTSGrid
+#' @export
+
+BIC.optSparseLTSGrid <- BIC.sparseLTS

@@ -521,7 +521,9 @@ sparseLTSGrid.formula <- function(formula, data, ...) {
 #' @export
 
 sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
-        crit = "BIC", ..., model = TRUE) {
+        ..., crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
+        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
+        seed = NULL, model = TRUE) {
     # initializations
     call <- match.call()
     call[[1]] <- as.name("sparseLTSGrid")
@@ -544,20 +546,24 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         mode <- match.arg(mode)
         lambda <- sort(unique(lambda), decreasing=TRUE)
     }
-    if(mode == "fraction" && any(lambda > 0)) { 
-        # fraction of a robust estimate of the smallest value for the penalty 
-        # parameter that sets all coefficients to zero (based on bivariate 
-        # winsorization)
-        lambda <- lambda * lambda0(x, y, ...)
-    }
     crit <- match.arg(crit)
+    if(!is.null(seed)) set.seed(seed)
+    model <- isTRUE(model)
     # fit models and find optimal lambda
     if(crit == "BIC") {
+        # check grid of lambda values
+        if(mode == "fraction" && any(lambda > 0)) { 
+            # fraction of a robust estimate of the smallest value for the 
+            # penalty parameter that sets all coefficients to zero (based on 
+            # bivariate winsorization)
+            lambda <- lambda * lambda0(x, y, ...)
+        }
         # fit sparse LTS models along supplied grid
         fit <- lapply(lambda, 
-            function(l, ...) {
+            function(l, x, y, ...) {
                 sparseLTS(x, y, lambda=l, mode="lambda", ..., model=FALSE)
-            }, ...)
+            }, x, y, ...)
+        names(fit) <- seq_along(lambda)
         # select the optimal reweighted and raw model via BIC
         critValues <- sapply(fit, BIC, fit="both")
         raw.critValues <- critValues["raw",]
@@ -565,10 +571,9 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         sOpt <- which.min(critValues)
         raw.sOpt <- which.min(raw.critValues)
         # combine information from the models into suitable data structures
-        names(fit) <- seq_along(lambda)
         best <- sapply(fit, function(x) x$best)
         objective <- sapply(fit, function(x) x$objective)
-        coef <- sapply(fit, coef, fit="reweighted")
+        coef <- do.call(cbind, lapply(fit, coef, fit="reweighted"))
         fitted <- sapply(fit, fitted, fit="reweighted")
         residuals <- sapply(fit, residuals, fit="reweighted")
         center <- sapply(fit, function(x) x$center)
@@ -580,34 +585,85 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         cnp2 <- sapply(fit, function(x) x$cnp2)
         wt <- sapply(fit, wt, fit="reweighted")
         df <- sapply(fit, function(x) x$df)
-        raw.coef <- sapply(fit, coef, fit="raw")
+        raw.coef <- do.call(cbind, lapply(fit, coef, fit="raw"))
         raw.fitted <- sapply(fit, fitted, fit="raw")
         raw.residuals <- sapply(fit, residuals, fit="raw")
         raw.center <- sapply(fit, function(x) x$raw.center)
         raw.scale <- sapply(fit, function(x) x$raw.scale)
         raw.cnp2 <- sapply(fit, function(x) x$raw.cnp2)
         raw.wt <- sapply(fit, wt, fit="raw")
+        # construct return object
+        fit <- list(best=best, objective=objective, coefficients=coef, 
+            fitted.values=fitted, residuals=residuals, center=center, 
+            scale=scale, lambda=lambda, intercept=intercept, alpha=alpha, 
+            quan=quan, cnp2=cnp2, wt=wt, df=df, raw.coefficients=raw.coef, 
+            raw.fitted.values=raw.fitted, raw.residuals=raw.residuals, 
+            raw.center=raw.center, raw.scale=raw.scale, raw.cnp2=raw.cnp2, 
+            raw.wt=raw.wt, crit=crit, critValues=critValues, sOpt=sOpt, 
+            raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
+        class(fit) <- "sparseLTSGrid"
     } else if(crit == "PE") {
         # select the optimal reweighted and raw model via prediction error
+        selectBest <- match.arg(selectBest)
+        critValues <- perrySparseLTS(x, y, lambda, mode, ..., 
+            splits=splits, cost=cost, costArgs=costArgs, 
+            selectBest=selectBest, seFactor=seFactor)
         # fit sparse LTS models for optimal lambdas
-        # combine information from the models into suitable data structures
-        stop("not implemented yet")
+        if(mode == "fraction") lambda <- critValues$tuning$lambda
+        sOpt <- critValues$best
+        if(sOpt[1] == sOpt[2]) {
+            # same optimal lambda for reweighted and raw estimator, only one 
+            # call to sparseLTS() necessary
+            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]],
+                mode="lambda", ..., model=FALSE)
+        } else {
+            # call sparseLTS() with respective optimal lambda for reweighted 
+            # and raw estimator
+            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], 
+                mode="lambda", ..., model=FALSE)
+            raw.fit <- sparseLTS(x, y, lambda=lambda[sOpt[2]], 
+                mode="lambda", ..., model=FALSE)
+            # combine results
+            fitNames <- names(fit)
+            rawNames <- c("best", "objective", 
+                fitNames[substr(fitNames, 1, 3) == "raw"])
+            fit[rawNames] <- raw.fit[rawNames]
+        }
+        # add prediction error information
+        names(lambda) <- seq_along(lambda)
+        fit$lambda <- lambda
+        fit$crit <- crit
+        fit$critValues <- critValues
+        if(model) fit$call <- NULL  # ensure correct order of components
+        class(fit) <- "optSparseLTSGrid"
     }
     # construct return object
-    fit <- list(best=best, objective=objective, coefficients=coef, 
-        fitted.values=fitted, residuals=residuals, center=center, 
-        scale=scale, lambda=lambda, intercept=intercept, alpha=alpha, 
-        quan=quan, cnp2=cnp2, wt=wt, df=df, raw.coefficients=raw.coef, 
-        raw.fitted.values=raw.fitted, raw.residuals=raw.residuals, 
-        raw.center=raw.center, raw.scale=raw.scale, raw.cnp2=raw.cnp2, 
-        raw.wt=raw.wt, crit=crit, critValues=critValues, sOpt=sOpt, 
-        raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
-    if(isTRUE(model)) {
-        if(intercept) x <- addIntercept(x)
+    if(model) {
+        if(fit$intercept) x <- addIntercept(x)
         fit$x <- x
         fit$y <- y
     }
     fit$call <- call
-    class(fit) <- c("sparseLTSGrid", "seqModel")
     fit
+}
+
+
+## internal function for estimating the prediction error of sparse LTS models 
+## over a grid of lambda values
+perrySparseLTS <- function(x, y, lambda, mode, ..., splits = foldControl(), 
+        cost = rtmspe, costArgs = list(), selectBest = c("hastie", "min"), 
+        seFactor = 1) {
+    # call function perryTuning() to perform prediction error estimation
+    call <- as.call(list(sparseLTS, mode=mode, ...))
+    out <- perryTuning(call, x=x, y=y, tuning=list(lambda=lambda), 
+        splits=splits, predictArgs=list(fit="both"), cost=cost, 
+        costArgs=costArgs, selectBest=selectBest, seFactor=seFactor)
+    # modify results
+    if(mode == "fraction" && any(lambda > 0)) {
+        # penalty parameters supplied as fractions, make sure that result 
+        # contains absolute values
+        out$tuning$lambda <- lambda * lambda0(x, y, ...)
+    }
+    class(out) <- c("perrySparseLTS", class(out))
+    out
 }

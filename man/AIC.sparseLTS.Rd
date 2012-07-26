@@ -1,6 +1,8 @@
 \name{AIC.sparseLTS}
+\alias{AIC.optSparseLTSGrid}
 \alias{AIC.sparseLTS}
 \alias{AIC.sparseLTSGrid}
+\alias{BIC.optSparseLTSGrid}
 \alias{BIC.sparseLTS}
 \alias{BIC.sparseLTSGrid}
 \title{Information criteria for sparse LTS regression models}
@@ -14,6 +16,11 @@
     fit = c("reweighted", "raw", "both"), k = 2)
 
   \method{BIC}{sparseLTSGrid} (object, ...)
+
+  \method{AIC}{optSparseLTSGrid} (object, ...,
+    fit = c("reweighted", "raw", "both"), k = 2)
+
+  \method{BIC}{optSparseLTSGrid} (object, ...)
 }
 \arguments{
   \item{object}{the model fit for which to compute the

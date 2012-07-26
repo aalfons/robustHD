@@ -16,5 +16,4 @@ y <- c(x %*% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit sparse LTS model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-coef(fit, zeros = FALSE)
+sparseLTS(x, y, lambda = 0.05, mode = "fraction")

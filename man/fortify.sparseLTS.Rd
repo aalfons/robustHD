@@ -1,4 +1,5 @@
 \name{fortify.sparseLTS}
+\alias{fortify.optSparseLTSGrid}
 \alias{fortify.sparseLTS}
 \alias{fortify.sparseLTSGrid}
 \title{Convert a sparse LTS regression model into a data frame for plotting}
@@ -7,6 +8,9 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{fortify}{sparseLTSGrid} (model, data, s,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{fortify}{optSparseLTSGrid} (model, data,
     fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{

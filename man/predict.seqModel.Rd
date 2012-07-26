@@ -1,9 +1,12 @@
 \name{predict.seqModel}
+\alias{predict.optSeqModel}
 \alias{predict.rlars}
 \alias{predict.seqModel}
 \title{Predict from a sequence of regression models}
 \usage{
-  \method{predict}{seqModel} (object, newdata, s, ...)
+  \method{predict}{seqModel} (object, newdata, s = NA, ...)
+
+  \method{predict}{optSeqModel} (object, newdata, ...)
 }
 \arguments{
   \item{object}{the model fit from which to make

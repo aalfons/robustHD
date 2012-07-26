@@ -10,8 +10,11 @@
   \method{sparseLTSGrid}{formula} (formula, data, ...)
 
   \method{sparseLTSGrid}{default} (x, y, lambda,
-    mode = c("lambda", "fraction"), crit = "BIC", ...,
-    model = TRUE)
+    mode = c("lambda", "fraction"), ...,
+    crit = c("BIC", "PE"), splits = foldControl(),
+    cost = rtmspe, costArgs = list(),
+    selectBest = c("hastie", "min"), seFactor = 1,
+    seed = NULL, model = TRUE)
 }
 \arguments{
   \item{formula}{a formula describing the model.}
@@ -207,8 +210,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit sparse LTS models over a grid of values for lambda
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
-coef(fitGrid, zeros = FALSE)
+sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
 }
 \author{
   Andreas Alfons

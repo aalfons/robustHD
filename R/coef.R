@@ -33,9 +33,9 @@
 #' 
 #' @export
 
-coef.seqModel <- function(object, s, zeros = TRUE, drop = !is.null(s), ...) {
+coef.seqModel <- function(object, s = NA, zeros = TRUE, 
+        drop = !is.null(s), ...) {
     ## extract coefficients
-    if(missing(s) && missing(drop)) drop <- TRUE
     coef <- getComponent(object, "coefficients", s=s, drop=drop, ...)
     ## if requested, omit zero coefficients
     if(!isTRUE(zeros)) {
@@ -46,6 +46,17 @@ coef.seqModel <- function(object, s, zeros = TRUE, drop = !is.null(s), ...) {
         }
     }
     ## return coefficients
+    coef
+}
+
+
+#' @rdname coef.seqModel
+#' @method coef optSeqModel
+#' @export
+
+coef.optSeqModel <- function(object, zeros = TRUE, ...) {
+    coef <- object$coefficients                 # extract coefficients
+    if(!isTRUE(zeros)) coef <- coef[coef != 0]  # omit zero coefficients
     coef
 }
 
@@ -112,11 +123,10 @@ coef.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method coef sparseLTSGrid
 #' @export
 
-coef.sparseLTSGrid <- function(object, s, 
+coef.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         zeros = TRUE, drop = !is.null(s), ...) {
     ## extract coefficients
-    if(missing(s) && missing(drop)) drop <- TRUE
     coef <- getComponent(object, "coefficients", s=s, fit=fit, drop=drop, ...)
     ## if requested, omit zero coefficients
     if(!isTRUE(zeros)) {
@@ -129,3 +139,10 @@ coef.sparseLTSGrid <- function(object, s,
     ## return coefficients
     coef
 }
+
+
+#' @rdname coef.sparseLTS
+#' @method coef optSparseLTSGrid
+#' @export
+
+coef.optSparseLTSGrid <- coef.sparseLTS

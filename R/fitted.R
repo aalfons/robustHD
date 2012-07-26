@@ -31,10 +31,16 @@
 #' 
 #' @export
 
-fitted.seqModel <- function(object, s, drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
+fitted.seqModel <- function(object, s = NA, drop = !is.null(s), ...) {
     getComponent(object, "fitted.values", s=s, drop=drop, ...)
 }
+
+
+#' @rdname fitted.seqModel
+#' @method fitted optSeqModel
+#' @export
+
+fitted.optSeqModel <- function(object, ...) object$fitted.values
 
 
 #' Extract fitted values from sparse LTS regression models
@@ -86,9 +92,15 @@ fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method fitted sparseLTSGrid
 #' @export
 
-fitted.sparseLTSGrid <- function(object, s, 
+fitted.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
     getComponent(object, "fitted.values", s=s, fit=fit, drop=drop, ...)
 }
+
+
+#' @rdname fitted.sparseLTS
+#' @method fitted optSparseLTSGrid
+#' @export
+
+fitted.optSparseLTSGrid <- fitted.sparseLTS

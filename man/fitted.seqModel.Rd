@@ -1,10 +1,13 @@
 \name{fitted.seqModel}
+\alias{fitted.optSeqModel}
 \alias{fitted.rlars}
 \alias{fitted.seqModel}
 \title{Extract fitted values from a sequence of regression models}
 \usage{
-  \method{fitted}{seqModel} (object, s, drop = !is.null(s),
-    ...)
+  \method{fitted}{seqModel} (object, s = NA,
+    drop = !is.null(s), ...)
+
+  \method{fitted}{optSeqModel} (object, ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract fitted

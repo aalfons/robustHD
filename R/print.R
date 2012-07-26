@@ -92,42 +92,30 @@ print.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
     }
     print(coefficients, ...)
     # print penalty parameter and robust scale estimate
+    sOpt <- getSOpt(x, fit=fit)
+    lambda <- x$lambda[sOpt]
+    scale <- getScale(x, fit=fit)
+    info <- rbind(lambda, scale)
     text <- c("Optimal penalty parameter:", "Residual scale estimate:")
     if(fit == "both") {
-        sOpt <- c(x$sOpt, x$raw.sOpt)
-        lambda <- x$lambda[sOpt]
-        scale <- c(x$scale[sOpt[1]], x$raw.scale[sOpt[2]])
-        info <- rbind(lambda, scale)
         dimnames(info) <- list(text, colnames(coefficients))
         cat("\n")
-    } else {
-        if(fit == "reweighted") {
-            sOpt <- x$sOpt
-            scale <- x$scale
-        } else {
-            sOpt <- x$raw.sOpt
-            scale <- x$raw.scale
-        }
-        info <- matrix(c(x$lambda[sOpt], scale[sOpt]), 2, 1)
-        dimnames(info) <- list(text, "")
-    }
+    } else dimnames(info) <- list(text, "")
     print(info, ...)
     # return object invisibly
     invisible(x)
 }
 
-#' @S3method print cvSeqModel
-#' @import cvTools
-print.cvSeqModel <- function(x, ...) {
-#    # print function call
-#    if(!is.null(call <- x$call)) {
-#        cat("\nCall:\n")
-#        dput(x$call)
-#    }
-    # print cross-validation results
-    cvTools:::print.cvSelect(x, best=FALSE, ...)
+#' @S3method print optSparseLTSGrid
+print.optSparseLTSGrid <- print.sparseLTSGrid
+
+#' @S3method print perrySeqModel
+#' @import perry
+print.perrySeqModel <- function(x, ...) {
+    # print prediction error results
+    perry:::print.perrySelect(x, best=FALSE, ...)
     # print optimal model if requested
-    bestFit <- x$cv[x$best, "Fit"]
+    bestFit <- x$pe[x$best, "Fit"]
     if(is.factor(bestFit)) bestFit <- as.character(bestFit)
     bestFit <- as.numeric(bestFit)
     if(length(bestFit) > 1) {
@@ -141,16 +129,11 @@ print.cvSeqModel <- function(x, ...) {
     invisible(x)
 }
 
-#' @S3method print cvSparseLTS
-#' @import cvTools
-print.cvSparseLTS <- function(x, ...) {
-#    # print function call
-#    if(!is.null(call <- x$call)) {
-#        cat("\nCall:\n")
-#        dput(x$call)
-#    }
-    # print cross-validation results
-    cvTools:::print.cvTuning(x, best=FALSE, ...)
+#' @S3method print perrySparseLTS
+#' @import perry
+print.perrySparseLTS <- function(x, ...) {
+    # print prediction error results
+    perry:::print.perryTuning(x, best=FALSE, ...)
     # print optimal value for penalty parameter
     optimalLambda <- x$tuning[x$best, "lambda"]
     if(length(optimalLambda) > 1) {

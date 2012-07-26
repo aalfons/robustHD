@@ -17,5 +17,4 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit sparse LTS models over a grid of values for lambda
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
-coef(fitGrid, zeros = FALSE)
+sparseLTSGrid(x, y, lambda = frac, mode = "fraction")

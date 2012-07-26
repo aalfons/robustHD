@@ -18,7 +18,6 @@ Version: \tab 0.2.0\cr
 Date: \tab 2012-07-05\cr
 Depends: \tab 
 Rcpp (>= 0.9.10),
-cvTools (>= 0.3.0),
 ggplot2,
 MASS,
 perry,
