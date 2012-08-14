@@ -568,8 +568,8 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         critValues <- sapply(fit, BIC, fit="both")
         raw.critValues <- critValues["raw",]
         critValues <- critValues["reweighted",]
-        sOpt <- which.min(critValues)
-        raw.sOpt <- which.min(raw.critValues)
+        sOpt <- unname(which.min(critValues))
+        raw.sOpt <- unname(which.min(raw.critValues))
         # combine information from the models into suitable data structures
         best <- sapply(fit, function(x) x$best)
         objective <- sapply(fit, function(x) x$objective)
