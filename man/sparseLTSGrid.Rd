@@ -14,7 +14,7 @@
     crit = c("BIC", "PE"), splits = foldControl(),
     cost = rtmspe, costArgs = list(),
     selectBest = c("hastie", "min"), seFactor = 1,
-    seed = NULL, model = TRUE)
+    ncores = 1, cl = NULL, seed = NULL, model = TRUE)
 }
 \arguments{
   \item{formula}{a formula describing the model.}

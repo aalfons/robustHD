@@ -348,8 +348,6 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 		int& ncores, double& center, double& scale) {
 	// initializations
 	const int h = initial.n_rows, nsamp = initial.n_cols;
-	const int ncoresMax = omp_get_num_procs();
-	if(ncores == 0 || ncores > ncoresMax) ncores = ncoresMax;
 
 	// block for parallel computing
 	vector<Subset> subsets(nsamp);

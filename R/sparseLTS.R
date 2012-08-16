@@ -263,9 +263,8 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     }
     use.Gram <- isTRUE(use.Gram)
     ncores <- rep(ncores, length.out=1)
-    if(is.na(ncores)) {
-        ncores <- 0  # use all available cores
-    } else if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+    if(is.na(ncores)) ncores <- detectCores()  # use all available cores
+    if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
         ncores <- 1  # use default value
         warning("invalid value of 'ncores'; using default value")
     } else ncores <- as.integer(ncores)
@@ -523,7 +522,7 @@ sparseLTSGrid.formula <- function(formula, data, ...) {
 sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
         ..., crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
         costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        seed = NULL, model = TRUE) {
+        ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
     # initializations
     call <- match.call()
     call[[1]] <- as.name("sparseLTSGrid")
@@ -547,10 +546,10 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
         lambda <- sort(unique(lambda), decreasing=TRUE)
     }
     crit <- match.arg(crit)
-    if(!is.null(seed)) set.seed(seed)
     model <- isTRUE(model)
     # fit models and find optimal lambda
     if(crit == "BIC") {
+        if(!is.null(seed)) set.seed(seed)
         # check grid of lambda values
         if(mode == "fraction" && any(lambda > 0)) { 
             # fraction of a robust estimate of the smallest value for the 
@@ -559,9 +558,11 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
             lambda <- lambda * lambda0(x, y, ...)
         }
         # fit sparse LTS models along supplied grid
+        # parallel computing is performed on the C++ level inside sparseLTS()
         fit <- lapply(lambda, 
             function(l, x, y, ...) {
-                sparseLTS(x, y, lambda=l, mode="lambda", ..., model=FALSE)
+                sparseLTS(x, y, lambda=l, mode="lambda", ..., 
+                    ncores=ncores, model=FALSE)
             }, x, y, ...)
         names(fit) <- seq_along(lambda)
         # select the optimal reweighted and raw model via BIC
@@ -605,24 +606,24 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     } else if(crit == "PE") {
         # select the optimal reweighted and raw model via prediction error
         selectBest <- match.arg(selectBest)
-        critValues <- perrySparseLTS(x, y, lambda, mode, ..., 
-            splits=splits, cost=cost, costArgs=costArgs, 
-            selectBest=selectBest, seFactor=seFactor)
+        critValues <- perrySparseLTS(x, y, lambda, mode, ..., splits=splits, 
+            cost=cost, costArgs=costArgs, selectBest=selectBest, 
+            seFactor=seFactor, ncores=ncores, cl=cl, seed=seed)
         # fit sparse LTS models for optimal lambdas
         if(mode == "fraction") lambda <- critValues$tuning$lambda
         sOpt <- critValues$best
         if(sOpt[1] == sOpt[2]) {
             # same optimal lambda for reweighted and raw estimator, only one 
             # call to sparseLTS() necessary
-            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]],
-                mode="lambda", ..., model=FALSE)
+            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], mode="lambda", 
+                ..., ncores=ncores, model=FALSE)
         } else {
             # call sparseLTS() with respective optimal lambda for reweighted 
             # and raw estimator
-            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], 
-                mode="lambda", ..., model=FALSE)
-            raw.fit <- sparseLTS(x, y, lambda=lambda[sOpt[2]], 
-                mode="lambda", ..., model=FALSE)
+            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], mode="lambda", 
+                ..., ncores=ncores, model=FALSE)
+            raw.fit <- sparseLTS(x, y, lambda=lambda[sOpt[2]], mode="lambda", 
+                ..., ncores=ncores, model=FALSE)
             # combine results
             fitNames <- names(fit)
             rawNames <- c("best", "objective", 
@@ -652,12 +653,13 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 ## over a grid of lambda values
 perrySparseLTS <- function(x, y, lambda, mode, ..., splits = foldControl(), 
         cost = rtmspe, costArgs = list(), selectBest = c("hastie", "min"), 
-        seFactor = 1) {
+        seFactor = 1, ncores = 1, cl = NULL, seed = NULL) {
     # call function perryTuning() to perform prediction error estimation
     call <- as.call(list(sparseLTS, mode=mode, ...))
     out <- perryTuning(call, x=x, y=y, tuning=list(lambda=lambda), 
         splits=splits, predictArgs=list(fit="both"), cost=cost, 
-        costArgs=costArgs, selectBest=selectBest, seFactor=seFactor)
+        costArgs=costArgs, selectBest=selectBest, seFactor=seFactor, 
+        ncores=ncores, cl=cl, seed=seed)
     # modify results
     if(mode == "fraction" && any(lambda > 0)) {
         # penalty parameters supplied as fractions, make sure that result 
