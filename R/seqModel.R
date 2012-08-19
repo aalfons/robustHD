@@ -6,7 +6,8 @@
 seqModel <- function(x, y, active, s = NULL, assign = NULL, robust = FALSE, 
         regFun = lm.fit, useFormula = FALSE, regArgs = list(), final = TRUE, 
         crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
-        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1) {
+        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
+        cl = NULL) {
     # initializations
     n <- length(y)
     haveAssign <- !is.null(assign)
@@ -69,8 +70,9 @@ seqModel <- function(x, y, active, s = NULL, assign = NULL, robust = FALSE,
                 callRegFun(x, y, fun=regFun, args=regArgs)
             }
         }
-    } else 
+    } else {
         fitFun <- function(k) lm.fit(x[, sequenced[seq_len(k)], drop=FALSE], y)
+    }
     # fit submodels and find optimal one
     if(final && crit == "PE") {
         # select the optimal submodel via prediction error
@@ -78,7 +80,7 @@ seqModel <- function(x, y, active, s = NULL, assign = NULL, robust = FALSE,
         critValues <- perrySeqModel(x, y, active=active, s=s, assign=assign, 
             robust=robust, regFun=regFun, useFormula=useFormula, 
             regArgs=regArgs, splits=splits, cost=cost, costArgs=costArgs, 
-            selectBest=selectBest, seFactor=seFactor)
+            selectBest=selectBest, seFactor=seFactor, cl=cl)
         # fit optimal submodel
         kOpt <- critValues$best
         model <- fitFun(kOpt)
@@ -93,7 +95,8 @@ seqModel <- function(x, y, active, s = NULL, assign = NULL, robust = FALSE,
     } else {
         # fit submodels
         # number of variables to use is one less than degrees of freedom
-        models <- lapply(df, fitFun)
+        if(is.null(cl)) models <- lapply(df, fitFun) 
+        else models <- parLapply(cl, df, fitFun)
         # construct matrix of coefficents
         coef <- matrix(0, nrow=ncol(x), ncol=length(s), 
             dimnames=list(colnames(x), s))
@@ -139,9 +142,9 @@ seqModel <- function(x, y, active, s = NULL, assign = NULL, robust = FALSE,
 
 ## internal function for estimating the prediction error of sequential models
 perrySeqModel <- function(x, y, active, s = NULL, assign = NULL, 
-        robust = FALSE, regFun = lm.fit, useFormula = FALSE, regArgs = list(), 
-        splits = foldControl(), cost, costArgs = list(), 
-        selectBest = c("hastie", "min"), seFactor = 1) {
+        robust = FALSE, regFun = lm.fit, useFormula = FALSE, 
+        regArgs = list(), splits = foldControl(), cost, costArgs = list(), 
+        selectBest = c("hastie", "min"), seFactor = 1, cl = NULL) {
     ## initializations
     # check if the predictor matrix contains column for intercept and 
     # remove it if necessary
@@ -160,7 +163,8 @@ perrySeqModel <- function(x, y, active, s = NULL, assign = NULL,
         call$regArgs <- regArgs
     }
     ## call function perryFit() to perform prediction error estimation
-    out <- perryFit(call, x=x, y=y, splits=splits, cost=cost, costArgs=costArgs)
+    out <- perryFit(call, x=x, y=y, splits=splits, cost=cost, 
+        costArgs=costArgs, cl=cl)
     ## reshape, modify and return the prediction error results
     out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
     fits(out) <- as.numeric(as.character(fits(out)))

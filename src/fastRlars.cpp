@@ -28,8 +28,6 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 		const double& prob, const double& tol, SEXP scaleFun, int& ncores) {
 	// initializations
 	const uword n = x.n_rows, p = x.n_cols;
-	const int ncoresMax = omp_get_num_procs();
-	if(ncores == 0 || ncores > ncoresMax) ncores = ncoresMax;
 
 	// STEP 1: find first ranked predictor
 	// compute correlations with response

@@ -1,6 +1,17 @@
 Changes in robustHD version 0.2.0
 
-    + Graphics now based on ggplot2 instead of lattice.
+    + Graphics are now based on package ggplot2 instead of lattice.
+    
+    + Prediction error estimation is now based on package perry instead of 
+      cvTools.
+    
+    + Parallel computing for sparseLTS() now available via OpenMP.
+    
+    + rlars() is now using C++ code for variable sequencing, including 
+      parallelization of certain tasks via OpenMP.
+    
+    + sparseLTSGrid() and rlars() now allow model selection based on the 
+      prediction error.
     
     + coef(), fitted(), residuals() and wt() methods now have argument 
       'drop' to control whether to reduce the dimension if possible.
@@ -12,10 +23,6 @@ Changes in robustHD version 0.2.0
       coefficients by default; also added argument to print method for "rlars".
     
     + sparseLTS() and sparseLTSGrid() now store raw fitted values.
-    
-    + Parallel computing for sparseLTS() now available via OpenMP.
-    
-    + rlars() is now using C++ code for variable sequencing.
     
     + Bugfixes in C++ code for sparseLTS() and fastLasso() to prevent memory 
       related errors.

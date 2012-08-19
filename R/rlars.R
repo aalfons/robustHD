@@ -153,7 +153,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
         crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
         costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        ncores = 1, model = TRUE, tol = .Machine$double.eps^0.5, ...) {
+        ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
+        tol = .Machine$double.eps^0.5, ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rlars")
@@ -161,6 +162,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     x <- addColnames(as.matrix(x))
     p <- ncol(x)
     sMax <- checkSMax(sMax, n, p)
+    if(!is.null(seed)) set.seed(seed)
     # robustly standardize data
     z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
     xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
@@ -168,9 +170,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
     ncores <- rep(ncores, length.out=1)
-    if(is.na(ncores)) {
-        ncores <- 0  # use all available cores
-    } else if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+    if(is.na(ncores)) ncores <- detectCores()  # use all available cores
+    if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
         ncores <- 1  # use default value
         warning("invalid value of 'ncores'; using default value")
     } else ncores <- as.integer(ncores)
@@ -182,6 +183,21 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {
+        # check whether parallel computing should be used
+        haveNcores <- ncores > 1
+        useParallel <- haveNcores || !is.null(cl)
+        # set up multicore or snow cluster if not supplied
+        if(haveNcores) {
+            if(.Platform$OS.type == "windows") {
+                cl <- makePSOCKcluster(rep.int("localhost", ncores))
+            } else cl <- makeForkCluster(ncores)
+            on.exit(stopCluster(cl))
+        }
+        if(useParallel) {
+            # set seed of the random number stream
+            if(!is.null(seed)) clusterSetRNGStream(cl, iseed=seed)
+            else if(haveNcores) clusterSetRNGStream(cl)
+        }
         # add ones to matrix of predictors to account for intercept
         x <- addIntercept(x)
         # call function to fit models along the sequence
@@ -189,7 +205,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         out <- seqModel(x, y, active=active, s=s, robust=TRUE, regFun=regFun, 
             useFormula=regControl$useFormula, regArgs=regArgs, crit=crit, 
             splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
-            seFactor=seFactor)
+            seFactor=seFactor, cl=cl)
         # add center and scale estimates
         out$muY <- attr(z, "center")
         out$sigmaY <- attr(z, "scale")
