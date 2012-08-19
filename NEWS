@@ -8,7 +8,8 @@ Changes in robustHD version 0.2.0
     + Parallel computing for sparseLTS() now available via OpenMP.
     
     + rlars() is now using C++ code for variable sequencing, including 
-      parallelization of certain tasks via OpenMP.
+      parallelization of certain tasks via OpenMP.  Further parallel 
+      computing is implemented on the R level via package parallel.
     
     + sparseLTSGrid() and rlars() now allow model selection based on the 
       prediction error.
