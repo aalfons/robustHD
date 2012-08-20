@@ -327,7 +327,10 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
 #' methods, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
+#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.  
+#' For the \code{"optSeqModel"} and \code{"optSparseLTSGrid"} methods, 
+#' additional arguments to be passed down to the 
+#' \code{\link[perry:perryPlot]{plot}} method for the prediction error results.
 #' 
 #' @return  
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
@@ -579,12 +582,13 @@ labelify <- function(data, which, id.n = NULL) {
 #' outliers, which can be different for the different plots.  See 
 #' \dQuote{Details} for more information.
 #' @param \dots  for the generic function \code{diagnosticPlot}, additional 
-#' arguments to be passed down to methods.  For the \code{"sparseLTSGrid"} 
-#' method of \code{diagnosticPlot}, additional arguments to be passed down to 
-#' the \code{"sparseLTS"} method.  For the \code{"sparseLTS"} method of 
-#' \code{diagnosticPlot}, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_point}}.  For the \code{"sparseLTS"} method of 
-#' \code{plot}, additional arguments to be passed down to \code{diagnosticPlot}.
+#' arguments to be passed down to methods.  For the \code{"sparseLTS"}, 
+#' \code{"sparseLTSGrid"} and \code{"optSparseLTSGrid"} methods of 
+#' \code{diagnosticPlot}, additional arguments to be passed down to the default 
+#' method.  For the default method of \code{diagnosticPlot}, additional 
+#' arguments to be passed down to \code{\link[ggplot2]{geom_point}}.  For the 
+#' \code{"sparseLTS"} method of \code{plot}, additional arguments to be passed 
+#' down to \code{diagnosticPlot}.
 #' 
 #' @return  
 #' If only one plot is requested, an object of class \code{"ggplot"} (see 

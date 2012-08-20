@@ -129,9 +129,9 @@ print.perrySeqModel <- function(x, ...) {
     invisible(x)
 }
 
-#' @S3method print perrySparseLTS
+#' @S3method print perrySparseLTSGrid
 #' @import perry
-print.perrySparseLTS <- function(x, ...) {
+print.perrySparseLTSGrid <- function(x, ...) {
     # print prediction error results
     perry:::print.perryTuning(x, best=FALSE, ...)
     # print optimal value for penalty parameter

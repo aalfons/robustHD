@@ -37,7 +37,11 @@
   \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
   additional arguments to be passed down to
   \code{\link[ggplot2]{geom_line}} and
-  \code{\link[ggplot2]{geom_point}}.}
+  \code{\link[ggplot2]{geom_point}}. For the
+  \code{"optSeqModel"} and \code{"optSparseLTSGrid"}
+  methods, additional arguments to be passed down to the
+  \code{\link[perry:perryPlot]{plot}} method for the
+  prediction error results.}
 }
 \value{
   An object of class \code{"ggplot"} (see

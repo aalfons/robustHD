@@ -75,13 +75,13 @@
 
   \item{\dots}{for the generic function
   \code{diagnosticPlot}, additional arguments to be passed
-  down to methods.  For the \code{"sparseLTSGrid"} method
-  of \code{diagnosticPlot}, additional arguments to be
-  passed down to the \code{"sparseLTS"} method.  For the
-  \code{"sparseLTS"} method of \code{diagnosticPlot},
-  additional arguments to be passed down to
-  \code{\link[ggplot2]{geom_point}}.  For the
-  \code{"sparseLTS"} method of \code{plot}, additional
+  down to methods.  For the \code{"sparseLTS"},
+  \code{"sparseLTSGrid"} and \code{"optSparseLTSGrid"}
+  methods of \code{diagnosticPlot}, additional arguments to
+  be passed down to the default method.  For the default
+  method of \code{diagnosticPlot}, additional arguments to
+  be passed down to \code{\link[ggplot2]{geom_point}}.  For
+  the \code{"sparseLTS"} method of \code{plot}, additional
   arguments to be passed down to \code{diagnosticPlot}.}
 }
 \value{
