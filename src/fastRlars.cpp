@@ -27,7 +27,7 @@ using namespace std;
 uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 		const double& prob, const double& tol, SEXP scaleFun, int& ncores) {
 	// initializations
-	const uword n = x.n_rows, p = x.n_cols;
+	const uword p = x.n_cols;
 
 	// STEP 1: find first ranked predictor
 	// compute correlations with response
