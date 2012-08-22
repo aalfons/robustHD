@@ -95,7 +95,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         }
         // compute correlations of inactive predictors with equiangular vector
         vec corU(m);
-		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
+        #pragma omp parallel for num_threads(ncores) schedule(dynamic)
         for(uword j = 0; j < m; j++) {
         	corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
         }

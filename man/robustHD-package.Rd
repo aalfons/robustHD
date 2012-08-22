@@ -16,7 +16,8 @@ Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.2.0\cr
 Date: \tab 2012-08-20\cr
-Depends: \tab Rcpp (>= 0.9.10), ggplot2, MASS, perry, robustbase (>= 0.6-0)\cr
+Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2, MASS, perry,
+robustbase (>= 0.6-0)\cr
 Imports: \tab RcppArmadillo (>= 0.3.0), stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
 Suggests: \tab mvtnorm\cr

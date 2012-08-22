@@ -7,6 +7,7 @@ Authors@R: person("Andreas", "Alfons",
     email = "andreas.alfons@kuleuven.be",
     role = c("aut", "cre"))
 Depends:
+    R (>= 2.14.1),
     Rcpp (>= 0.9.10),
     ggplot2,
     MASS,

@@ -9,7 +9,9 @@
 #define ARMA_NO_DEBUG
 
 #include <RcppArmadillo.h>
+#ifdef _OPENMP
 #include <omp.h>	// OpenMP
+#endif
 #include "fastLasso.h"
 #include "utils.h"
 
