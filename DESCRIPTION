@@ -2,10 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
 Version: 0.2.0
-Date: 2012-08-20
-Authors@R: person("Andreas", "Alfons",
-    email = "andreas.alfons@kuleuven.be",
-    role = c("aut", "cre"))
+Date: 2012-08-24
 Depends:
     R (>= 2.14.1),
     Rcpp (>= 0.9.10),
@@ -24,6 +21,9 @@ Description: Robust methods for high-dimensional data, in particular linear
     regression.
 License: GPL (>= 2)
 LazyLoad: yes
+Authors@R: person("Andreas", "Alfons",
+    email = "andreas.alfons@kuleuven.be",
+    role = c("aut", "cre"))
 Collate:
     'accessors.R'
     'AIC.R'
