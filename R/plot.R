@@ -48,6 +48,13 @@ plot.seqModel <- function(x, method = c("coefficients", "crit"), ...) {
 
 
 #' @rdname plot.seqModel
+#' @method plot optSeqModel
+#' @export 
+
+plot.optSeqModel <- function(x, ...) critPlot(x, ...)
+
+
+#' @rdname plot.seqModel
 #' @method plot tslars
 #' @export
 
@@ -61,6 +68,20 @@ plot.tslars <- function(x, p, method = c("coefficients", "crit"), ...) {
         if(missing(p)) critPlot(x, ...) else critPlot(x, p, ...)
     }
 }
+
+
+#' @rdname plot.seqModel
+#' @method plot sparseLTSGrid
+#' @export 
+
+plot.sparseLTSGrid <- plot.seqModel
+
+
+#' @rdname plot.seqModel
+#' @method plot optSparseLTSGrid
+#' @export 
+
+plot.optSparseLTSGrid <- plot.optSeqModel
 
 # ----------------------
 
@@ -90,7 +111,7 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
     # build data frame
     coefData <- data.frame(step=rep.int(steps, m), 
         df=rep.int(df, m), coefficient=as.numeric(coef), 
-        variable=rep(factor(vn, levels=vn), each=nsteps))
+        variable=factor(rep(vn, each=nsteps), levels=vn))
     if(!is.null(labels)) 
         coefData$label <- rep(as.character(labels), each=nsteps)
     coefData
@@ -98,9 +119,12 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
 
 coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"), 
         zeros = FALSE, labels, ...) {
-    # prepare coefficients and labels
+    # initializations
     fit <- match.arg(fit)
-    coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
+    coef <- coef(model, s=NULL, fit=fit)
+    df <- if(fit == "reweighted") model$df else apply(coef, 2, modelDf)
+    # prepare coefficients and labels
+    coef <- removeIntercept(t(coef))
     zeros <- isTRUE(zeros)
     if(!zeros) {
         keep <- apply(coef != 0, 2, any)
@@ -140,23 +164,22 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
     lambda <- model$lambda    # tuning parameters
     steps <- getSteps(model)  # step numbers
     sMax <- length(steps)     # number of steps
-    df <- model$df            # degrees of freedom
     vn <- colnames(coef)      # variable names
     # build data frame
     if(fit == "both") {
         fits <- c("reweighted", "raw")
         coefData <- data.frame(
-            fit=rep.int(rep(factor(fits, levels=fits), each=sMax), m), 
+            fit=rep.int(factor(rep(fits, each=sMax), levels=fits), m), 
             lambda=rep.int(lambda, 2*m), step=rep.int(steps, 2*m), 
-            df=rep.int(df, 2*m), coefficient=as.numeric(coef), 
-            variable=rep(factor(vn, levels=vn), each=2*sMax))
+            df=rep.int(df, m), coefficient=as.numeric(coef), 
+            variable=factor(rep(vn, each=2*sMax), levels=vn))
         if(!is.null(labels)) 
             coefData$label <- rep(as.character(labels), each=2*sMax)
     } else {
         coefData <- data.frame(
             lambda=rep.int(lambda, m), step=rep.int(steps, m), 
             df=rep.int(df, m), coefficient=as.numeric(coef), 
-            variable=rep(factor(vn, levels=vn), each=sMax))
+            variable=factor(rep(vn, each=sMax), levels=vn))
         if(!is.null(labels)) 
             coefData$label <- rep(as.character(labels), each=sMax)
     }
@@ -198,9 +221,9 @@ coefify.sparseLTSGrid <- function(model, fit = c("reweighted", "raw", "both"),
 #' blank characters to be prepended to the label).
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} and 
-#' \code{"sparseLTSGrid"} methods, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
+#' passed down to the \code{"seqModel"} method.  For the other methods, 
+#' additional arguments to be passed down to \code{\link[ggplot2]{geom_line}} 
+#' and \code{\link[ggplot2]{geom_point}}.
 #' 
 #' @return  
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
@@ -354,9 +377,13 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 #' point size, respectively.
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} and 
-#' \code{"sparseLTSGrid"} methods, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_point}}.
+#' passed down to the \code{"seqModel"} or \code{"optSeqModel"} method.  For 
+#' the \code{"seqModel"} and \code{"sparseLTSGrid"} methods, additional 
+#' arguments to be passed down to \code{\link[ggplot2]{geom_line}} and 
+#' \code{\link[ggplot2]{geom_point}}.  For the \code{"optSeqModel"} and 
+#' \code{"optSparseLTSGrid"} methods, additional arguments to be passed down 
+#' to the \code{\link[perry:perryPlot]{plot}} method for the prediction error 
+#' results.
 #' 
 #' @return  
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
@@ -389,6 +416,31 @@ critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
     names(critData) <- c("step", crit)
     ## call workhorse function
     ggCritPlot(critData, abscissa="step", size=size, ...)
+}
+
+
+#' @rdname critPlot
+#' @method critPlot optSeqModel
+#' @export 
+
+critPlot.optSeqModel <- function(x, ...) {
+    ## local plot function for prediction error results to override defaults
+    localPlot <- function(x, method = c("line", "dot", "box", "density"), ...) {
+        # initializations
+        if(x$splits$R == 1) {
+            choices <- eval(formals()[["method"]])
+            if(identical(method, choices)) method <- "line"
+            else method <- match.arg(method, c("line", "dot"))
+        } else method <- match.arg(method)
+        # call plot() methed for prediction error results
+        p <- plot(x, method=method, ...)
+        if(method != "density") {
+            p <- p + scale_x_continuous(minor_breaks=fits(x))
+        }
+        p
+    }
+    ## call local plot function
+    localPlot(x$critValues, ...)
 }
 
 
@@ -446,6 +498,34 @@ critPlot.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"),
         p <- p + facet_grid(. ~ fit)
     }
     p
+}
+
+
+#' @rdname critPlot
+#' @method critPlot optSparseLTSGrid
+#' @export 
+
+critPlot.optSparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
+        ...) {
+    ## local plot function for prediction error results to override defaults
+    localPlot <- function(x, method = c("line", "dot", "box", "density"), 
+            fit = select, select = "reweighted", ...) {
+        # initializations
+        if(x$splits$R == 1) {
+            choices <- eval(formals()[["method"]])
+            if(identical(method, choices)) method <- "line"
+            else method <- match.arg(method, c("line", "dot"))
+        } else method <- match.arg(method)
+        # call plot() methed for prediction error results
+        plot(x, method=method, select=fit, ...)
+    }
+    ## call local plot function
+    if(missing(fit)) localPlot(x$critValues, ...)
+    else {
+        fit <- match.arg(fit)
+        if(fit == "both") fit <- NULL
+        localPlot(x$critValues, fit=fit, ...)
+    }
 }
 
 
@@ -524,7 +604,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' with the largest distances from that line are identified by a label (the 
 #' observation number).  The default for \code{id.n} is the number of 
 #' regression outliers, i.e., the number of observations with outlier weight 
-#' equal to 0  (see \code{\link[=weights.sparseLTS]{weights}}).
+#' equal to 0  (see \code{\link[=wt.sparseLTS]{wt}}).
 #' 
 #' In the plots of the standardized residuals versus their index or the fitted 
 #' values, horizontal reference lines are drawn at 0 and +/-2.5.  The 
@@ -532,7 +612,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' standardized residuals are identified by a label (the observation 
 #' number).  The default for \code{id.n} is the number of regression outliers, 
 #' i.e., the number of observations with outlier weight equal to 0  (see 
-#' \code{\link[=weights.sparseLTS]{weights}}).
+#' \code{\link[=wt.sparseLTS]{wt}}).
 #' 
 #' For the regression diagnostic plot, the robust Mahalanobis distances of the 
 #' predictor variables are computed via the MCD based on only those predictors 
@@ -546,10 +626,9 @@ labelify <- function(data, which, id.n = NULL) {
 #' are identified by a label (the observation number).  The default for 
 #' \code{id.n} is the number of all outliers: regression outliers (i.e., 
 #' observations with outlier weight equal to 0, see 
-#' \code{\link[=weights.sparseLTS]{weights}}) and leverage points (i.e., 
-#' observations with robust Mahalanobis distance larger than the 97.5\% 
-#' quantile of the \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p} 
-#' degrees of freedom).
+#' \code{\link[=wt.sparseLTS]{wt}}) and leverage points (i.e., observations 
+#' with robust Mahalanobis distance larger than the 97.5\% quantile of the 
+#' \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p} degrees of freedom).
 #' 
 #' @param x  the model fit for which to produce diagnostic plots, or a data 
 #' frame containing all necessary information for plotting (as generated by the 
@@ -571,7 +650,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' @param ask  a logical indicating whether the user should be asked before 
 #' each plot (see \code{\link[grDevices]{devAskNewPage}}). The default is to 
 #' ask if all plots are requested and not ask otherwise.
-#' @param facets  faceting formula to override the default behavior.  If 
+#' @param facets  a faceting formula to override the default behavior.  If 
 #' supplied, \code{\link[ggplot2]{facet_wrap}} or 
 #' \code{\link[ggplot2]{facet_grid}} is called depending on whether the formula 
 #' is one-sided or two-sided.
@@ -582,12 +661,13 @@ labelify <- function(data, which, id.n = NULL) {
 #' outliers, which can be different for the different plots.  See 
 #' \dQuote{Details} for more information.
 #' @param \dots  for the generic function \code{diagnosticPlot}, additional 
-#' arguments to be passed down to methods.  For the \code{"sparseLTSGrid"} 
-#' method of \code{diagnosticPlot}, additional arguments to be passed down to 
-#' the \code{"sparseLTS"} method.  For the \code{"sparseLTS"} method of 
-#' \code{diagnosticPlot}, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_point}}.  For the \code{"sparseLTS"} method of 
-#' \code{plot}, additional arguments to be passed down to \code{diagnosticPlot}.
+#' arguments to be passed down to methods.  For the \code{"sparseLTS"}, 
+#' \code{"sparseLTSGrid"} and \code{"optSparseLTSGrid"} methods of 
+#' \code{diagnosticPlot}, additional arguments to be passed down to the default 
+#' method.  For the default method of \code{diagnosticPlot}, additional 
+#' arguments to be passed down to \code{\link[ggplot2]{geom_point}}.  For the 
+#' \code{"sparseLTS"} method of \code{plot}, additional arguments to be passed 
+#' down to \code{diagnosticPlot}.
 #' 
 #' @return  
 #' If only one plot is requested, an object of class \code{"ggplot"} (see 
@@ -632,6 +712,13 @@ diagnosticPlot.sparseLTSGrid <- function(x, s,
 
 
 #' @rdname diagnosticPlot
+#' @method diagnosticPlot optSparseLTSGrid
+#' @export
+
+diagnosticPlot.optSparseLTSGrid <- diagnosticPlot.sparseLTS
+
+
+#' @rdname diagnosticPlot
 #' @method diagnosticPlot default
 #' @export
 
@@ -653,6 +740,7 @@ diagnosticPlot.default <- function(x,
         if(inherits(p, "try-error")) {
             warn <- gsub("Error in", "In", p)
             warning(warn, call.=FALSE)
+            res <- list()
         } else {
             print(p)
             res <- list(rqq=p)
@@ -687,26 +775,22 @@ diagnosticPlot.default <- function(x,
             print(p)
             res$rdiag <- p
         }
+        invisible(res)
     } else if(which == "rqq") {
         # residual Q-Q plot
-        res <- rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
-        print(res)
+        rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
     } else if(which == "rindex") {
         # residuals vs indices plot
-        res <- residualPlot(x, abscissa="index", facets=facets, 
+        residualPlot(x, abscissa="index", facets=facets, 
             size=size, id.n=id.n, ...)
-        print(res)
     } else if(which == "rfit") {
         # residuals vs fitted plot
-        res <- residualPlot(x, abscissa="fitted", facets=facets, 
+        residualPlot(x, abscissa="fitted", facets=facets, 
             size=size, id.n=id.n, ...)
-        print(res)
     } else if(which == "rdiag") {
         # regression diagnostic plot
-        res <- rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
-        print(res)
+        rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
     }
-    invisible(res)
 }
 
 

@@ -1,6 +1,7 @@
 \name{diagnosticPlot}
 \alias{diagnosticPlot}
 \alias{diagnosticPlot.default}
+\alias{diagnosticPlot.optSparseLTSGrid}
 \alias{diagnosticPlot.sparseLTS}
 \alias{diagnosticPlot.sparseLTSGrid}
 \alias{plot.sparseLTS}
@@ -12,6 +13,9 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{diagnosticPlot}{sparseLTSGrid} (x, s,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{diagnosticPlot}{optSparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{diagnosticPlot}{default} (x,
@@ -55,7 +59,7 @@
   \code{\link[grDevices]{devAskNewPage}}). The default is
   to ask if all plots are requested and not ask otherwise.}
 
-  \item{facets}{faceting formula to override the default
+  \item{facets}{a faceting formula to override the default
   behavior.  If supplied, \code{\link[ggplot2]{facet_wrap}}
   or \code{\link[ggplot2]{facet_grid}} is called depending
   on whether the formula is one-sided or two-sided.}
@@ -71,13 +75,13 @@
 
   \item{\dots}{for the generic function
   \code{diagnosticPlot}, additional arguments to be passed
-  down to methods.  For the \code{"sparseLTSGrid"} method
-  of \code{diagnosticPlot}, additional arguments to be
-  passed down to the \code{"sparseLTS"} method.  For the
-  \code{"sparseLTS"} method of \code{diagnosticPlot},
-  additional arguments to be passed down to
-  \code{\link[ggplot2]{geom_point}}.  For the
-  \code{"sparseLTS"} method of \code{plot}, additional
+  down to methods.  For the \code{"sparseLTS"},
+  \code{"sparseLTSGrid"} and \code{"optSparseLTSGrid"}
+  methods of \code{diagnosticPlot}, additional arguments to
+  be passed down to the default method.  For the default
+  method of \code{diagnosticPlot}, additional arguments to
+  be passed down to \code{\link[ggplot2]{geom_point}}.  For
+  the \code{"sparseLTS"} method of \code{plot}, additional
   arguments to be passed down to \code{diagnosticPlot}.}
 }
 \value{
@@ -97,7 +101,7 @@
   observation number).  The default for \code{id.n} is the
   number of regression outliers, i.e., the number of
   observations with outlier weight equal to 0 (see
-  \code{\link[=weights.sparseLTS]{weights}}).
+  \code{\link[=wt.sparseLTS]{wt}}).
 
   In the plots of the standardized residuals versus their
   index or the fitted values, horizontal reference lines
@@ -107,7 +111,7 @@
   number).  The default for \code{id.n} is the number of
   regression outliers, i.e., the number of observations
   with outlier weight equal to 0 (see
-  \code{\link[=weights.sparseLTS]{weights}}).
+  \code{\link[=wt.sparseLTS]{wt}}).
 
   For the regression diagnostic plot, the robust
   Mahalanobis distances of the predictor variables are
@@ -125,9 +129,9 @@
   number).  The default for \code{id.n} is the number of
   all outliers: regression outliers (i.e., observations
   with outlier weight equal to 0, see
-  \code{\link[=weights.sparseLTS]{weights}}) and leverage
-  points (i.e., observations with robust Mahalanobis
-  distance larger than the 97.5\% quantile of the
+  \code{\link[=wt.sparseLTS]{wt}}) and leverage points
+  (i.e., observations with robust Mahalanobis distance
+  larger than the 97.5\% quantile of the
   \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
   degrees of freedom).
 }

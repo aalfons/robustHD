@@ -63,9 +63,8 @@
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
   \code{"tslars"} method, additional arguments to be passed
-  down to the \code{"seqModel"} method.  For the
-  \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
-  additional arguments to be passed down to
+  down to the \code{"seqModel"} method.  For the other
+  methods, additional arguments to be passed down to
   \code{\link[ggplot2]{geom_line}} and
   \code{\link[ggplot2]{geom_point}}.}
 }

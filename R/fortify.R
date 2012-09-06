@@ -3,12 +3,6 @@
 #         KU Leuven
 # ----------------------
 
-
-## supplement the fitted values and residuals of a model with other useful 
-## information for diagnostic plots
-## argument 'data' is currently ignored
-## returns a data frame suitable for plotting with ggplot2
-
 #' Convert a sparse LTS regression model into a data frame for plotting
 #' 
 #' Supplement the fitted values and residuals of a sparse least trimmed squared 
@@ -31,7 +25,7 @@
 #' and slopes of the respective reference lines to be displayed in residual Q-Q 
 #' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff 
 #' points for detecting leverage points), and \code{"facets"} (default faceting 
-#' formulas for the diagnostic plots).
+#' formula for the diagnostic plots).
 #' @returnItem step  the indices of the models (only returned if more than one 
 #' model is requested).
 #' @returnItem fit  the model fits (only returned if both the reweighted 
@@ -101,7 +95,7 @@ fortify.sparseLTS <- function(model, data,
         residuals <- residuals(model, fit=fit, standardized=TRUE)
         n <- length(residuals)  # number of observations
         ## extract outlier weights
-        weights <- weights(model, fit=fit)
+        wt <- wt(model, fit=fit)
         ## compute theoretical quantiles and distances from Q-Q reference line
         theoretical <- qqNorm(residuals)
         qql <- qqLine(residuals)  # Q-Q reference line
@@ -166,11 +160,11 @@ fortify.sparseLTS <- function(model, data,
         ## construct indicator variables for leverage points
         leverage <- rd > q
         ## classify data points
-        class <- ifelse(weights == 0, "outlier", "good")
+        class <- ifelse(wt == 0, "outlier", "good")
         class <- factor(class, levels=c("outlier", "good"))
         ## construct data frame
         data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-            theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, weight=weights, 
+            theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, weight=wt, 
             leverage=leverage, classification=class)
         attr(data, "qqLine") <- as.data.frame(qql)
         attr(data, "q") <- data.frame(q=max(q, 2.5))
@@ -251,3 +245,10 @@ fortify.sparseLTSGrid <- function(model, data, s,
     ## return data frame
     data
 }
+
+
+#' @rdname fortify.sparseLTS
+#' @method fortify optSparseLTSGrid
+#' @export 
+
+fortify.optSparseLTSGrid <- fortify.sparseLTS

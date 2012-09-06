@@ -19,8 +19,8 @@
 #' @param drop  a logical indicating whether to reduce the dimension to a 
 #' vector in case of only one step.
 #' @param \dots  for the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} 
-#' method, additional arguments are currently ignored.
+#' passed down to the \code{"seqModel"} or \code{"optSeqModel"} method.  For 
+#' the other methods, additional arguments are currently ignored.
 #' 
 #' @return  
 #' A numeric vector or matrix containing the requested residuals.
@@ -37,10 +37,16 @@
 #' 
 #' @export
 
-residuals.seqModel <- function(object, s, drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
+residuals.seqModel <- function(object, s = NA, drop = !is.null(s), ...) {
     getComponent(object, "residuals", s=s, drop=drop, ...)
 }
+
+
+#' @rdname residuals.seqModel
+#' @method residuals optSeqModel
+#' @export
+
+residuals.optSeqModel <- function(object, ...) object$residuals
 
 
 #' @rdname residuals.seqModel
@@ -111,13 +117,12 @@ residuals.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
     standardized <- isTRUE(standardized)
     # extract residuals and standardize if requested
     if(fit == "reweighted") {
-        if(standardized) {
-            (object$residuals - object$center) / object$scale
-        } else object$residuals
+        if(standardized) (object$residuals - object$center) / object$scale
+        else object$residuals
     } else if(fit == "raw") {
-        if(standardized) {
+        if(standardized) 
             (object$raw.residuals - object$raw.center) / object$raw.scale
-        } else object$raw.residuals
+        else object$raw.residuals
     } else {
         if(standardized) {
             reweighted <- (object$residuals - object$center) / object$scale
@@ -132,44 +137,13 @@ residuals.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method residuals sparseLTSGrid
 #' @export
 
-residuals.sparseLTSGrid <- function(object, s, 
+residuals.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         standardized = FALSE, drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    standardized <- isTRUE(standardized)
     ## extract residuals
-    if(fit == "reweighted") {
-        residuals <- object$residuals
-    } else if(fit == "raw") {
-        residuals <- object$raw.residuals
-    } else {
-        residuals <- list(reweighted=object$residuals, raw=object$raw.residuals)
-        residuals <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, residuals, names(residuals), SIMPLIFY=FALSE)
-        residuals <- do.call(cbind, residuals)
-    }
-    ## check selected steps and extract corresponding residuals
-    sMax <- length(object$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) residuals <- residuals[, s, drop=FALSE]  # selected steps
-    if(isTRUE(drop)) residuals <- drop(residuals)
+    residuals <- getComponent(object, "residuals", s=s, fit=fit, drop=drop, ...)
     ## if requested, standardize residuals
-    if(standardized) {
+    if(isTRUE(standardized)) {
         # extract center and scale estimates
         if(fit == "reweighted") {
             center <- object$center
@@ -187,9 +161,8 @@ residuals.sparseLTSGrid <- function(object, s,
             scale <- scale[s]
         }
         # standardize selected residuals
-        if(is.null(dim(residuals))) {
-            residuals <- (residuals - center) / scale
-        } else {
+        if(is.null(dim(residuals))) residuals <- (residuals - center) / scale
+        else {
             residuals <- x <- sweep(residuals, 2, center, check.margin=FALSE)
             residuals <- sweep(residuals, 2, scale, "/", check.margin=FALSE)
         }
@@ -197,3 +170,10 @@ residuals.sparseLTSGrid <- function(object, s,
     ## return residuals
     residuals
 }
+
+
+#' @rdname residuals.sparseLTS
+#' @method residuals optSparseLTSGrid
+#' @export
+
+residuals.optSparseLTSGrid <- residuals.sparseLTS

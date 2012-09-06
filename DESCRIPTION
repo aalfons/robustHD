@@ -2,16 +2,14 @@ Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
 Version: 0.3.0
-Date: 2012-07-05
-Author: Andreas Alfons
-Maintainer: Andreas Alfons
-    <andreas.alfons@econ.kuleuven.be>
+Date: 2012-09-06
 Depends:
+    R (>= 2.14.1),
     Rcpp (>= 0.9.10),
-    cvTools (>= 0.3.0),
     ggplot2,
     MASS,
     parallel,
+    perry,
     robustbase (>= 0.6-0)
 Imports:
     RcppArmadillo (>= 0.3.0),
@@ -24,26 +22,29 @@ Description: Robust methods for high-dimensional data, in particular linear
     regression.
 License: GPL (>= 2)
 LazyLoad: yes
+Authors@R: person("Andreas", "Alfons",
+    email = "andreas.alfons@kuleuven.be",
+    role = c("aut", "cre"))
 Collate:
+    'accessors.R'
     'AIC.R'
     'backend.R'
     'coef.R'
     'corHuber.R'
-    'cv.R'
     'fastLasso.R'
-    'fitModels.R'
     'fitted.R'
     'fortify.R'
+    'grplarsInternal.R'
     'grplars.R'
-    'grplarsWork.R'
     'initialSubsets.R'
     'lambda0.R'
+    'perry.R'
     'plot.R'
     'predict.R'
     'print.R'
-    'repCV.R'
     'residuals.R'
     'rlars.R'
+    'seqModel.R'
     'sparseLTS.R'
     'standardize.R'
     'subset.R'

@@ -19,8 +19,8 @@
 #' @param drop  a logical indicating whether to reduce the dimension to a 
 #' vector in case of only one step.
 #' @param \dots  for the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"seqModel"} method.  For the \code{"seqModel"} 
-#' method, additional arguments are currently ignored.
+#' passed down to the \code{"seqModel"} or \code{"optSeqModel"} method.  For 
+#' the other methods, additional arguments are currently ignored.
 #' 
 #' @return  
 #' A numeric vector or matrix containing the requested fitted values.
@@ -37,10 +37,16 @@
 #' 
 #' @export
 
-fitted.seqModel <- function(object, s, drop = !is.null(s), ...) {
-    if(missing(s) && missing(drop)) drop <- TRUE
+fitted.seqModel <- function(object, s = NA, drop = !is.null(s), ...) {
     getComponent(object, "fitted.values", s=s, drop=drop, ...)
 }
+
+
+#' @rdname fitted.seqModel
+#' @method fitted optSeqModel
+#' @export
+
+fitted.optSeqModel <- function(object, ...) object$fitted.values
 
 
 #' @rdname fitted.seqModel
@@ -105,9 +111,7 @@ fitted.tslars <- function(object, p, ...) {
 fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), 
         ...) {
     fit <- match.arg(fit)
-    switch(fit,
-        reweighted=object$fitted.values,
-        raw=object$raw.fitted.values,
+    switch(fit, reweighted=object$fitted.values, raw=object$raw.fitted.values,
         both=cbind(reweighted=object$fitted.values, 
             raw=object$raw.fitted.values))
 }
@@ -117,41 +121,15 @@ fitted.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
 #' @method fitted sparseLTSGrid
 #' @export
 
-fitted.sparseLTSGrid <- function(object, s, 
+fitted.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## extract fitted values
-    if(fit == "reweighted") {
-        fitted <- object$fitted.values
-    } else if(fit == "raw") {
-        fitted <- object$raw.fitted.values
-    } else {
-        fitted <- list(reweighted=object$fitted.values, 
-            raw=object$raw.fitted.values)
-        fitted <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, fitted, names(fitted), SIMPLIFY=FALSE)
-        fitted <- do.call(cbind, fitted)
-    }
-    ## check selected steps and extract corresponding fitted values
-    sMax <- length(object$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) fitted <- fitted[, s, drop=FALSE]  # selected steps
-    ## return fitted values
-    if(isTRUE(drop)) drop(fitted) else fitted
+    getComponent(object, "fitted.values", s=s, fit=fit, drop=drop, ...)
 }
+
+
+#' @rdname fitted.sparseLTS
+#' @method fitted optSparseLTSGrid
+#' @export
+
+fitted.optSparseLTSGrid <- fitted.sparseLTS

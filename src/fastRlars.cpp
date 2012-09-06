@@ -40,9 +40,7 @@ vec applyScaleFun(const mat& x, SEXP scaleFun) {
 uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 		const double& prob, const double& tol, SEXP scaleFun, int& ncores) {
 	// initializations
-	const uword n = x.n_rows, p = x.n_cols;
-	const int ncoresMax = omp_get_num_procs();
-	if(ncores == 0 || ncores > ncoresMax) ncores = ncoresMax;
+	const uword p = x.n_cols;
 
 	// STEP 1: find first ranked predictor
 	// compute correlations with response
@@ -110,7 +108,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         }
         // compute correlations of inactive predictors with equiangular vector
         vec corU(m);
-		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
+        #pragma omp parallel for num_threads(ncores) schedule(dynamic)
         for(uword j = 0; j < m; j++) {
         	corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
         }

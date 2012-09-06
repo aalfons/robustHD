@@ -18,12 +18,6 @@ addIntercept <- function(x, check = FALSE) {
 }
 
 ## remove intercept column from design matrix
-#removeIntercept <- function(x, pos) {
-#    if(missing(pos)) {
-#        pos <- match("(Intercept)", colnames(x), nomatch = 0)
-#        if(pos > 0) x[, -pos, drop=FALSE] else x
-#    } else x[, -pos, drop=FALSE]
-#}
 removeIntercept <- function(x, pos) {
     haveVector <- is.null(dim(x))
     if(missing(pos)) {
@@ -67,7 +61,8 @@ checkSMax <- function(sMax, n, p) {
 
 ## check steps for coef(), fitted(), residuals(), predict(), ... methods
 checkSteps <- function(s, sMin, sMax) {
-    if(!is.numeric(s) || length(s) == 0 || any(s < sMin) || any(s > sMax)) {
+    if(!is.numeric(s) || length(s) == 0 || any(!is.finite(s)) || 
+            any(s < sMin) || any(s > sMax)) {
         stop(sprintf("invalid step, must be between %d and %d", sMin, sMax))
     }
     s
@@ -89,9 +84,11 @@ copyColnames <- function(x, from) {
 
 ## utility function to get default labels for plot
 defaultLabels <- function(x) UseMethod("defaultLabels")
+
 defaultLabels.seqModel <- function(x) {
     as.character(seq_along(removeIntercept(coef(x))))
 }
+
 defaultLabels.grplars <- function(x) {
     assign <- x$assign
     labels <- split(as.character(assign), assign)
@@ -102,8 +99,23 @@ defaultLabels.grplars <- function(x) {
     unsplit(labels, assign)
 }
 
+defaultLabels.sparseLTSGrid <- defaultLabels.seqModel
+
 ## utility function to get default main plot title
 defaultMain <- function() "Coefficient path" 
+
+## drop dimension in case of matrix with one column
+dropCol <- function(x) {
+    d <- dim(x)
+    if(is.null(d[2]) || d[2] != 1) x
+    else if(d[1] == 1) {
+        # drop() drops all names for a 1x1 matrix
+        names <- rownames(x)
+        x <- drop(x)
+        names(x) <- names
+        x
+    } else drop(x)
+}
 
 ## find argument names of functions
 #findArgNames <- function(..., removeDots = TRUE) {
@@ -138,37 +150,6 @@ getCallFun <- function(args) {
     else function(..., fun, args) do.call(fun, c(list(...), args))
 }
 
-## get a component (coefficients, fitted values, residuals, ...) for certain 
-## steps of the model sequence
-## the component is assumed to be a matrix
-# generic function
-getComponent <- function(x, component, s, ...) UseMethod("getComponent")
-# method for class "seqModel"
-getComponent.seqModel <- function(x, component, s, drop = !is.null(s), ...) {
-    comp <- x[[component]]      # extract the specified component
-    if(missing(s)) s <- x$sOpt  # use the optimal step size as default
-    if(!is.null(s)) {
-        s <- checkSteps(s, sMin=1, sMax=ncol(comp))  # check steps
-        comp <- comp[, s, drop=FALSE]  # extract selected steps
-    }
-    if(isTRUE(drop)) drop(comp) else comp
-}
-# method for classes "rlars" and "grplars"
-getComponent.rlars <- getComponent.grplars <- function(x, component, s, 
-        drop = !is.null(s), ...) {
-    comp <- x[[component]]      # extract the specified component
-    if(missing(s)) s <- x$sOpt  # use the optimal step size as default
-    if(!is.null(s)) {
-        s <- checkSteps(s, sMin=0, sMax=ncol(comp)-1)  # check steps
-        comp <- comp[, s + 1, drop=FALSE]  # extract selected steps
-    }
-    if(isTRUE(drop)) drop(comp) else comp
-}
-# TODO: method for class "sparseLTSGrid"
-
-## get the number of processor cores
-getNumProcs <- function() .Call("R_getNumProcs", PACKAGE="robustHD")
-
 ## get the control object for model functions
 #' @import robustbase MASS
 getRegControl <- function(fun) {
@@ -194,9 +175,9 @@ getRegControl <- function(fun) {
 ## get steps of model sequence
 getSteps <- function(x) UseMethod("getSteps")
 
-getSteps.seqModel <- function(x) seq_along(x$df)
+getSteps.seqModel <- function(x) seq_along(x$df) - 1
 
-getSteps.rlars <- getSteps.grplars <- function(x) seq_along(x$df) - 1
+getSteps.sparseLTSGrid <- function(x) seq_along(x$lambda)
 
 ## compute coefficients of hyperplane through data points
 hyperplane <- function(x) {
@@ -218,6 +199,13 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
 newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
     n <- length(y)
     tsBlocks(x, y, p=p, subset=(n-h-p+2):n, intercept=intercept)
+}
+
+## find indices of h smallest observations
+partialOrder <- function(x, h) {
+    # call C++ function
+    callBackend <- getBackend()
+    callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h)) + 1
 }
 
 ## find indices of h smallest observations

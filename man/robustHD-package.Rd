@@ -15,20 +15,12 @@ Robust methods for high-dimensional data, in particular linear
 Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.3.0\cr
-Date: \tab 2012-07-05\cr
-Depends: \tab 
-Rcpp (>= 0.9.10),
-cvTools (>= 0.3.0),
-ggplot2,
-MASS,
-parallel,
-robustbase (>= 0.6-0)\cr
-Imports: \tab 
-RcppArmadillo (>= 0.3.0),
-stats\cr
+Date: \tab 2012-09-06\cr
+Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2, MASS, parallel,
+perry, robustbase (>= 0.6-0)\cr
+Imports: \tab RcppArmadillo (>= 0.3.0), stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
-Suggests: \tab 
-mvtnorm\cr
+Suggests: \tab mvtnorm\cr
 License: \tab GPL (>= 2)\cr
 LazyLoad: \tab yes\cr
 }
@@ -46,12 +38,6 @@ coefPlot                Coefficient plot of a sequence of regression
 corHuber                Robust correlation based on winsorization.
 critPlot                Optimality criterion plot of a sequence of
                         regression models
-cvGrplars               Cross-validation along a groupwise least angle
-                        regression sequence
-cvRlars                 Cross-validation along a robust least angle
-                        regression sequence
-cvSparseLTS             Cross-validation for sparse LTS regression
-                        models
 diagnosticPlot          Diagnostic plots for sparse LTS regression
                         models
 fitted.seqModel         Extract fitted values from a sequence of
@@ -62,13 +48,13 @@ fortify.sparseLTS       Convert a sparse LTS regression model into a
                         data frame for plotting
 grplars                 Groupwise least angle regression
 lambda0                 Penalty parameter for sparse LTS regression
+perry.seqModel          Resampling-based prediction error for a
+                        sequential regression model
+perry.sparseLTS         Resampling-based prediction error for sparse
+                        LTS regression models
 plot.seqModel           Plot a sequence of regression models
 predict.seqModel        Predict from a sequence of regression models
 predict.sparseLTS       Predict from sparse LTS regression models
-repCV.seqModel          Cross-validation for a sequential regression
-                        model
-repCV.sparseLTS         Cross-validation for sparse LTS regression
-                        models
 residuals.seqModel      Extract residuals from a sequence of regression
                         models
 residuals.sparseLTS     Extract residuals from sparse LTS regression
@@ -88,15 +74,14 @@ tsBlocks                Construct predictor blocks for time series
 tslars                  Least angle regression for time series data
 tslarsP                 Least angle regression for time series data
                         with fixed lag length
-weights.sparseLTS       Extract outlier weights from sparse LTS
-                        regression models
 winsorize               Data cleaning by winsorization
+wt                      Extract outlier weights from sparse LTS
+                        regression models
 }
 }
 \author{
-Andreas Alfons
+Andreas Alfons [aut, cre]
 
-Maintainer: Andreas Alfons
-<andreas.alfons@econ.kuleuven.be>
+Maintainer: Andreas Alfons <andreas.alfons@kuleuven.be>
 }
 \keyword{package}

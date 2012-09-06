@@ -1,4 +1,5 @@
 \name{fortify.sparseLTS}
+\alias{fortify.optSparseLTSGrid}
 \alias{fortify.sparseLTS}
 \alias{fortify.sparseLTSGrid}
 \title{Convert a sparse LTS regression model into a data frame for plotting}
@@ -7,6 +8,9 @@
     fit = c("reweighted", "raw", "both"), ...)
 
   \method{fortify}{sparseLTSGrid} (model, data, s,
+    fit = c("reweighted", "raw", "both"), ...)
+
+  \method{fortify}{optSparseLTSGrid} (model, data,
     fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
@@ -33,7 +37,7 @@
   reference lines to be displayed in residual Q-Q plots),
   \code{"q"} (quantiles of the Mahalanobis distribution
   used as cutoff points for detecting leverage points), and
-  \code{"facets"} (default faceting formulas for the
+  \code{"facets"} (default faceting formula for the
   diagnostic plots).
 
   \item{step}{the indices of the models (only returned if

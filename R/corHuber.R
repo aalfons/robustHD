@@ -126,29 +126,6 @@ corHuberBi <- function(x, y, const = 2, prob = 0.95,
     .Call("R_corHuberBi", R_x=x, R_y=y, R_c=const, R_prob=prob, R_tol=tol, 
         PACKAGE="robustHD")
 }
-#corHuberBi <- function(x, y, const = 2, prob = 0.95, 
-#        tol = .Machine$double.eps^0.5) {
-#    ## compute the initial correlation matrix with adjusted winsorization
-#    r0 <- corHuberAdj(x, y, const=const)
-#    if(is.na(r0) || isTRUE((1 - abs(r0)) < tol)) {
-#        # points almost on a line, leads to computationally singular system
-#        return(r0)
-#    }
-#    R0 <- diag(c(1, 1))
-#    R0[2, 1] <- R0[1, 2] <- r0
-#    ## compute Mahalanobis distances
-#    # function 'mahalanobis()' requires suppling estimates for the centers, 
-#    # hence it is not used here
-#    xy <- cbind(x, y)
-#    invR0 <- solve(R0)
-#    md <- rowSums((xy %*% invR0) * xy)  # squared Mahalanobis distances
-#    ## shrink observations with too large distances
-#    d <- qchisq(prob, df=2)  # quantile of the chi-squared distribution
-#    ind <- which(md > d)  # select observations that need to be shrunken
-#    xy[ind, ] <- xy[ind,] * sqrt(d / md[ind])  # shrink selected observations
-#    ## return classical correlation of winsorized data
-#    cor(xy[, 1], xy[, 2])
-#}
 
 # robust correlation based on adjusted univariate winsorization
 corHuberAdj <- function(x, y, const = 2) {
@@ -162,10 +139,3 @@ corHuberUni <- function(x, y, const = 2) {
     # call C++ function
     .Call("R_corHuberUni", R_x=x, R_y=y, R_c=const, PACKAGE="robustHD")
 }
-#corHuberUni <- function(x, y, const = 2) {
-#    ind <- abs(x) > const           # observations in 'x' that need to be shrunken
-#    x[ind] <- const * sign(x[ind])  # winsorize 'x'
-#    ind <- abs(y) > const           # observations in 'y' that need to be shrunken
-#    y[ind] <- const * sign(y[ind])  # winsorize 'y'
-#    cor(x, y)  # return classical correlation of winsorized data
-#}

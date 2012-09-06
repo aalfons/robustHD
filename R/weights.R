@@ -13,8 +13,6 @@ weights.rlm <- function(object, ...) object$w
 #' Extract binary weights that indicate outliers from sparse least trimmed 
 #' squares regression models.
 #' 
-#' @method weights sparseLTS
-#' 
 #' @param object  the model fit from which to extract outlier weights.
 #' @param s  an integer vector giving the indices of the models for which to 
 #' extract outlier weights.  If \code{fit} is \code{"both"}, this can be a list 
@@ -40,63 +38,41 @@ weights.rlm <- function(object, ...) object$w
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[stats]{weights}}, \code{\link{sparseLTS}}, 
-#' \code{\link{sparseLTSGrid}}
+#' @seealso \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
 #' 
-#' @example inst/doc/examples/example-weights.sparseLTS.R
+#' @example inst/doc/examples/example-wt.sparseLTS.R
 #' 
 #' @keywords regression
 #' 
 #' @export
 
-weights.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), 
-        ...) {
-    fit <- match.arg(fit)
-    switch(fit,
-        reweighted=object$weights,
-        raw=object$raw.weights,
-        both=cbind(reweighted=object$weights, raw=object$raw.weights))
-}
+wt <- function(object, ...) UseMethod("wt")
 
 
-#' @rdname weights.sparseLTS
-#' @method weights sparseLTSGrid
+#' @rdname wt
+#' @method wt sparseLTS
 #' @export
 
-weights.sparseLTSGrid <- function(object, s, 
+wt.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), ...) {
+    fit <- match.arg(fit)
+    switch(fit, reweighted=object$wt, raw=object$raw.wt,
+        both=cbind(reweighted=object$wt, raw=object$raw.wt))
+}
+
+
+#' @rdname wt
+#' @method wt sparseLTSGrid
+#' @export
+
+wt.sparseLTSGrid <- function(object, s = NA, 
         fit = c("reweighted", "raw", "both"), 
         drop = !is.null(s), ...) {
-    ## initializations
-    fit <- match.arg(fit)
-    ## extract weights
-    if(fit == "reweighted") {
-        weights <- object$weights
-    } else if(fit == "raw") {
-        weights <- object$raw.weights
-    } else {
-        weights <- list(reweighted=object$weights, raw=object$raw.weights)
-        weights <- mapply(function(x, n) {
-                colnames(x) <- paste(n, colnames(x), sep=".")
-                x
-            }, weights, names(weights), SIMPLIFY=FALSE)
-        weights <- do.call(cbind, weights)
-    }
-    ## check selected steps and extract corresponding weights
-    sMax <- length(object$lambda)
-    if(missing(s)) {
-        s <- switch(fit, reweighted=object$sOpt, raw=object$raw.sOpt, 
-            both=c(reweighted=object$sOpt, raw=sMax+object$raw.sOpt))
-    } else if(!is.null(s)) {
-        if(fit == "both" && is.list(s)) {
-            s <- rep(s, length.out=2)
-            s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-            s <- c(s[[1]], sMax+s[[2]])
-        } else {
-            s <- checkSteps(s, sMin=1, sMax=sMax)
-            if(fit == "both") s <- c(s, sMax+s)
-        }
-    }
-    if(!is.null(s)) weights <- weights[, s, drop=FALSE]  # selected steps
-    ## return weights
-    if(isTRUE(drop)) drop(weights) else weights
+    getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
 }
+
+
+#' @rdname wt
+#' @method wt optSparseLTSGrid
+#' @export
+
+wt.optSparseLTSGrid <- wt.sparseLTS

@@ -1,13 +1,16 @@
 \name{residuals.seqModel}
 \alias{residuals.grplars}
+\alias{residuals.optSeqModel}
 \alias{residuals.rlars}
 \alias{residuals.seqModel}
 \alias{residuals.tslars}
 \alias{residuals.tslarsP}
 \title{Extract residuals from a sequence of regression models}
 \usage{
-  \method{residuals}{seqModel} (object, s,
+  \method{residuals}{seqModel} (object, s = NA,
     drop = !is.null(s), ...)
+
+  \method{residuals}{optSeqModel} (object, ...)
 
   \method{residuals}{tslars} (object, p, ...)
 }
@@ -27,9 +30,9 @@
   dimension to a vector in case of only one step.}
 
   \item{\dots}{for the \code{"tslars"} method, additional
-  arguments to be passed down to the \code{"seqModel"}
-  method.  For the \code{"seqModel"} method, additional
-  arguments are currently ignored.}
+  arguments to be passed down to the \code{"seqModel"} or
+  \code{"optSeqModel"} method.  For the other methods,
+  additional arguments are currently ignored.}
 }
 \value{
   A numeric vector or matrix containing the requested

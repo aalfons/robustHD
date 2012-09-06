@@ -1,13 +1,16 @@
 \name{fitted.seqModel}
 \alias{fitted.grplars}
+\alias{fitted.optSeqModel}
 \alias{fitted.rlars}
 \alias{fitted.seqModel}
 \alias{fitted.tslars}
 \alias{fitted.tslarsP}
 \title{Extract fitted values from a sequence of regression models}
 \usage{
-  \method{fitted}{seqModel} (object, s, drop = !is.null(s),
-    ...)
+  \method{fitted}{seqModel} (object, s = NA,
+    drop = !is.null(s), ...)
+
+  \method{fitted}{optSeqModel} (object, ...)
 
   \method{fitted}{tslars} (object, p, ...)
 }
@@ -27,9 +30,9 @@
   dimension to a vector in case of only one step.}
 
   \item{\dots}{for the \code{"tslars"} method, additional
-  arguments to be passed down to the \code{"seqModel"}
-  method.  For the \code{"seqModel"} method, additional
-  arguments are currently ignored.}
+  arguments to be passed down to the \code{"seqModel"} or
+  \code{"optSeqModel"} method.  For the other methods,
+  additional arguments are currently ignored.}
 }
 \value{
   A numeric vector or matrix containing the requested

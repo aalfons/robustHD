@@ -1,6 +1,8 @@
 \name{critPlot}
 \alias{critPlot}
 \alias{critPlot.grplars}
+\alias{critPlot.optSeqModel}
+\alias{critPlot.optSparseLTSGrid}
 \alias{critPlot.rlars}
 \alias{critPlot.seqModel}
 \alias{critPlot.sparseLTSGrid}
@@ -12,11 +14,16 @@
 
   \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
+  \method{critPlot}{optSeqModel} (x, ...)
+
   \method{critPlot}{tslars} (x, p, ...)
 
   \method{critPlot}{sparseLTSGrid} (x,
     fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
     ...)
+
+  \method{critPlot}{optSparseLTSGrid} (x,
+    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}
@@ -37,10 +44,15 @@
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
   \code{"tslars"} method, additional arguments to be passed
-  down to the \code{"seqModel"} method.  For the
-  \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
-  additional arguments to be passed down to
-  \code{\link[ggplot2]{geom_point}}.}
+  down to the \code{"seqModel"} or \code{"optSeqModel"}
+  method.  For the \code{"seqModel"} and
+  \code{"sparseLTSGrid"} methods, additional arguments to
+  be passed down to \code{\link[ggplot2]{geom_line}} and
+  \code{\link[ggplot2]{geom_point}}.  For the
+  \code{"optSeqModel"} and \code{"optSparseLTSGrid"}
+  methods, additional arguments to be passed down to the
+  \code{\link[perry:perryPlot]{plot}} method for the
+  prediction error results.}
 }
 \value{
   An object of class \code{"ggplot"} (see

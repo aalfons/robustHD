@@ -1,5 +1,7 @@
 \name{plot.seqModel}
 \alias{plot.grplars}
+\alias{plot.optSeqModel}
+\alias{plot.optSparseLTSGrid}
 \alias{plot.rlars}
 \alias{plot.seqModel}
 \alias{plot.sparseLTSGrid}
@@ -10,8 +12,15 @@
   \method{plot}{seqModel} (x,
     method = c("coefficients", "crit"), ...)
 
+  \method{plot}{optSeqModel} (x, ...)
+
   \method{plot}{tslars} (x, p,
     method = c("coefficients", "crit"), ...)
+
+  \method{plot}{sparseLTSGrid} (x,
+    method = c("coefficients", "crit"), ...)
+
+  \method{plot}{optSparseLTSGrid} (x, ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}

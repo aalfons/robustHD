@@ -1,14 +1,17 @@
 \name{predict.seqModel}
 \alias{predict.grplars}
+\alias{predict.optSeqModel}
 \alias{predict.rlars}
 \alias{predict.seqModel}
 \alias{predict.tslars}
 \alias{predict.tslarsP}
 \title{Predict from a sequence of regression models}
 \usage{
-  \method{predict}{seqModel} (object, newdata, s, ...)
+  \method{predict}{seqModel} (object, newdata, s = NA, ...)
 
-  \method{predict}{tslarsP} (object, newdata, s, ...)
+  \method{predict}{optSeqModel} (object, newdata, ...)
+
+  \method{predict}{tslarsP} (object, newdata, ...)
 
   \method{predict}{tslars} (object, newdata, p, ...)
 }
@@ -34,10 +37,8 @@
 
   \item{\dots}{for the \code{"tslars"} method, additional
   arguments to be passed down to the \code{"tslarsP"}
-  method.  For the \code{"tslarsP"} method, additional
-  arguments are currently ignored.  For the
-  \code{"seqModel"} method, additional arguments to be
-  passed down to the respective method of
+  method.  For the other methods, additional arguments to
+  be passed down to the respective method of
   \code{\link[=coef.seqModel]{coef}}.}
 }
 \value{

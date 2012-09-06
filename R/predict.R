@@ -35,10 +35,9 @@
 #' @param s  an integer vector giving the steps of the submodels for which to 
 #' make predictions (the default is to use the optimal submodel).
 #' @param \dots  for the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"tslarsP"} method.  For the \code{"tslarsP"} 
-#' method, additional arguments are currently ignored.  For the 
-#' \code{"seqModel"} method, additional arguments to be passed down to the 
-#' respective method of \code{\link[=coef.seqModel]{coef}}.
+#' passed down to the \code{"tslarsP"} method.  For the other methods, 
+#' additional arguments to be passed down to the respective method of 
+#' \code{\link[=coef.seqModel]{coef}}.
 #' 
 #' @return  
 #' If only one submodel is requested, a numeric vector containing the 
@@ -59,7 +58,7 @@
 #' 
 #' @export
 
-predict.seqModel <- function(object, newdata, s, ...) {
+predict.seqModel <- function(object, newdata, s = NA, ...) {
     ## initializations
     coef <- coef(object, s=s, ...)  # extract coefficients
     # extract or check new data
@@ -96,12 +95,48 @@ predict.seqModel <- function(object, newdata, s, ...) {
 
 
 #' @rdname predict.seqModel
+#' @method predict optSeqModel
+#' @export
+
+predict.optSeqModel <- function(object, newdata, ...) {
+    ## initializations
+    coef <- coef(object, ...)  # extract coefficients
+    # extract or check new data
+    terms <- delete.response(object$terms)  # extract terms for model matrix
+    if(missing(newdata) || is.null(newdata)) {
+        if(is.null(newdata <- object$x)) {
+            newdata <- try(model.matrix(terms), silent=TRUE)
+            if(inherits(newdata, "try-error")) stop("model data not available")
+        }
+    } else {
+        # interpret vector as row
+        if(is.null(dim(newdata))) newdata <- t(newdata)
+        # check dimensions if model was not specified with a formula, 
+        # otherwise use the terms object to extract model matrix
+        if(is.null(terms)) {
+            newdata <- as.matrix(newdata)
+            # add a column of ones to the new data matrix 
+            # (unless it already contains intercept column)
+            newdata <- addIntercept(newdata, check=TRUE)
+            # check dimensions of new data
+            p <- length(coef)
+            if(ncol(newdata) != p) {
+                stop(sprintf("new data must have %d columns", p))
+            }
+        } else newdata <- model.matrix(terms, as.data.frame(newdata))
+    }
+    ## compute predictions (ensure that a vector is returned)
+    drop(newdata %*% coef)
+}
+
+
+#' @rdname predict.seqModel
 #' @method predict tslarsP
 #' @export
 
-predict.tslarsP <- function(object, newdata, s, ...) {
+predict.tslarsP <- function(object, newdata, ...) {
     ## initializations
-    coef <- coef(object, s=s, ...)  # extract coefficients
+    coef <- coef(object, ...)  # extract coefficients
     d <- dim(coef)
     terms <- object$terms  # extract terms for model matrix
     if(missing(newdata) || is.null(newdata)) {
@@ -151,15 +186,15 @@ predict.tslarsP <- function(object, newdata, s, ...) {
 
 predict.tslars <- function(object, newdata, p, ...) {
     ## initializations
-	# check lag length
+    # check lag length
     if(missing(p) || !is.numeric(p) || length(p) == 0) {
         p <- object$pOpt
     } else p <- p[1]
     pMax <- object$pMax
     if(p < 1) {
         p <- 1
-		warning("lag length too small, using lag length 1")
-	} else if(p > pMax) {
+        warning("lag length too small, using lag length 1")
+    } else if(p > pMax) {
         p <- pMax
         warning(sprintf("lag length too large, using maximum lag length %d", p))
     }
@@ -174,7 +209,7 @@ predict.tslars <- function(object, newdata, p, ...) {
             }
         }
         # extract model for specified lag length and add original data
-		object <- object$pFit[[p]]
+        object <- object$pFit[[p]]
         object$x <- x
         object$y <- y
         predict(object, ...)
@@ -271,7 +306,7 @@ predict.sparseLTS <- function(object, newdata,
 #' @method predict sparseLTSGrid
 #' @export
 
-predict.sparseLTSGrid <- function(object, newdata, s, 
+predict.sparseLTSGrid <- function(object, newdata, s = NA, 
         fit = c("reweighted", "raw", "both"), ...) {
     ## initializations
     coef <- coef(object, s=s, fit=fit)  # extract coefficients
@@ -305,3 +340,10 @@ predict.sparseLTSGrid <- function(object, newdata, s,
     if(is.null(d)) out <- drop(out)
     out
 }
+
+
+#' @rdname predict.sparseLTS
+#' @method predict optSparseLTSGrid
+#' @export
+
+predict.optSparseLTSGrid <- predict.sparseLTS

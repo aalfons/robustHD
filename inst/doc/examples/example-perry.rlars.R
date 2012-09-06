@@ -15,5 +15,4 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit and evaluate robust LARS model
 fit <- rlars(x, y)
-cv <- repCV(fit)
-cv
+repCV(fit)

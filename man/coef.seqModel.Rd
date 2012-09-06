@@ -1,13 +1,16 @@
 \name{coef.seqModel}
 \alias{coef.grplars}
+\alias{coef.optSeqModel}
 \alias{coef.rlars}
 \alias{coef.seqModel}
 \alias{coef.tslars}
 \alias{coef.tslarsP}
 \title{Extract coefficients from a sequence of regression models}
 \usage{
-  \method{coef}{seqModel} (object, s, zeros = TRUE,
+  \method{coef}{seqModel} (object, s = NA, zeros = TRUE,
     drop = !is.null(s), ...)
+
+  \method{coef}{optSeqModel} (object, zeros = TRUE, ...)
 
   \method{coef}{tslars} (object, p, ...)
 }
@@ -21,16 +24,19 @@
 
   \item{s}{an integer vector giving the steps of the
   submodels for which to extract coefficients (the default
-  is to use the optimal submodel). (\code{TRUE}, the
-  default) or to omit them (\code{FALSE}).}
+  is to use the optimal submodel).}
+
+  \item{zeros}{a logical indicating whether to keep zero
+  coefficients (\code{TRUE}, the default) or to omit them
+  (\code{FALSE}).}
 
   \item{drop}{a logical indicating whether to reduce the
   dimension to a vector in case of only one step.}
 
   \item{\dots}{for the \code{"tslars"} method, additional
-  arguments to be passed down to the \code{"seqModel"}
-  method.  For the \code{"seqModel"} method, additional
-  arguments are currently ignored.}
+  arguments to be passed down to the \code{"seqModel"} or
+  \code{"optSeqModel"} method.  For the other methods,
+  additional arguments are currently ignored.}
 }
 \value{
   A numeric vector or matrix containing the requested
