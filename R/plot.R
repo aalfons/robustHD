@@ -351,8 +351,8 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
         geom_text(labelMapping, data=labelData, 
             hjust=0, size=size[3], alpha=0.4) + 
         scale_x_continuous(minor_breaks=gridX) + 
-        opts(legend.position="none", title=main) + 
-        labs(x=xlab, y=ylab)
+        theme(legend.position="none") + 
+        labs(title=main, x=xlab, y=ylab)
 }
 
 # ----------------------
@@ -551,7 +551,7 @@ ggCritPlot <- function(critData, abscissa = c("step", "lambda"),
         geom_line(size=size[1], ...) + 
         geom_point(size=size[2], ...) + 
         scale_x_continuous(minor_breaks=gridX) + 
-        opts(title=main) + labs(x=xlab, y=ylab)
+        labs(title=main, x=xlab, y=ylab)
 }
 
 # ----------------------
@@ -828,7 +828,7 @@ rqqPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4),
         p <- p + geom_text(labelMapping, data=labelData, 
             hjust=0, size=size[2], alpha=0.4)
     }
-    p <- p + opts(title=main) + labs(x=xlab, y=ylab)
+    p <- p + labs(title=main, x=xlab, y=ylab)
     if(!is.null(facets)) {
         # split plot into different panels
         if(length(facets) == 2) p <- p + facet_wrap(facets) 
@@ -891,7 +891,7 @@ residualPlot <- function(data, abscissa = c("index", "fitted"),
             hjust=0, size=size[2], alpha=0.4)
     }
     p <- p + scale_y_continuous(breaks=breaks) + 
-        opts(title=main) + labs(x=xlab, y=ylab)
+        labs(title=main, x=xlab, y=ylab)
     if(!is.null(facets)) {
         # split plot into different panels
         if(length(facets) == 2) p <- p + facet_wrap(facets) 
@@ -937,7 +937,7 @@ rdiagPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4),
         p <- p + geom_text(labelMapping, data=labelData, 
             hjust=0, size=size[2], alpha=0.4)
     }
-    p <- p + opts(title=main) + labs(x=xlab, y=ylab)
+    p <- p + labs(title=main, x=xlab, y=ylab)
     if(!is.null(facets)) {
         # split plot into different panels
         if(length(facets) == 2) p <- p + facet_wrap(facets) 

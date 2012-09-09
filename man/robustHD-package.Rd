@@ -15,8 +15,8 @@ Robust methods for high-dimensional data, in particular linear
 Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.3.0\cr
-Date: \tab 2012-09-06\cr
-Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2, MASS, parallel,
+Date: \tab 2012-09-09\cr
+Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2 (>= 0.9.2), MASS,
 perry, robustbase (>= 0.6-0)\cr
 Imports: \tab RcppArmadillo (>= 0.3.0), stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr

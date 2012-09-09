@@ -4,6 +4,19 @@ Changes in robustHD version 0.3.0
 
 
 
+Changes in robustHD version 0.2.1
+
+    + Bugfix in rlars(): formula method now only adds function call and model 
+      terms if the default method returns an "rlars" object, not if only the 
+      sequence is returned.
+    
+    + Bugfix in rlars(): argument cl is now preferred over argument ncores for 
+      parallel computing, as stated in the help file.
+    
+    + Plots are no longer using the opts() function from package ggplot2, which 
+      is deprecated since ggplot2 version 0.9.2.
+
+
 Changes in robustHD version 0.2.0
 
     + Graphics are now based on package ggplot2 instead of lattice.
