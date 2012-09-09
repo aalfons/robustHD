@@ -59,7 +59,7 @@
 #' @param ncores  a positive integer giving the number of processor cores to be 
 #' used for parallel computing (the default is 1 for no parallelization).  If 
 #' this is set to \code{NA}, all available processor cores are used.  For 
-#' fitting models along the sequence or for prediction error estimation, 
+#' fitting models along the sequence and for prediction error estimation, 
 #' parallel computing is implemented on the \R level using package 
 #' \pkg{parallel}.  Otherwise parallel computing for some of of the more 
 #' computer-intensive computations in the sequencing step is implemented on the 
@@ -71,9 +71,9 @@
 #' @param seed  optional initial seed for the random number generator (see 
 #' \code{\link{.Random.seed}}).  This is useful because many robust regression 
 #' functions (including \code{\link[robustbase]{lmrob}}) involve randomness, 
-#' or for prediction error estimation.  On parallel \R worker processes for 
-#' prediction error estimation, random number streams are used and the seed is 
-#' set via \code{\link{clusterSetRNGStream}}.
+#' or for prediction error estimation.  On parallel \R worker processes, random 
+#' number streams are used and the seed is set via 
+#' \code{\link{clusterSetRNGStream}}.
 #' @param model  a logical indicating whether the model data should be included 
 #' in the returned object.
 #' @param tol  a small positive numeric value.  This is used in bivariate 
@@ -114,7 +114,7 @@
 #' the optimality criterion from the submodels along the sequence 
 #' (\code{"seqModel"}); or an object of class \code{"perrySeqModel"} 
 #' (inheriting from \code{"\link[perry]{perrySelect}"}) that contains 
-#' the estimated prediction errors of the submodels  (\code{"optSeqModel"}).
+#' the estimated prediction errors of the submodels (\code{"optSeqModel"}).
 #' @returnItem sOpt  an integer giving the optimal submodel (only 
 #' \code{"seqModel"}).
 #' @returnItem muY  numeric; the center estimate of the response.
@@ -145,6 +145,8 @@
 #' @keywords regression robust
 #' 
 #' @export
+#' @import Rcpp 
+#' @import RcppArmadillo
 
 rlars <- function(x, ...) UseMethod("rlars")
 
@@ -173,8 +175,10 @@ rlars.formula <- function(formula, data, ...) {
     if(attr(mt, "intercept")) x <- x[, -1, drop=FALSE]
     ## call default method
     out <- rlars.default(x, y, ...)
-    out$call <- call  # add call to return object
-    out$terms <- mt   # add model terms to return object
+    if(inherits(out, "rlars")) {
+        out$call <- call  # add call to return object
+        out$terms <- mt   # add model terms to return object
+    }
     out
 }
 
@@ -203,6 +207,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     # check regression function
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
+    # check number of processor cores
     ncores <- rep(ncores, length.out=1)
     if(is.na(ncores)) ncores <- detectCores()  # use all available cores
     if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
@@ -218,8 +223,9 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {
         # check whether parallel computing should be used
-        haveNcores <- ncores > 1
-        useParallel <- haveNcores || !is.null(cl)
+        haveCl <- inherits(cl, "cluster")
+        haveNcores <- !haveCl && ncores > 1
+        useParallel <- haveNcores || haveCl
         # set up multicore or snow cluster if not supplied
         if(haveNcores) {
             if(.Platform$OS.type == "windows") {

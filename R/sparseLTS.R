@@ -150,6 +150,7 @@
 #' 
 #' @export 
 #' @import Rcpp 
+#' @import RcppArmadillo
 
 sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 
