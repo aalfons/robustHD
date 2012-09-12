@@ -10,13 +10,14 @@
   \method{rlars}{formula} (formula, data, ...)
 
   \method{rlars}{default} (x, y, sMax = NA,
-    centerFun = median, scaleFun = mad, const = 2,
-    prob = 0.95, fit = TRUE, regFun = lmrob,
-    regArgs = list(), crit = c("BIC", "PE"),
-    splits = foldControl(), cost = rtmspe,
-    costArgs = list(), selectBest = c("hastie", "min"),
-    seFactor = 1, ncores = 1, cl = NULL, seed = NULL,
-    model = TRUE, tol = .Machine$double.eps^0.5, ...)
+    centerFun = median, scaleFun = mad, winsorize = FALSE,
+    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
+    regFun = lmrob, regArgs = list(),
+    crit = c("BIC", "PE"), splits = foldControl(),
+    cost = rtmspe, costArgs = list(),
+    selectBest = c("hastie", "min"), seFactor = 1,
+    ncores = 1, cl = NULL, seed = NULL, model = TRUE,
+    tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}

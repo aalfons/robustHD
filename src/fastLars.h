@@ -3,9 +3,8 @@
  *         KU Leuven
  */
 
-/*
-#ifndef _robustHD_FASTRLARS_H
-#define _robustHD_FASTRLARS_H
+#ifndef _robustHD_FASTLARS_H
+#define _robustHD_FASTLARS_H
 
 #define ARMA_NO_DEBUG
 
@@ -17,8 +16,7 @@
 #include "corHuber.h"
 
 // functions to export to R
-RcppExport SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c,
+RcppExport SEXP R_fastLars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_robust, SEXP R_c,
 		SEXP R_prob, SEXP R_tol, SEXP scaleFun, SEXP R_ncores);
 
 #endif
-*/

@@ -3,30 +3,88 @@
  *         KU Leuven
  */
 
-/*
 #include <R.h>
-#include "fastRlars.h"
+#include "fastLars.h"
 
 using namespace Rcpp;
 using namespace arma;
 using namespace std;
 
 
-// variable sequencing via robust least angle regression
+// ******************************************
+// control class definitions for correlations
+// ******************************************
+
+// The control classes that handle how the correlations are computed.  They
+// store the values for the additional control parameters and have a cor()
+// method to call the corresponding correlation function.
+
+// -------------------------------------
+// control class for Pearson correlation
+// -------------------------------------
+
+class CorPearsonControl {
+public:
+	// method to compute correlation
+	double cor(const vec&, const vec&);
+};
+
+// method to compute correlation
+double CorPearsonControl::cor(const vec& x, const vec& y) {
+	return corPearson(x, y);
+}
+
+
+// ----------------------------------------------------------
+// control class for Huber correlation based on winsorization
+// ----------------------------------------------------------
+
+// ATTENTION: the data are assumed to be standardized (this is done in R)
+
+class CorHuberControl {
+public:
+	double c;
+	double prob;
+	double tol;
+	// constructors
+	CorHuberControl(double &, double&, double&);
+	// method to compute correlation
+	double cor(const vec&, const vec&);
+};
+
+// constructors
+inline CorHuberControl::CorHuberControl(double & _c, double& _p, double& _t) {
+	c = _c;
+	prob = _p;
+	tol = _t;
+}
+
+// method to compute correlation
+double CorHuberControl::cor(const vec& x, const vec& y) {
+	return corHuberBi(x, y, c, prob, tol);
+}
+
+
+// ***************************************************
+// (robust) least angle regression variable sequencing
+// ***************************************************
+
+// variable sequencing via (robust) least angle regression
 // Armadillo library is used for linear algebra
 // ATTENTION: the data are assumed to be standardized (this is done in R)
-// x .......... predictor matrix
-// y .......... response
-// sMax ....... number of predictors to be sequenced
-// c .......... tuning constant for initial adjusted univariate winsorization
-// prob ....... tuning parameter for bivariate winsorization
-// tol ........ numeric tolerance for detecting singularity
-// scaleFun ... R function to compute scale estimates
-// ncores ..... number of processor cores for parallel computing
+// x ............ predictor matrix
+// y ............ response
+// sMax ......... number of predictors to be sequenced
+// corControl ... control object to compute correlation
+// robust ....... check robust correlation matrix for positive definiteness?
+// scaleFun ..... R function to compute scale estimates
+// ncores ....... number of processor cores for parallel computing
 // parallel computing is only used for expensive computations with all
 // inactive predictors, otherwise there is no speedup due to overhead
-uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
-		const double& prob, const double& tol, SEXP scaleFun, int& ncores) {
+template <class CorControl>
+uvec fastLars(const mat& x, const vec& y, const uword& sMax,
+		CorControl corControl, const bool& robust, SEXP scaleFun,
+		int& ncores) {
 	// initializations
 	const uword p = x.n_cols;
 
@@ -35,7 +93,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 	vec corY(p);
 	#pragma omp parallel for num_threads(ncores) schedule(dynamic)
 	for(uword j = 0; j < p; j++) {
-		corY(j) = corHuberBi(x.unsafe_col(j), y, c, prob, tol);
+		corY(j) = corControl.cor(x.unsafe_col(j), y);
 	}
 	vec absCorY = abs(corY);
 	// find predictor with maximum absolute correlation
@@ -65,7 +123,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 		#pragma omp parallel for num_threads(ncores) schedule(dynamic)
 		for(uword j = 0; j < m; j++) {
 			vec xj = x.unsafe_col(inactive(j));
-			R(inactive(j), k-1) = corHuberBi(xj, xx, c, prob, tol);
+			R(inactive(j), k-1) = corControl.cor(xj, xx);
 		}
 		for(uword j = 1; j < k; j++) {
 			R(active(j-1), k-1) = R(active(k-1), j-1);
@@ -79,15 +137,17 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         			G(i, j) = signs(i) * signs(j) * R(active(i), j);
         		}
         	}
-        	// check if correlation matrix is positive definite
-        	// compute eigenvalues and eigenvectors
-        	vec eigVal;
-        	mat eigVec;
-        	eig_sym(eigVal, eigVec, G);
-        	if(eigVal(0) < 0) {  // first eigenvalue is the smallest
-        		// correction of correlation matrix for positive definiteness
-        		vec lambda = square(applyScaleFun(x.cols(active) * eigVec, scaleFun));
-        		G = eigVec * diagmat(lambda) * trans(eigVec);
+        	if(robust) {
+            	// check if correlation matrix is positive definite
+            	// compute eigenvalues and eigenvectors
+            	vec eigVal;
+            	mat eigVec;
+            	eig_sym(eigVal, eigVec, G);
+            	if(eigVal(0) < 0) {  // first eigenvalue is the smallest
+            		// correction of correlation matrix for positive definiteness
+            		vec lambda = square(applyScaleFun(x.cols(active) * eigVec, scaleFun));
+            		G = eigVec * diagmat(lambda) * trans(eigVec);
+            	}
         	}
             // compute quantities necessary for computing the step size
         	mat invG = solve(G, eye<mat>(k, k));
@@ -140,8 +200,8 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
 }
 
 // R interface to fastRlars()
-SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c, SEXP R_prob,
-		SEXP R_tol, SEXP scaleFun, SEXP R_ncores) {
+SEXP R_fastLars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_robust, SEXP R_c,
+		SEXP R_prob, SEXP R_tol, SEXP scaleFun, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -149,12 +209,20 @@ SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c, SEXP R_prob,
 	NumericVector Rcpp_y(R_y);			// response
 	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	uword sMax = as<uword>(R_sMax);
-	double c = as<double>(R_c);
-	double prob = as<double>(R_prob);
-	double tol = as<double>(R_tol);
+	bool robust = as<bool>(R_robust);
 	int ncores = as<int>(R_ncores);
 	// call native C++ function
-	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun, ncores);
+	uvec active;
+	if(robust) {
+		double c = as<double>(R_c);
+		double prob = as<double>(R_prob);
+		double tol = as<double>(R_tol);
+		CorHuberControl corControl(c, prob, tol);
+		active = fastLars(x, y, sMax, corControl, robust, scaleFun, ncores);
+	} else {
+		CorPearsonControl corControl;
+		active = fastLars(x, y, sMax, corControl, false, scaleFun, ncores);
+	}
+	// call native C++ function
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }
-*/
