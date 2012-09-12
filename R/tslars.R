@@ -176,6 +176,12 @@ tslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA, fit = TRUE,
 #' interpreted as weighted least squares (defaults to 
 #' \code{\link[robustbase]{lmrob}}).
 #' @param regArgs  a list of arguments to be passed to \code{regFun}.
+#' @param combine  a character string specifying how to combine the data 
+#' cleaning weights from the robust regressions with each predictor group.  
+#' Possible values are \code{"min"} for taking the minimum weight for each 
+#' observation, or \code{"mahalanobis"} for weights based on Mahalanobis 
+#' distances of the multivariate set of standardized residuals (i.e., 
+#' multivariate winsorization of the standardized residuals).
 #' @param winsorize  a logical indicating whether to clean the data by 
 #' multivariate winsorization.
 #' @param const  numeric; tuning constant for multivariate winsorization to be 
@@ -184,15 +190,6 @@ tslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA, fit = TRUE,
 #' @param prob  numeric; probability for the quantile of the 
 #' \eqn{\chi^{2}}{chi-squared} distribution to be used in multivariate 
 #' winsorization (defaults to 0.95).
-#' @param combine  a character string specifying how to combine the data 
-#' cleaning weights from the robust regressions with each predictor group.  
-#' Possible values are \code{"min"} for taking the minimum weight for each 
-#' observation, \code{"euclidean"} for weights based on Euclidean distances 
-#' of the multivariate set of standardized residuals (i.e., multivariate 
-#' winsorization of the standardized residuals assuming independence), or 
-#' \code{"mahalanobis"} for weights based on Mahalanobis distances of the 
-#' multivariate set of standardized residuals (i.e., multivariate winsorization 
-#' of the standardized residuals).
 #' @param fit  a logical indicating whether to fit submodels along the sequence 
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
 #' @param crit  a character string specifying the optimality criterion to be 
@@ -287,17 +284,17 @@ rtslars.formula <- function(formula, data, ...) {
 #' @export
 
 rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA, 
-        centerFun = median, scaleFun = mad, regFun = lmrob, 
-        regArgs = list(), winsorize = FALSE, const = 2, prob = 0.95, 
-        combine = c("min", "euclidean", "mahalanobis"), fit = TRUE, 
-        crit = "BIC", ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...) {
+        centerFun = median, scaleFun = mad, regFun = lmrob, regArgs = list(), 
+        combine = c("min", "mahalanobis"), winsorize = FALSE, pca = FALSE, 
+        const = 2, prob = 0.95, fit = TRUE, crit = "BIC", ncores = 1, 
+        cl = NULL, seed = NULL, model = TRUE, ...) {
     ## call fit function with classical functions for center, scale, 
     ## correlation and regression
     call <- match.call()  # get function call
     call[[1]] <- as.name("rtslars")
     out <- tslarsFit(x, y, h=h, pMax=pMax, sMax=sMax, robust=TRUE, 
         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
-		winsorize=winsorize, const=const, prob=prob, combine=combine, 
+        combine=combine, winsorize=winsorize, pca=pca, const=const, prob=prob, 
         fit=fit, crit=crit, ncores=ncores, cl=cl, seed=seed, model=model)
     if(inherits(out, "tslars")) out$call <- call  # add call to return object
     out
@@ -308,9 +305,9 @@ rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA,
 ## and regression
 tslarsFit <- function(x, y, h = 1, pMax = 3, sMax = NA, robust = FALSE, 
         centerFun = mean, scaleFun = sd, regFun = lm.fit, regArgs = list(), 
-        winsorize = FALSE, const = 2, prob = 0.95, 
-        combine = c("min", "euclidean", "mahalanobis"), fit = TRUE, 
-        crit = "BIC", ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
+        combine = c("min", "mahalanobis"), winsorize = FALSE, pca = FALSE, 
+        const = 2, prob = 0.95, fit = TRUE, crit = "BIC", ncores = 1, 
+        cl = NULL, seed = NULL, model = TRUE) {
     ## initializations
     n <- length(y)
     x <- as.matrix(x)
@@ -351,9 +348,9 @@ tslarsFit <- function(x, y, h = 1, pMax = 3, sMax = NA, robust = FALSE,
             select <- (pMax-i+1):n  # make sure to use the same observations
             tslarsPFit(x[select, , drop=FALSE], y[select], h=h, p=i, sMax=sMax, 
                 robust=robust, centerFun=centerFun, scaleFun=scaleFun, 
-                regFun=regFun, regArgs=regArgs, winsorize=winsorize, 
-                const=const, prob=prob, combine=combine, fit=fit, 
-                crit=crit, cl=cl, model=FALSE)
+                regFun=regFun, regArgs=regArgs, combine=combine, 
+                winsorize=winsorize, pca=pca, const=const, prob=prob, 
+                fit=fit, crit=crit, cl=cl, model=FALSE)
         })
     names(out) <- p
     ## find optimal lag length

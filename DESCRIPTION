@@ -9,6 +9,7 @@ Depends:
     ggplot2 (>= 0.9.2),
     MASS,
     parallel,
+    pcaPP,
     perry,
     robustbase (>= 0.6-0)
 Imports:
@@ -25,3 +26,34 @@ LazyLoad: yes
 Authors@R: person("Andreas", "Alfons",
     email = "andreas.alfons@kuleuven.be",
     role = c("aut", "cre"))
+Collate:
+    'accessors.R'
+    'AIC.R'
+    'backend.R'
+    'coef.R'
+    'corHuber.R'
+    'fastLasso.R'
+    'fitted.R'
+    'fortify.R'
+    'grplarsInternal.R'
+    'grplars.R'
+    'initialSubsets.R'
+    'lambda0.R'
+    'perry.R'
+    'plot.R'
+    'predict.R'
+    'print.R'
+    'residuals.R'
+    'rlars.R'
+    'seqModel.R'
+    'sparseLTS.R'
+    'standardize.R'
+    'subset.R'
+    'test.R'
+    'tsBlocks.R'
+    'tslarsP.R'
+    'tslars.R'
+    'utils.R'
+    'weights.R'
+    'winsorize.R'
+    'zzz.R'

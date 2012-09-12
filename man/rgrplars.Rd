@@ -14,7 +14,7 @@
   \method{rgrplars}{default} (x, y, sMax = NA, assign,
     dummy, centerFun = median, scaleFun = mad,
     regFun = lmrob, regArgs = list(),
-    combine = c("min", "euclidean", "mahalanobis"),
+    combine = c("min", "mahalanobis"), pca = FALSE,
     const = 2, prob = 0.95, fit = TRUE,
     crit = c("BIC", "PE"), splits = foldControl(),
     cost = rtmspe, costArgs = list(),
@@ -71,14 +71,10 @@
   combine the data cleaning weights from the robust
   regressions with each predictor group. Possible values
   are \code{"min"} for taking the minimum weight for each
-  observation, \code{"euclidean"} for weights based on
-  Euclidean distances of the multivariate set of
+  observation, or \code{"mahalanobis"} for weights based on
+  Mahalanobis distances of the multivariate set of
   standardized residuals (i.e., multivariate winsorization
-  of the standardized residuals assuming independence), or
-  \code{"mahalanobis"} for weights based on Mahalanobis
-  distances of the multivariate set of standardized
-  residuals (i.e., multivariate winsorization of the
-  standardized residuals).}
+  of the standardized residuals).}
 
   \item{const}{numeric; tuning constant for multivariate
   winsorization to be used in the initial corralation

@@ -10,11 +10,11 @@
 
   \method{rtslars}{default} (x, y, h = 1, pMax = 3,
     sMax = NA, centerFun = median, scaleFun = mad,
-    regFun = lmrob, regArgs = list(), winsorize = FALSE,
-    const = 2, prob = 0.95,
-    combine = c("min", "euclidean", "mahalanobis"),
-    fit = TRUE, crit = "BIC", ncores = 1, cl = NULL,
-    seed = NULL, model = TRUE, ...)
+    regFun = lmrob, regArgs = list(),
+    combine = c("min", "mahalanobis"), winsorize = FALSE,
+    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
+    crit = "BIC", ncores = 1, cl = NULL, seed = NULL,
+    model = TRUE, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -63,6 +63,15 @@
   \item{regArgs}{a list of arguments to be passed to
   \code{regFun}.}
 
+  \item{combine}{a character string specifying how to
+  combine the data cleaning weights from the robust
+  regressions with each predictor group. Possible values
+  are \code{"min"} for taking the minimum weight for each
+  observation, or \code{"mahalanobis"} for weights based on
+  Mahalanobis distances of the multivariate set of
+  standardized residuals (i.e., multivariate winsorization
+  of the standardized residuals).}
+
   \item{winsorize}{a logical indicating whether to clean
   the data by multivariate winsorization.}
 
@@ -74,19 +83,6 @@
   \item{prob}{numeric; probability for the quantile of the
   \eqn{\chi^{2}}{chi-squared} distribution to be used in
   multivariate winsorization (defaults to 0.95).}
-
-  \item{combine}{a character string specifying how to
-  combine the data cleaning weights from the robust
-  regressions with each predictor group. Possible values
-  are \code{"min"} for taking the minimum weight for each
-  observation, \code{"euclidean"} for weights based on
-  Euclidean distances of the multivariate set of
-  standardized residuals (i.e., multivariate winsorization
-  of the standardized residuals assuming independence), or
-  \code{"mahalanobis"} for weights based on Mahalanobis
-  distances of the multivariate set of standardized
-  residuals (i.e., multivariate winsorization of the
-  standardized residuals).}
 
   \item{fit}{a logical indicating whether to fit submodels
   along the sequence (\code{TRUE}, the default) or to

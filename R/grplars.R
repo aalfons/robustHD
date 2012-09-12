@@ -250,12 +250,9 @@ grplars.default <- function(x, y, sMax = NA, assign, fit = TRUE,
 #' @param combine  a character string specifying how to combine the data 
 #' cleaning weights from the robust regressions with each predictor group.  
 #' Possible values are \code{"min"} for taking the minimum weight for each 
-#' observation, \code{"euclidean"} for weights based on Euclidean distances 
-#' of the multivariate set of standardized residuals (i.e., multivariate 
-#' winsorization of the standardized residuals assuming independence), or 
-#' \code{"mahalanobis"} for weights based on Mahalanobis distances of the 
-#' multivariate set of standardized residuals (i.e., multivariate winsorization 
-#' of the standardized residuals).
+#' observation, or \code{"mahalanobis"} for weights based on Mahalanobis 
+#' distances of the multivariate set of standardized residuals (i.e., 
+#' multivariate winsorization of the standardized residuals).
 #' @param const  numeric; tuning constant for multivariate winsorization to be 
 #' used in the initial corralation estimates based on adjusted univariate 
 #' winsorization (defaults to 2).
@@ -418,7 +415,7 @@ rgrplars.data.frame <- function(x, y, ...) {
 
 rgrplars.default <- function(x, y, sMax = NA, assign, dummy, 
         centerFun = median, scaleFun = mad, regFun = lmrob, regArgs = list(), 
-        combine = c("min", "euclidean", "mahalanobis"), const = 2, prob = 0.95, 
+        combine = c("min", "mahalanobis"), pca = FALSE, const = 2, prob = 0.95, 
         fit = TRUE, crit = c("BIC", "PE"), splits = foldControl(), 
         cost = rtmspe, costArgs = list(), selectBest = c("hastie", "min"), 
         seFactor = 1, ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...) {
@@ -447,7 +444,7 @@ rgrplars.default <- function(x, y, sMax = NA, assign, dummy,
     ## correlation and regression
     out <- grplarsFit(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=TRUE, 
         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
-		combine=combine, const=const, prob=prob, fit=fit, crit=crit, 
+		combine=combine, pca=pca, const=const, prob=prob, fit=fit, crit=crit, 
         splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
         seFactor=seFactor, ncores=ncores, cl=cl, seed=seed, model=model)
     if(inherits(out, "grplars")) out$call <- call  # add call to return object
@@ -476,10 +473,10 @@ rgrplarsDefault <- function(x, y, mt, assign, dummy, ...) {
 ## and regression
 grplarsFit <- function(x, y, sMax = NA, assign, dummy = TRUE, robust = FALSE, 
         centerFun = mean, scaleFun = sd, regFun = lm.fit, regArgs = list(), 
-        combine = c("min", "euclidean", "mahalanobis"), const = 2, prob = 0.95, 
-        fit = TRUE, crit = c("BIC", "PE"), splits = foldControl(), cost = rmspe, 
-        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
+        combine = c("min", "mahalanobis"), pca = FALSE, const = 2, prob = 0.95, 
+        fit = TRUE, crit = c("BIC", "PE"), splits = foldControl(), 
+        cost = rmspe, costArgs = list(), selectBest = c("hastie", "min"), 
+        seFactor = 1, ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
     ## initializations
     n <- length(y)
     x <- addColnames(as.matrix(x))
@@ -487,7 +484,7 @@ grplarsFit <- function(x, y, sMax = NA, assign, dummy = TRUE, robust = FALSE,
     ## call workhorse function
     grplarsInternal(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=robust, 
         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
-        const=const, prob=prob, combine=combine, fit=fit, crit=crit, 
+        combine=combine, pca=pca, const=const, prob=prob, fit=fit, crit=crit, 
         splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
         seFactor=seFactor, ncores=ncores, cl=cl, seed=seed, model=model)
 }

@@ -7,29 +7,40 @@
 #' @import Rcpp 
 #' @import RcppArmadillo
 #' @import parallel
+#' @import pcaPP
 
 grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE, 
         robust = FALSE, centerFun = mean, scaleFun = sd, regFun = lm.fit, 
-        regArgs = list(), winsorize = FALSE, const = 2, prob = 0.95, 
-        combine = c("min", "euclidean", "mahalanobis"), fit = TRUE, 
-        crit = c("BIC", "PE"), splits = foldControl(), cost = rmspe, 
-        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
+        regArgs = list(), combine = c("min", "mahalanobis"), winsorize = FALSE, 
+        pca = FALSE, const = 2, prob = 0.95, fit = TRUE, crit = c("BIC", "PE"), 
+        splits = foldControl(), cost = rmspe, costArgs = list(), 
+        selectBest = c("hastie", "min"), seFactor = 1, ncores = 1, cl = NULL, 
+        seed = NULL, model = TRUE) {
     ## initializations
     n <- length(y)
     assignList <- split(seq_len(length(assign)), assign)  # column indices for each block in list form
-    m <- length(assignList)  # number of blocks
+    m <- length(assignList)          # number of blocks
     p <- sapply(assignList, length)  # number of variables in each block
     adjust <- length(unique(p)) > 1  # adjust for block length?
     robust <- isTRUE(robust)
     if(robust) {
+        # check if there are dummy variables
         dummy <- sapply(dummy, isTRUE)
         haveDummies <- any(dummy)
+        # if possible, do not use formula interface
         regControl <- getRegControl(regFun)
-        regFun <- regControl$fun  # if possible, do not use formula interface
+        regFun <- regControl$fun
         callRegFun <- getCallFun(regArgs)
-        winsorize <- isTRUE(winsorize) && !haveDummies  # do not winsorize if there are dummies
+        # check how data cleaning weights should be combined
         combine <- match.arg(combine)
+        # alternatively use winsorization, but not if there are dummies
+        winsorize <- isTRUE(winsorize) && !haveDummies
+        # check whether PCA step should be used to reduce dimensionality
+        if(is.numeric(pca)) {
+            pca <- rep(pca, length.out=1)
+            if(is.na(pca)) pca <- FALSE
+            else k <- pca
+        } else pca <- FALSE
     }
     fit <- isTRUE(fit)
     if(!is.null(seed)) set.seed(seed)
@@ -61,11 +72,11 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
         if(haveDummies) {
             # use standardization with mean/SD for dummies 
             # and with centerFun/scaleFun otherwise
-            z <- robStandardize(y, centerFun, scaleFun)  # robustly standardize response
+            z <- robStandardize(y, centerFun, scaleFun)
             dummy <- rep(dummy, length.out=sum(p))
             xs <- robStandardizeDummy(x, dummy, centerFun, scaleFun)
         } else {
-            z <- robStandardize(y, centerFun, scaleFun)  # robustly standardize response
+            z <- robStandardize(y, centerFun, scaleFun)
             xs <- robStandardize(x, centerFun, scaleFun)
         }
         muY <- attr(z, "center")
@@ -74,8 +85,17 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
         sigmaX <- attr(xs, "scale")
         if(winsorize) {
             if(is.null(const)) const <- 2
-            w <- winsorize(cbind(y, x), standardized=TRUE, 
-                const=const, prob=prob, return="weights")
+            if(pca) {
+                # perform PCA for dimension reduction before obtaining weights
+                scores <- PCAgrid(cbind(z, xs), k=k)$scores
+                scores <- robStandardize(scores, centerFun, scaleFun)
+                w <- winsorize(scores, standardized=TRUE, const=const, 
+                    prob=prob, return="weights")
+            } else {
+                # obtain data cleaning weights from winsorization
+                w <- winsorize(cbind(z, xs), standardized=TRUE, 
+                    const=const, prob=prob, return="weights")
+            }
         } else {
             # clean data in a limited sense: there may still be correlation 
             # outliers between the blocks, but these should not be a problem
@@ -93,7 +113,7 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
                 if(useParallel) {
                     w <- parSapply(cl, assignList, getWeights, xs, z)
                 } else w <- sapply(assignList, getWeights, xs, z)
-                w <- apply(w, 1, min)  # take smallest weight for each observation
+                w <- apply(w, 1, min)  # smallest weight for each observation
                 # observations can have zero weight, in which case the number 
                 # of observations needs to be adjusted
                 n <- length(which(w > 0))
@@ -115,17 +135,14 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
                 if(useParallel) {
                     residuals <- parSapply(cl, assignList, getResiduals, xs, z)
                 } else residuals <- sapply(assignList, getResiduals, xs, z)
-                # obtain weights from scaled residuals
-                if(combine == "euclidean") {
-                    # assume diagonal structure of the residual correlation matrix
-                    # and compute weights based on resulting mahalanobis distances
-                    d <- qchisq(prob, df=m)  # quantile of the chi-squared distribution
-                    w <- pmin(sqrt(d/rowSums(residuals^2)), 1)
-                } else {
-                    # get weights from multivariate winsorization of residuals
-                    w <- winsorize(residuals, standardized=TRUE, 
-                        const=const, prob=prob, return="weights")
+                # if requested, perform PCA for dimension reduction
+                if(pca) {
+                    residuals <- PCAgrid(residuals, k=k)$scores
+                    residuals <- robStandardize(residuals, centerFun, scaleFun)
                 }
+                # obtain weights from multivariate winsorization
+                w <- winsorize(residuals, standardized=TRUE, 
+                    const=const, prob=prob, return="weights")
             }
         }
         z <- standardize(w*z)  # standardize cleaned response
