@@ -127,18 +127,19 @@ winsorize.matrix <- function(x, standardized = FALSE, centerFun = median,
         return = c("data", "weights"), ...) {
     ## initializations
     m <- ncol(x)
+    standardized <- isTRUE(standardized)
+    if(standardized) return <- match.arg(return)
+    ## winsorize the data
     if(m == 1) {
         attributes <- attributes(x)
         x <- winsorize(c(x), standardized=standardized, centerFun=centerFun, 
             scaleFun=scaleFun, const=const, return=return, ...)
-        attributes(x) <- attributes
+        if(!(standardized && return == "weights")) attributes(x) <- attributes
     } else {
         if(nrow(x) <= m) {
             stop("not enough observations for inversion of correlation matrix")
         }
-        standardized <- isTRUE(standardized)
-        if(standardized) return <- match.arg(return)
-        else {
+        if(!standardized) {
             # standardize data
             attributes <- attributes(x)
             x <- robStandardize(x, centerFun=centerFun, scaleFun=scaleFun, ...)

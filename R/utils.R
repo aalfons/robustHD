@@ -47,9 +47,6 @@ checkSMax <- function(sMax, n, p) {
     if(!isTRUE(is.finite(sMax[1])) || !isTRUE(sMax[1] <= min(p, n-1))) {
         sMax[1] <- min(p, n-1)
     }
-#    if(!isTRUE(is.finite(sMax[2])) || !isTRUE(sMax[2] <= min(p, n-1))) {
-#        sMax[2] <- min(p, n-1)
-#    }
     if(!isTRUE(is.finite(sMax[2]))) {
         sMax[2] <- NA
     } else {
@@ -221,6 +218,21 @@ partialOrder <- function(x, h) {
 #    .CallBackend <- getBackendEnv("backend")
 #    .CallBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
 #}
+
+## get pca scores corresponding to eigenvalues larger than 1
+pcaScores <- function(x, kMax) {
+    # check maximum number of principal components
+    d <- dim(x)
+    kMax <- rep(kMax, length.out=1)
+    if(!isTRUE(is.finite(kMax)) || !isTRUE(kMax <= min(d[2], d[1]-1))) {
+        kMax <- min(d[2], d[1]-1)
+    }
+    # fit PCA and extract scores
+    pca <- PCAgrid(x, k=kMax, scores=TRUE)
+    sdev <- pca$sdev
+    k <- which.min(sdev[sdev >= 1])
+    pca$scores[, seq_len(k), drop=FALSE]
+}
 
 ## prepend something to column names of a matrix
 prependColnames <- function(x, prefix) {

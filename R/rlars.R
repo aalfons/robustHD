@@ -31,11 +31,23 @@
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
 #' (defaults to \code{\link[stats]{mad}}).
+#' @param winsorize  a logical indicating whether to clean the full data set by 
+#' multivariate winsorization, i.e., to perform data cleaning RLARS instead of 
+#' plug-in RLARS (defaults to \code{FALSE}).
+#' @param pca  a logical indicating whether a robust PCA step should be 
+#' performed when computing the data cleaning weights for multivariate 
+#' winsorization (defaults to \code{FALSE}).  The distances of the observations 
+#' are then computed on the PCA scores rather than the original observations, 
+#' which makes data cleaning RLARS applicable for high-dimensional data.  If 
+#' \code{TRUE} or \code{NA}, components are computed as long as the robust 
+#' correlation matrix of the scores can be inverted, and all components with an 
+#' eigenvalue larger than or equal to 1 are retained.  Alternatively, an 
+#' integer giving the maximum number of components can be supplied.
 #' @param const numeric; tuning constant to be used in the initial corralation 
 #' estimates based on adjusted univariate winsorization (defaults to 2).
 #' @param prob  numeric; probability for the quantile of the 
-#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate 
-#' winsorization (defaults to 0.95).
+#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate or 
+#' multivariate winsorization (defaults to 0.95).
 #' @param fit  a logical indicating whether to fit submodels along the sequence 
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
 #' @param regFun  a function to compute robust linear regressions along the 
@@ -126,6 +138,8 @@
 #' @returnItem x  the matrix of candidate predictors (if \code{model} is 
 #' \code{TRUE}).
 #' @returnItem y  the response (if \code{model} is \code{TRUE}).
+#' @returnItem w  a numeric vector giving the data cleaning weights (if 
+#' \code{winsorize} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
 #' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and 
@@ -147,6 +161,7 @@
 #' @export
 #' @import Rcpp 
 #' @import RcppArmadillo
+#' @import pcaPP
 
 rlars <- function(x, ...) UseMethod("rlars")
 
@@ -188,11 +203,11 @@ rlars.formula <- function(formula, data, ...) {
 #' @export
 
 rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
-        const = 2, prob = 0.95, fit = TRUE, regFun = lmrob, regArgs = list(), 
-        crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
-        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
-        tol = .Machine$double.eps^0.5, ...) {
+        winsorize = FALSE, pca = FALSE, const = 2, prob = 0.95, fit = TRUE, 
+        regFun = lmrob, regArgs = list(), crit = c("BIC", "PE"), 
+        splits = foldControl(), cost = rtmspe, costArgs = list(), 
+        selectBest = c("hastie", "min"), seFactor = 1, ncores = 1, cl = NULL, 
+        seed = NULL, model = TRUE, tol = .Machine$double.eps^0.5, ...) {
     ## initializations
     call <- match.call()  # get function call
     call[[1]] <- as.name("rlars")
@@ -200,10 +215,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
     x <- addColnames(as.matrix(x))
     p <- ncol(x)
     sMax <- checkSMax(sMax, n, p)
-    if(!is.null(seed)) set.seed(seed)
-    # robustly standardize data
-    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
-    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+    winsorize <- isTRUE(winsorize)
     # check regression function
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun  # if possible, do not use formula interface
@@ -214,11 +226,54 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
         ncores <- 1  # use default value
         warning("invalid value of 'ncores'; using default value")
     } else ncores <- as.integer(ncores)
+    # set seed of random number generator if supplied
+    if(!is.null(seed)) set.seed(seed)
+    
+    ## prepare the data
+    # robustly standardize data
+    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
+    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+    muY <- attr(z, "center")
+    sigmaY <- attr(z, "scale")
+    muX <- attr(xs, "center")
+    sigmaX <- attr(xs, "scale")
+    # if requested, clean the data via multivariate winsorization
+    if(winsorize) {
+        # check whether PCA step should be used to reduce dimensionality
+        if(isTRUE(pca)) {
+            kMax <- NA
+            pca <- TRUE
+        } else if(is.numeric(pca) || is.na(pca)) {
+            kMax <- pca
+            pca <- TRUE
+        } else pca <- FALSE
+        if(pca) {
+            # perform PCA for dimension reduction before obtaining weights
+            scores <- pcaScores(cbind(z, xs), kMax=kMax)
+            scores <- robStandardize(scores, centerFun, scaleFun)
+            w <- winsorize(scores, standardized=TRUE, const=const, 
+                prob=prob, return="weights")
+        } else {
+            # obtain data cleaning weights from winsorization
+            w <- winsorize(cbind(z, xs), standardized=TRUE, 
+                const=const, prob=prob, return="weights")
+        }
+        # standardize data with mean and standard deviation
+        z <- standardize(w*z)    # standardize cleaned response
+        xs <- standardize(w*xs)  # standardize cleaned predictors
+        # center and scale of response
+        muY <- muY + attr(z, "center")
+        sigmaY <- sigmaY * attr(z, "scale")
+        # center and scale of candidate predictor variables
+        muX <- muX + attr(xs, "center")
+        sigmaX <- sigmaX * attr(xs, "scale")
+    }
     
     ## call C++ function
-    active <- .Call("R_fastRlars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
-        R_c=as.numeric(const), R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
-        scaleFun=scaleFun, R_ncores=ncores, PACKAGE="robustHD") + 1
+    active <- .Call("R_fastLars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
+        R_robust=!winsorize, R_c=as.numeric(const), R_prob=as.numeric(prob), 
+        R_tol=as.numeric(tol), scaleFun=scaleFun, R_ncores=ncores, 
+        PACKAGE="robustHD") + 1
     
     ## choose optimal model according to specified criterion
     if(isTRUE(fit)) {
@@ -247,15 +302,16 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad,
             splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
             seFactor=seFactor, cl=cl)
         # add center and scale estimates
-        out$muY <- attr(z, "center")
-        out$sigmaY <- attr(z, "scale")
-        out$muX <- attr(xs, "center")
-        out$sigmaX <- attr(xs, "scale")
+        out$muY <- muY
+        out$sigmaY <- sigmaY
+        out$muX <- muX
+        out$sigmaX <- sigmaX
         if(isTRUE(model)) {
             # add model data to result
             out$x <- x
             out$y <- y
         }
+        if(winsorize) out$w <- w
         out$call <- call  # add call to return object
         class(out) <- c("rlars", class(out))
         out

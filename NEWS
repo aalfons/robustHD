@@ -4,6 +4,15 @@ Changes in robustHD version 0.3.0
 
 
 
+Changes in robustHD version 0.2.2
+
+    + rlars() now supports data cleaning RLARS, with an extra PCA step for 
+      high-dimensional data.
+    
+    + Bugfix in winsorize(): weights are now correctly returned as vector for 
+      a matrix with only one column.
+
+
 Changes in robustHD version 0.2.1
 
     + Bugfix in rlars(): formula method now only adds function call and model 

@@ -10,13 +10,14 @@
   \method{rlars}{formula} (formula, data, ...)
 
   \method{rlars}{default} (x, y, sMax = NA,
-    centerFun = median, scaleFun = mad, const = 2,
-    prob = 0.95, fit = TRUE, regFun = lmrob,
-    regArgs = list(), crit = c("BIC", "PE"),
-    splits = foldControl(), cost = rtmspe,
-    costArgs = list(), selectBest = c("hastie", "min"),
-    seFactor = 1, ncores = 1, cl = NULL, seed = NULL,
-    model = TRUE, tol = .Machine$double.eps^0.5, ...)
+    centerFun = median, scaleFun = mad, winsorize = FALSE,
+    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
+    regFun = lmrob, regArgs = list(),
+    crit = c("BIC", "PE"), splits = foldControl(),
+    cost = rtmspe, costArgs = list(),
+    selectBest = c("hastie", "min"), seFactor = 1,
+    ncores = 1, cl = NULL, seed = NULL, model = TRUE,
+    tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -50,13 +51,32 @@
   \item{scaleFun}{a function to compute a robust estimate
   for the scale (defaults to \code{\link[stats]{mad}}).}
 
+  \item{winsorize}{a logical indicating whether to clean
+  the full data set by multivariate winsorization, i.e., to
+  perform data cleaning RLARS instead of plug-in RLARS
+  (defaults to \code{FALSE}).}
+
+  \item{pca}{a logical indicating whether a robust PCA step
+  should be performed when computing the data cleaning
+  weights for multivariate winsorization (defaults to
+  \code{FALSE}).  The distances of the observations are
+  then computed on the PCA scores rather than the original
+  observations, which makes data cleaning RLARS applicable
+  for high-dimensional data.  If \code{TRUE} or \code{NA},
+  components are computed as long as the robust correlation
+  matrix of the scores can be inverted, and all components
+  with an eigenvalue larger than or equal to 1 are
+  retained.  Alternatively, an integer giving the maximum
+  number of components can be supplied.}
+
   \item{const}{numeric; tuning constant to be used in the
   initial corralation estimates based on adjusted
   univariate winsorization (defaults to 2).}
 
   \item{prob}{numeric; probability for the quantile of the
   \eqn{\chi^{2}}{chi-squared} distribution to be used in
-  bivariate winsorization (defaults to 0.95).}
+  bivariate or multivariate winsorization (defaults to
+  0.95).}
 
   \item{fit}{a logical indicating whether to fit submodels
   along the sequence (\code{TRUE}, the default) or to
@@ -197,6 +217,9 @@
   \code{model} is \code{TRUE}).}
 
   \item{y}{the response (if \code{model} is \code{TRUE}).}
+
+  \item{w}{a numeric vector giving the data cleaning
+  weights (if \code{winsorize} is \code{TRUE}).}
 
   \item{call}{the matched function call.}
 }
