@@ -203,6 +203,15 @@ tslarsP.default <- function(x, y, h = 1, p = 2, sMax = NA, fit = TRUE,
 #' multivariate winsorization of the standardized residuals).
 #' @param winsorize  a logical indicating whether to clean the data by 
 #' multivariate winsorization.
+#' @param pca  a logical indicating whether a robust PCA step should be 
+#' performed when computing the data cleaning weights in multivariate 
+#' winsorization (defaults to \code{FALSE}).  The distances of the observations 
+#' are then computed on the PCA scores, which makes the approach applicable in 
+#' the high-dimensional case.  If \code{TRUE} or \code{NA}, components are 
+#' computed as long as the robust correlation matrix of the scores can be 
+#' inverted, and all components with an eigenvalue larger than or equal to 1 
+#' are retained.  Alternatively, an integer giving the maximum number of 
+#' components can be supplied.
 #' @param const  numeric; tuning constant for multivariate winsorization to be 
 #' used in the initial corralation estimates based on adjusted univariate 
 #' winsorization (defaults to 2).
