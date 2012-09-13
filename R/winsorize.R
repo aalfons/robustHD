@@ -139,7 +139,7 @@ winsorize.matrix <- function(x, standardized = FALSE, centerFun = median,
         if(nrow(x) <= m) {
             stop("not enough observations for inversion of correlation matrix")
         }
-        else {
+        if(!standardized) {
             # standardize data
             attributes <- attributes(x)
             x <- robStandardize(x, centerFun=centerFun, scaleFun=scaleFun, ...)
