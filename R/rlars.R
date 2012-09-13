@@ -31,11 +31,23 @@
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
 #' (defaults to \code{\link[stats]{mad}}).
+#' @param winsorize  a logical indicating whether to clean the full data set by 
+#' multivariate winsorization, i.e., to perform data cleaning RLARS instead of 
+#' plug-in RLARS (defaults to \code{FALSE}).
+#' @param pca  a logical indicating whether a robust PCA step should be 
+#' performed when computing the data cleaning weights for multivariate 
+#' winsorization (defaults to \code{FALSE}).  The distances of the observations 
+#' are then computed on the PCA scores rather than the original observations, 
+#' which makes data cleaning RLARS applicable for high-dimensional data.  If 
+#' \code{TRUE} or \code{NA}, components are computed as long as the robust 
+#' correlation matrix of the scores can be inverted, and all components with an 
+#' eigenvalue larger than or equal to 1 are retained.  Alternatively, an 
+#' integer giving the maximum number of components can be supplied.
 #' @param const numeric; tuning constant to be used in the initial corralation 
 #' estimates based on adjusted univariate winsorization (defaults to 2).
 #' @param prob  numeric; probability for the quantile of the 
-#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate 
-#' winsorization (defaults to 0.95).
+#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate or 
+#' multivariate winsorization (defaults to 0.95).
 #' @param fit  a logical indicating whether to fit submodels along the sequence 
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
 #' @param regFun  a function to compute robust linear regressions along the 
@@ -126,6 +138,8 @@
 #' @returnItem x  the matrix of candidate predictors (if \code{model} is 
 #' \code{TRUE}).
 #' @returnItem y  the response (if \code{model} is \code{TRUE}).
+#' @returnItem w  a numeric vector giving the data cleaning weights (if 
+#' \code{winsorize} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
 #' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and 
