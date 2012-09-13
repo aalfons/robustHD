@@ -12,19 +12,6 @@ using namespace arma;
 using namespace std;
 
 
-// apply scale function to columns of a matrix
-vec applyScaleFun(const mat& x, SEXP scaleFun) {
-	// initializations
-	Environment base("package:base");
-	Function apply = base["apply"];
-	NumericMatrix Rcpp_x = wrap(x);	// does this reuse memory?
-	// call R function and convert result
-	NumericVector Rcpp_scale = apply(Rcpp_x, 2, scaleFun);
-	vec scale(Rcpp_scale.begin(), Rcpp_scale.size(), false);	// reuse memory
-	return scale;
-}
-
-
 // variable sequencing via robust least angle regression
 // Armadillo library is used for linear algebra
 // ATTENTION: the data are assumed to be standardized (this is done in R)
