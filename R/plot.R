@@ -654,7 +654,8 @@ diagnosticPlot.default <- function(x,
     size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
     # call functions for selected plots
     if(which == "all") {
-        devAskNewPage(ask)  # ask for new page (if requested)
+        oldAsk <- devAskNewPage(ask)  # ask for new page (if requested)
+        on.exit(devAskNewPage(oldAsk))
         # residual Q-Q plot
         p <- try(rqqPlot(x, facets=facets, size=size, id.n=id.n, ...), 
             silent=TRUE)
