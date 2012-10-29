@@ -2,7 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
 Version: 0.2.2
-Date: 2012-09-13
+Date: 2012-10-30
 Depends:
     R (>= 2.14.1),
     Rcpp (>= 0.9.10),

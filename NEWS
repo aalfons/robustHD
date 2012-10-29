@@ -3,6 +3,8 @@ Changes in robustHD version 0.2.2
     + rlars() now supports data cleaning RLARS, with an extra PCA step for 
       high-dimensional data.
     
+    + Bugfix in sparseLTS() for more stability of the results.
+    
     + Bugfix in winsorize(): weights are now correctly returned as vector for 
       a matrix with only one column.
     
