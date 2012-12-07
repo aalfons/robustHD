@@ -165,6 +165,94 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     }
     sMax <- checkSMax(sMax, n, m)  # check maximum number of steps
     
+#     ## find first ranked predictor group
+#     zHat <- sapply(assignList, 
+#                    function(i, x, y) {
+#                      x <- x[, i, drop=FALSE]
+#                      model <- lm.fit(x, y)
+#                      fitted(model)
+#                    }, xs, z)
+#     corZ <- unname(apply(zHat, 2, sd))
+#     # if necessary, compute the denominators for adjustment w.r.t. the number
+#     # of variables in the group, and adjust the correlations of the fitted
+#     # values with the response
+#     if(adjust) {
+#       adjustment <- sqrt(p)
+#       corZ <- corZ / adjustment
+#     }
+#     # first active group
+#     active <- which.max(corZ)
+#     r <- c(corZ[active], rep.int(NA, sMax[1]-1))
+#     # not yet sequenced groups
+#     inactive <- seq_len(m)[-active]
+#     corZ <- corZ[-active]
+#     
+#     ## update active set
+#     R <- diag(1, sMax[1])
+#     a <- 1
+#     if(adjust) a <- a / adjustment[active]
+#     w <- 1
+#     sigma <- 1
+#     # start iterative computations
+#     for(k in seq_len(sMax[1]-1)) {
+#       # standardize fitted values for k-th block
+#       zHat[, active[k]] <- standardize(zHat[, active[k]])
+#       # compute the equiangular vector
+#       if(k == 1) u <- zHat[, active] # equiangular vector equals first direction
+#       else {
+#         # compute correlations between fitted values for active groups
+#         R[k, seq_len(k-1)] <- R[seq_len(k-1), k] <- 
+#           apply(zHat[, active[seq_len(k-1)], drop=FALSE], 2, cor, zHat[, active[k]])
+#         # other computations according to algorithm
+#         invR <- solve(R[seq_len(k), seq_len(k), drop=FALSE])
+#         q <- if(adjust) adjustment[active] else rep.int(1, k)
+#         # compute the correlation of the fitted values from the active
+#         # predictor groups with the equiangular vector (adjustment for
+#         # unequal group size is considered via vector 'q')
+#         a <- c(t(q) %*% invR %*% q)^(-1/2)
+#         # compute the equiangular vector
+#         w <- a * c(invR %*% q)
+#         u <- c(zHat[, active, drop=FALSE] %*% w)  # equiangular vector
+#       }
+#       # compute the fitted values of the equiangular vector for each
+#       # inactive predictor group, as well as the correlations involving the
+#       # inactive predictor groups and the equiangular vector
+#       uHat <- sapply(assignList[inactive], 
+#                     function(i, x, u) {
+#                       x <- x[, i, drop=FALSE]
+#                       model <- lm.fit(x, u)
+#                       fitted(model)
+#                     }, xs, u)
+#       corU <- apply(zHat[, inactive, drop=FALSE], 2, cor, u)
+#       tau <- apply(uHat, 2, sd)
+#       # adjustment for unequal group size if necessary
+#       if(adjust) {
+#         tmp <- adjustment[inactive]
+#         corU <- corU / tmp
+#         tau <- tau / tmp
+#       }
+#       # compute the step size by solving the quadratic equation
+#       gammas <- findStepSizes(r[k], a, corZ, corU, tau)
+#       whichMin <- which.min(gammas)
+#       gamma <- gammas[whichMin]
+#       # the following computations are not necessary in the last iteration
+#       if(k < sMax[1]-1) {
+#         # update the scale of the current response
+#         sigma <- sqrt(1 - 2*gamma*r[k]/a + gamma^2)
+#         # update the fitted values from the new or not yet sequenced
+#         # predictor groups
+#         zHat[, inactive] <- (zHat[, inactive] - gamma * uHat) / sigma
+#         r[k+1] <- (r[k] - gamma * a) / sigma
+#         corZ <- corZ[-whichMin]
+#         corU <- corU[-whichMin]
+#         tau <- tau[-whichMin]
+#         corZ = sqrt(corZ^2 - 2*gamma*corU*corZ + gamma^2 * tau^2) / sigma
+#       }
+#       # update active set and not yet sequenced groups
+#       active <- c(active, inactive[whichMin])  # update active set
+#       inactive <- inactive[-whichMin]          # update not yet sequenced groups
+#     }
+    
     ## call C++ function
     active <- .Call("R_fastGrplars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
         R_assign=assignList, R_ncores=ncores, PACKAGE="robustHD") + 1
@@ -208,13 +296,14 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
 
 
 ## find possible step sizes for groupwise LARS by solving quadratic equation
-#' @export
-findStepSizes <- function(r, a, corY, corU, tau) {
-    mapply(function(corY, corU, tau, r, a) {
-            # quadratic equation to be solved
-            comp <- c(r^2 - corY^2, 2 * (corU*corY - a*r), a^2 - tau^2)
-            # solution of quadratic equation
-            gamma <- Re(polyroot(comp))
-            min(gamma[gamma >= 0])
-        }, corY, corU, tau, MoreArgs=list(r=r, a=a))
-}
+## @export
+# findStepSizes <- function(r, a, corY, corU, tau) {
+#     mapply(function(corY, corU, tau, r, a) {
+#             # quadratic equation to be solved
+#             comp <- c(r^2 - corY^2, 2 * (corU*corY - a*r), a^2 - tau^2)
+#             # solution of quadratic equation
+#             gamma <- Re(polyroot(comp))
+#             solution <- min(gamma[gamma >= 0])
+#             solution
+#         }, corY, corU, tau, MoreArgs=list(r=r, a=a))
+# }

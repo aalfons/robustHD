@@ -38,18 +38,64 @@ void standardize(const mat& x, const uword& select) {
 	xj /= scale;										// sweep out SD
 }
 
+//// find possible step sizes for groupwise LARS by solving quadratic equation
+//vec computeStepSizes(const double& r, const double& a, const vec& corY,
+//		const vec& corU, const vec& tau) {
+//	// initializations
+//	Environment robustHD("package:robustHD");
+//	Function findStepSizes = robustHD["findStepSizes"];
+//	NumericVector Rcpp_corY = wrap(corY.memptr(), corY.memptr() + corY.n_elem);
+//	NumericVector Rcpp_corU = wrap(corU.memptr(), corU.memptr() + corU.n_elem);
+//	NumericVector Rcpp_tau = wrap(tau.memptr(), tau.memptr() + tau.n_elem);
+//	// call R function and convert result
+//	NumericVector Rcpp_gammas = findStepSizes(r, a, corY, corU, tau);
+//	vec gammas(Rcpp_gammas.begin(), Rcpp_gammas.size(), false);	// reuse memory
+//	return gammas;
+//}
+
+// find smallest nonnegative real solution of a quadratic equation
+double findSolution(const double& a, const double&b, const double& c) {
+  // compute the discriminant and initialize the solution
+  double discriminant = b*b - 4*a*c, solution = -b;
+  if(discriminant > 0) {
+    discriminant = sqrt(discriminant);
+    vec solutions(2);
+    solutions(0) = solution + discriminant;
+    solutions(1) = solution - discriminant;
+    solutions /= 2*a;  // divide by denominator
+    // keep only nonnegative solutions
+    const uvec keep = find(solutions >= 0);
+    solutions = solutions.elem(keep);
+    // check whether there is a nonnegative solution
+    const uword n = solutions.n_elem;
+    if(n == 0) {
+      solution = R_PosInf;
+    } else if(n == 1) {
+      solution = solutions(0);
+    } else {
+      solution = solutions.min(); // take the smallest one
+    }
+  } else {
+    solution /= 2*a;  // divide by denominator
+    // check whether the solution is nonnegative
+    if(solution < 0) solution = R_PosInf;
+  }
+  // return the smallest nonnegative solution
+  return solution;
+}
+
 // find possible step sizes for groupwise LARS by solving quadratic equation
 vec computeStepSizes(const double& r, const double& a, const vec& corY,
-		const vec& corU, const vec& tau) {
+  	const vec& corU, const vec& tau) {
 	// initializations
-	Environment robustHD("package:robustHD");
-	Function findStepSizes = robustHD["findStepSizes"];
-	NumericVector Rcpp_corY = wrap(corY.memptr(), corY.memptr() + corY.n_elem);
-	NumericVector Rcpp_corU = wrap(corU.memptr(), corU.memptr() + corU.n_elem);
-	NumericVector Rcpp_tau = wrap(tau.memptr(), tau.memptr() + tau.n_elem);
-	// call R function and convert result
-	NumericVector Rcpp_gammas = findStepSizes(r, a, corY, corU, tau);
-	vec gammas(Rcpp_gammas.begin(), Rcpp_gammas.size(), false);	// reuse memory
+  const uword n = corY.n_elem;
+  vec gammas(n);
+  // compute step size for each predictor group
+  for(uword j = 0; j < n; j++) {
+    gammas(j) = findSolution(a*a - tau(j)*tau(j), 2 * (corY(j)*corU(j) - r*a), 
+        r*r - corY(j)*corY(j));
+  }
+  // return step sizes
 	return gammas;
 }
 
@@ -77,7 +123,7 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 	// determine whether adjustment for different group sizes is necessary
 	bool adjust = false;
 	for(uword j = 1; j < m; j++) {
-		if(p(j) != p(1)) {
+		if(p(j) != p(0)) {
 			adjust = true;
 			break;
 		}
