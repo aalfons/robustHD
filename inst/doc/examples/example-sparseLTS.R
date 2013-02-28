@@ -15,5 +15,9 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x %*% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## fit sparse LTS model
+## fit sparse LTS model for one value of lambda
 sparseLTS(x, y, lambda = 0.05, mode = "fraction")
+
+## fit sparse LTS models over a grid of values for lambda
+frac <- seq(0.25, 0.05, by = -0.05)
+sparseLTSGrid(x, y, lambda = frac, mode = "fraction")

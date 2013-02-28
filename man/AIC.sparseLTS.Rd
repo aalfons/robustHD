@@ -1,26 +1,12 @@
 \name{AIC.sparseLTS}
-\alias{AIC.optSparseLTSGrid}
 \alias{AIC.sparseLTS}
-\alias{AIC.sparseLTSGrid}
-\alias{BIC.optSparseLTSGrid}
 \alias{BIC.sparseLTS}
-\alias{BIC.sparseLTSGrid}
 \title{Information criteria for sparse LTS regression models}
 \usage{
   \method{AIC}{sparseLTS} (object, ...,
     fit = c("reweighted", "raw", "both"), k = 2)
 
   \method{BIC}{sparseLTS} (object, ...)
-
-  \method{AIC}{sparseLTSGrid} (object, ...,
-    fit = c("reweighted", "raw", "both"), k = 2)
-
-  \method{BIC}{sparseLTSGrid} (object, ...)
-
-  \method{AIC}{optSparseLTSGrid} (object, ...,
-    fit = c("reweighted", "raw", "both"), k = 2)
-
-  \method{BIC}{optSparseLTSGrid} (object, ...)
 }
 \arguments{
   \item{object}{the model fit for which to compute the
@@ -43,8 +29,8 @@
   classical definition of the AIC.}
 }
 \value{
-  A numeric vector giving the information criteria for the
-  requested fits.
+  A numeric vector or matrix giving the information
+  criteria for the requested fits.
 }
 \description{
   Compute the Akaike or Bayes information criterion for

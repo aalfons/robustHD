@@ -1,7 +1,7 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus University Rotterdam
+# ------------------------------------
 
 #' Sparse least trimmed squares regression
 #' 
@@ -18,13 +18,15 @@
 #' \code{sparseLTS} is called.
 #' @param x  a numeric matrix containing the predictor variables.
 #' @param y  a numeric vector containing the response variable.
-#' @param lambda  a non-negative numeric value giving the penalty parameter.
+#' @param lambda  a numeric vector of non-negative values to be used as penalty 
+#' parameter.
 #' @param mode  a character string specifying the type of penalty parameter.  If 
-#' \code{"lambda"}, \code{lambda} gives penalty parameter directly.  If 
-#' \code{"fraction"}, the smallest value of the penalty parameter that sets all 
-#' coefficients to 0 is first estimated based on bivariate winsorization, then 
-#' \code{lambda} gives the fraction of that estimate to be used (hence 
-#' \code{lambda} should be in the interval [0,1] in that case).
+#' \code{"lambda"}, \code{lambda} gives the grid of values for the penalty 
+#' parameter directly.  If \code{"fraction"}, the smallest value of the penalty 
+#' parameter that sets all coefficients to 0 is first estimated based on 
+#' bivariate winsorization, then \code{lambda} gives the fractions of that 
+#' estimate to be used (hence all values of \code{lambda} should be in the 
+#' interval [0,1] in that case).
 #' @param alpha  a numeric value giving the percentage of the residuals for 
 #' which the \eqn{L_{1}}{L1} penalized sum of squares should be minimized (the 
 #' default is 0.75).
@@ -68,317 +70,10 @@
 #' is \code{TRUE}).  If the number of variables is large (e.g., larger than the 
 #' number of observations), computation may be faster when this is set to 
 #' \code{FALSE}.
-#' @param ncores  a positive integer giving the number of processor cores to be 
-#' used for parallel computing (the default is 1 for no parallelization).  If 
-#' this is set to \code{NA}, all available processor cores are used.
-#' @param seed  optional initial seed for the random number generator (see 
-#' \code{\link{.Random.seed}}).
-#' @param model  a logical indicating whether the data \code{x} and \code{y} 
-#' should be added to the return object.  If \code{intercept} is \code{TRUE}, 
-#' a column of ones is added to \code{x} to account for the intercept.
-#' @param \dots  additional arguments to be passed down.
-#' 
-#' @returnClass sparseLTS
-#' @returnItem best  an integer vector giving the best subset of \eqn{h} 
-#' observations found and used for computing the raw estimates.
-#' @returnItem objective  numeric; the value of the sparse LTS objective 
-#' function, i.e., the \eqn{L_{1}}{L1} penalized sum of the \eqn{h} smallest 
-#' squared residuals from the raw fit.
-#' @returnItem coefficients  a numeric vector of coefficient estimates of the 
-#' reweighted fit (including the intercept if \code{intercept} is \code{TRUE}).
-#' @returnItem fitted.values  a numeric vector containing the fitted values of 
-#' the response of the reweighted fit.
-#' @returnItem residuals  a numeric vector containing the residuals of the 
-#' reweighted fit.
-#' @returnItem center  a numeric value giving the robust center estimate of the 
-#' reweighted residuals.
-#' @returnItem scale  a numeric value giving the robust scale estimate of the 
-#' reweighted residuals.
-#' @returnItem lambda  a numeric value giving the penalty parameter.
-#' @returnItem intercept  a logical indicating whether the model includes a 
-#' constant term.
-#' @returnItem alpha  a numeric value giving the percentage of the residuals for 
-#' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.
-#' @returnItem quan  the number \eqn{h} of observations used to compute the raw 
-#' estimates.
-#' @returnItem cnp2  a numeric value giving the consistency factor applied to 
-#' the scale estimate of the reweighted residuals.
-#' @returnItem wt  an integer vector containing binary weights that indicate 
-#' outliers, i.e., the weights are \eqn{1} for observations with reasonably 
-#' small reweighted residuals and \eqn{0} for observations with large 
-#' reweighted residuals.
-#' @returnItem df  an integer giving the degrees of freedom of the obtained 
-#' reweighted model fit, i.e., the number of nonzero coefficient estimates.
-#' @returnItem raw.coefficients  a numeric vector of coefficient estimates of 
-#' the raw fit (including the intercept if \code{intercept} is \code{TRUE}).  
-#' @returnItem raw.fitted.values  a numeric vector containing the fitted values 
-#' of the response of the raw fit.
-#' @returnItem raw.residuals  a numeric vector containing the residuals of 
-#' the raw fit.
-#' @returnItem raw.center  a numeric value giving the robust center estimate of 
-#' the raw residuals.
-#' @returnItem raw.scale  a numeric value giving the robust scale estimate of 
-#' the raw residuals.
-#' @returnItem raw.cnp2  a numeric value giving the consistency factor applied 
-#' to the scale estimate of the raw residuals.
-#' @returnItem raw.wt  an integer vector containing binary weights that 
-#' indicate outliers of the raw fit, i.e., the weights used for the reweighted 
-#' fit.
-#' @returnItem x  the predictor matrix (if \code{model} is \code{TRUE}).
-#' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
-#' @returnItem call  the matched function call.
-#' 
-#' @note Package \pkg{robustHD} has a built-in back end for sparse least 
-#' trimmed squares using the C++ library Armadillo.  Another back end is 
-#' available through package \pkg{sparseLTSEigen}, which uses the C++ library 
-#' Eigen.  The latter is faster, currently does not work on 32-bit \R for 
-#' Windows.
-#' 
-#' For both C++ back ends, parallel computing is implemented via OpenMP 
-#' (\url{http://openmp.org/}).
-#' 
-#' @author Andreas Alfons
-#' 
-#' @seealso \code{\link{sparseLTSGrid}}, \code{\link{coef.sparseLTS}}, 
-#' \code{\link{fitted.sparseLTS}}, \code{\link{plot.sparseLTS}}, 
-#' \code{\link{predict.sparseLTS}}, \code{\link{residuals.sparseLTS}}, 
-#' \code{\link{wt.sparseLTS}}, \code{\link[robustbase]{ltsReg}}
-#' 
-#' @example inst/doc/examples/example-sparseLTS.R
-#' 
-#' @keywords regression robust
-#' 
-#' @export 
-#' @import Rcpp 
-#' @import RcppArmadillo
-
-sparseLTS <- function(x, ...) UseMethod("sparseLTS")
-
-
-#' @rdname sparseLTS
-#' @method sparseLTS formula
-#' @export
-
-sparseLTS.formula <- function(formula, data, ...) {
-    # get function call
-    call <- match.call()
-    call[[1]] <- as.name("sparseLTS")
-    # prepare model frame
-    mf <- match.call(expand.dots = FALSE)
-    m <- match(c("formula", "data"), names(mf), 0)
-    mf <- mf[c(1, m)]
-    mf$drop.unused.levels <- TRUE
-    mf[[1]] <- as.name("model.frame")
-    mf <- eval(mf, parent.frame())
-    mt <- attr(mf, "terms")
-    if(is.empty.model(mt)) stop("empty model")
-    # extract response and candidate predictors from model frame
-    y <- model.response(mf, "numeric")
-    x <- model.matrix(mt, mf)
-    # check if the specified model contains an intercept
-    # if so, remove the column for intercept and use 'intercept=TRUE'
-    # otherwise use 'intercept=FALSE'
-    whichIntercept <- match("(Intercept)", colnames(x), nomatch = 0)
-    intercept <- whichIntercept > 0
-    if(intercept) x <- x[, -whichIntercept, drop = FALSE]
-    # call default method
-    fit <- sparseLTS(x, y, intercept=intercept, ...)
-    fit$call <- call  # add call to return object
-    fit$terms <- mt   # add model terms to return object
-    fit
-}
-
-
-#' @rdname sparseLTS
-#' @method sparseLTS default
-#' @export
-
-sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
-        alpha = 0.75, intercept = TRUE, nsamp = c(500, 10), 
-        initial = c("sparse", "hyperplane", "random"), ncstep = 2, 
-        use.correction = TRUE, tol = .Machine$double.eps^0.5, 
-        eps = .Machine$double.eps, use.Gram = TRUE, ncores = 1, 
-        seed = NULL, model = TRUE, ...) {
-    ## initializations
-    call <- match.call()
-    call[[1]] <- as.name("sparseLTS")
-    n <- length(y)
-    x <- addColnames(as.matrix(x))
-    d <- dim(x)
-    if(!isTRUE(n == d[1])) stop(sprintf("'x' must have %d rows", n))
-    if(missing(lambda)) {
-        # if penalty parameter is not supplied, use a small fraction of a 
-        # robust estimate of the smallest value that sets all coefficients 
-        # to zero
-        lambda <- 0.05
-        mode <- "fraction"
-    } else {
-        # otherwise check the supplied penalty parameter
-        lambda <- rep(lambda, length.out=1)
-        if(!is.numeric(lambda) || !is.finite(lambda)) {
-            stop("missing or invalid value of 'lambda'")
-        }
-        if(lambda < 0) {
-            lambda <- 0
-            warning("negative value for 'lambda', using no penalization")
-        }
-        mode <- match.arg(mode)
-    }
-    intercept <- isTRUE(intercept)
-    if(mode == "fraction" && lambda > 0) { 
-        # fraction of a robust estimate of the smallest value for the penalty 
-        # parameter that sets all coefficients to zero (based on bivariate 
-        # winsorization)
-        lambda <- lambda * 
-            lambda0(x, y, intercept=intercept, tol=tol, eps=eps, ...)
-    }
-    alpha <- rep(alpha, length.out=1)
-    if(!isTRUE(is.numeric(alpha) && 0.5 <= alpha && alpha <= 1)) {
-        stop("'alpha' must be between 0.5 and 1")
-    }
-    h <- ceiling(alpha*n)  # subset sizes are different from 'ltsReg'
-    nsamp <- rep(nsamp, length.out=2)
-    if(!is.numeric(nsamp) || any(!is.finite(nsamp))) {
-        nsamp <- c(500, 10)
-        warning("missing or infinite values in 'nsamp'; using default values")
-    }
-    ncstep <- rep(ncstep, length.out=1)
-    if(!is.numeric(ncstep) || !is.finite(ncstep)) {
-        ncstep <- 2
-        warning("missing or infinite value of 'ncstep'; using default value")
-    }
-    tol <- rep(tol, length.out=1)
-    if(!is.numeric(tol) || !is.finite(tol)) {
-        tol <- .Machine$double.eps^0.5
-        warning("missing or infinite value of 'tol'; using default value")
-    }
-    eps <- rep(eps, length.out=1)
-    if(!is.numeric(eps) || !is.finite(eps)) {
-        eps <- .Machine$double.eps
-        warning("missing or infinite value of 'eps'; using default value")
-    }
-    use.Gram <- isTRUE(use.Gram)
-    ncores <- rep(ncores, length.out=1)
-    if(is.na(ncores)) ncores <- detectCores()  # use all available cores
-    if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
-        ncores <- 1  # use default value
-        warning("invalid value of 'ncores'; using default value")
-    } else ncores <- as.integer(ncores)
-    if(!is.null(seed)) set.seed(seed)
-    
-    ## compute initial subsets
-#   subsets <- randomSubsets(nrow(x), h, nsamp=nsamp[1]) - 1
-    subsets <- initialSubsets(x, y, h, nsamp[1], type=initial, lambda=lambda, 
-        intercept=intercept, eps=eps, use.Gram=use.Gram) - 1
-    
-    ## call C++ function
-    callBackend <- getBackend()
-    fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
-        R_subsets=subsets, R_intercept=intercept, 
-        R_ncstep=as.integer(ncstep), R_nkeep=as.integer(nsamp[2]), 
-        R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores)
-    fit$best <- sort.int(drop(fit$best) + 1)
-    fit$coefficients <- drop(fit$coefficients)
-    fit$residuals <- drop(fit$residuals)
-    objective <- fit$crit
-    
-    ## correct scale estimate if requested
-    q <- qnorm(0.9875)  # quantile of the normal distribution
-    qn <- qnorm((h+n)/ (2*n))  # quantile for consistency factor
-    cdelta <- 1 / sqrt(1 - (2*n)/(h/qn) * dnorm(qn))  # consistency factor
-    s <- fit$scale * cdelta
-    ## compute 0/1 weights identifying outliers
-    ok <- abs((fit$residuals - fit$center)/s) <= q  # good observations
-    raw.wt <- as.integer(ok)
-    
-    ## compute reweighted estimator
-    # keep information on raw estimator
-    raw.fit <- fit
-    raw.cdelta <- cdelta
-    raw.s <- s
-    nOk <- sum(raw.wt)  # number of good observations
-    # compute reweighted estimate
-    fit <- fastLasso(x, y, lambda=lambda, subset=which(ok), 
-        intercept=intercept, eps=eps, use.Gram=use.Gram)
-#    # -----
-#    # experiment: use only the selected variables for the lasso in the 
-#    #             reweighting step
-#    raw.coef <- raw.fit$coefficients
-#    select <- which(abs(raw.coef[-1]) > tol)  # selected variables
-#    fit <- fastLasso(x[, select, drop=FALSE], y, lambda=lambda, 
-#        subset=which(ok), intercept=intercept, eps=eps, use.Gram=use.Gram)
-#    coef <- rep.int(0, length(raw.coef))
-#    if(intercept) select <- c(1, select + 1)
-#    coef[select] <- fit$coefficients
-#    # modify object
-#    fit$coefficients <- coef
-#    # -----
-    if(intercept) x <- addIntercept(x)  # add column to account for intercept
-    if(nOk < n) {
-        qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
-        cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))  # consistency factor
-    } else cdelta <- 1  # consistency factor not necessary
-    center <- sum(raw.wt*fit$residuals)/nOk
-    centeredResiduals <- fit$residuals - center
-    s <- sqrt(sum(raw.wt*centeredResiduals^2)/(nOk-1)) * cdelta
-    wt <- as.integer(abs(centeredResiduals/s) <= q)
-    
-    ## compute degrees of freedom (number of nonzero parameters)
-    df <- modelDf(fit$coefficients, tol)
-    
-    ## return object
-    fit <- list(best=raw.fit$best, objective=objective, 
-        coefficients=copyColnames(fit$coefficients, x), 
-        fitted.values=copyNames(fit$fitted.values, y), 
-        residuals=copyNames(fit$residuals, y), center=center, scale=s, 
-        lambda=lambda, intercept=intercept, alpha=alpha, quan=h, 
-        cnp2=cdelta, wt=wt, df=df, 
-        raw.coefficients=copyColnames(raw.fit$coefficients, x), 
-        raw.fitted.values=y-raw.fit$residuals,
-        raw.residuals=copyNames(raw.fit$residuals, y), 
-        raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta, 
-        raw.wt=raw.wt)
-    if(isTRUE(model)) {
-        fit$x <- x
-        fit$y <- y
-    }
-    fit$call <- call
-    class(fit) <- "sparseLTS"
-    fit
-}
-
-
-#' Sparse least trimmed squares regression
-#' 
-#' Compute least trimmed squares regression with an \eqn{L_{1}}{L1} penalty on 
-#' the regression coefficients, which allows for sparse model estimates, over 
-#' a grid of values for the penalty parameter.
-#' 
-#' @aliases print.sparseLTSGrid print.optSparseLTSGrid
-#' 
-#' @param formula  a formula describing the model.
-#' @param data  an optional data frame, list or environment (or object coercible 
-#' to a data frame by \code{\link{as.data.frame}}) containing the variables in 
-#' the model.  If not found in data, the variables are taken from 
-#' \code{environment(formula)}, typically the environment from which 
-#' \code{sparseLTS} is called.
-#' @param x  a numeric matrix containing the predictor variables.
-#' @param y  a numeric vector containing the response variable.
-#' @param lambda  a numeric vector of non-negative numeric values to be used as 
-#' penalty parameter.
-#' @param mode  a character string specifying the type of penalty parameter.  If 
-#' \code{"lambda"}, \code{lambda} gives the grid of values for the penalty 
-#' parameter directly.  If \code{"fraction"}, the smallest value of the penalty 
-#' parameter that sets all coefficients to 0 is first estimated based on 
-#' bivariate winsorization, then \code{lambda} gives the fractions of that 
-#' estimate to be used (hence all values of \code{lambda} should be in the 
-#' interval [0,1] in that case).
-#' @param \dots  additional arguments to be passed down, eventually to 
-#' \code{\link{sparseLTS}}.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Possible values are \code{"BIC"} for 
-#' the Bayes information criterion and \code{"PE"} for resampling-based 
-#' prediction error estimation.
+#' the Bayes information criterion, \code{"PE"} for resampling-based prediction 
+#' error estimation, and \code{"none"} to not select a final model.
 #' @param splits  an object giving data splits to be used for prediction error 
 #' estimation (see \code{\link[perry]{perryTuning}}).
 #' @param cost  a cost function measuring prediction loss (see 
@@ -399,7 +94,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' @param cl  a \pkg{parallel} cluster for parallel computing as generated by 
 #' \code{\link[parallel]{makeCluster}}.  This is preferred over \code{ncores} 
 #' for prediction error estimation, in which case \code{ncores} is only used on 
-#' the C++ level for computing the optimal model.
+#' the C++ level for computing the final model.
 #' @param seed  optional initial seed for the random number generator (see 
 #' \code{\link{.Random.seed}}).  On parallel \R worker processes for prediction 
 #' error estimation, random number streams are used and the seed is set via 
@@ -407,40 +102,25 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' @param model  a logical indicating whether the data \code{x} and \code{y} 
 #' should be added to the return object.  If \code{intercept} is \code{TRUE}, 
 #' a column of ones is added to \code{x} to account for the intercept.
+#' @param \dots  additional arguments to be passed down.
 #' 
-#' @return An object of class \code{"sparseLTSGrid"} (if \code{crit="BIC"}) 
-#' or \code{"optSparseLTSGrid"} (if \code{crit="PE"}) with the following 
-#' components:
-#' @returnItem best  an integer matrix in which each column contains the 
-#' best subset of \eqn{h} observations found and used for computing the 
-#' corresponding raw estimates (\code{"sparseLTSGrid"}); or an integer 
-#' vector containing the best subset for the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem objective  a numeric vector giving the values of the sparse LTS 
-#' objective function, i.e., the \eqn{L_{1}}{L1} penalized sum of the \eqn{h} 
-#' smallest squared residuals from the raw fits (\code{"sparseLTSGrid"}); or a
-#' numeric giving the value of the objective function from the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem coefficients  a numeric matrix in which each column contains 
-#' the coefficient estimates of the corresponding reweighted fit 
-#' (\code{"sparseLTSGrid"}); or a numeric vector containing the coefficients 
-#' of the optimal reweighted fit (\code{"optSparseLTSGrid"}).
-#' @returnItem fitted.values  a numeric matrix in which each column contains 
-#' the fitted values of the response of the corresponding reweighted fit 
-#' (\code{"sparseLTSGrid"}); or a numeric vector containing the fitted values 
-#' of the optimal reweighted fit (\code{"optSparseLTSGrid"}).
-#' @returnItem residuals  a numeric matrix in which each column contains 
-#' the residuals of the corresponding reweighted fit (\code{"sparseLTSGrid"}); 
-#' or a numeric vector containing the residuals of the optimal reweighted fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem center  a numeric vector giving the robust center estimates 
-#' of the residuals from the reweighted fits (\code{"sparseLTSGrid"}); or a 
-#' numeric giving the robust center estimate of the optimal reweighted fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem scale  a numeric vector giving the robust scale estimates of 
-#' the residuals from the reweighted fits (\code{"sparseLTSGrid"}); or a 
-#' numeric giving the robust scale estimate of the optimal reweighted fit 
-#' (\code{"optSparseLTSGrid"}).
+#' @returnClass sparseLTS
+#' @returnItem best  an integer vector or matrix containing the respective best 
+#' subsets of \eqn{h} observations found and used for computing the raw 
+#' estimates.
+#' @returnItem objective  a numeric vector giving the respective values of the 
+#' sparse LTS objective function, i.e., the \eqn{L_{1}}{L1} penalized sums of 
+#' the \eqn{h} smallest squared residuals from the raw fits.
+#' @returnItem coefficients  a numeric vector or matrix containing the 
+#' respective coefficient estimates from the reweighted fits.
+#' @returnItem fitted.values  a numeric vector or matrix containing the 
+#' respective fitted values of the response from the reweighted fits.
+#' @returnItem residuals  a numeric vector or matrix containing the 
+#' respective residuals from the reweighted fits.
+#' @returnItem center  a numeric vector giving the robust center estimates of 
+#' the corresponding reweighted residuals.
+#' @returnItem scale  a numeric vector giving the robust scale estimates of the 
+#' corresponding reweighted residuals.
 #' @returnItem lambda  a numeric vector giving the values of the penalty 
 #' parameter.
 #' @returnItem intercept  a logical indicating whether the model includes a 
@@ -449,278 +129,424 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 #' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.
 #' @returnItem quan  the number \eqn{h} of observations used to compute the raw 
 #' estimates.
-#' @returnItem cnp2  a numeric vector giving the consistency factors applied 
-#' to the scale estimates of the residuals from the reweighted fits 
-#' (\code{"sparseLTSGrid"}); or a numeric giving the consistency factor from 
-#' the optimal reweighted fit (\code{"optSparseLTSGrid"}).
-#' @returnItem wt  an integer matrix in which each column contains binary 
-#' weights that indicate outliers from the corresponding reweighted fit, i.e., 
-#' the weights are \eqn{1} for observations with reasonably small reweighted 
-#' residuals and \eqn{0} for observations with large reweighted residuals 
-#' (\code{"sparseLTSGrid"}); or an integer vector containing the outlier 
-#' weights of the optimal reweighted fit (\code{"optSparseLTSGrid"}).
-#' @returnItem df  an integer vector giving the degrees of freedom of the 
-#' obtained reweighted model fits, i.e., the number of nonzero coefficient 
-#' estimates (\code{"sparseLTSGrid"}); or an integer giving the degrees of 
-#' freedom of the optimal reweighted fit (\code{"optSparseLTSGrid"}).
-#' @returnItem raw.coefficients  a numeric matrix in which each column 
-#' contains the coefficient estimates of the corresponding raw fit 
-#' (\code{"sparseLTSGrid"}); or a numeric vector containing the coefficients 
-#' of the optimal raw fit (\code{"optSparseLTSGrid"}).  
-#' @returnItem raw.fitted.values  a numeric matrix in which each column 
-#' contains the fitted values of the response of the corresponding raw fit 
-#' (\code{"sparseLTSGrid"}); or a numeric vector containing the fitted values 
-#' of the optimal raw fit (\code{"optSparseLTSGrid"}).
-#' @returnItem raw.residuals  a numeric matrix in which each column contains 
-#' the residuals of the corresponding raw fit (\code{"sparseLTSGrid"}); 
-#' or a numeric vector containing the residuals of the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
+#' @returnItem cnp2  a numeric vector giving the respective consistency factors 
+#' applied to the scale estimates of the reweighted residuals.
+#' @returnItem wt  an integer vector or matrix containing binary weights that 
+#' indicate outliers from the respective reweighted fits, i.e., the weights are 
+#' \eqn{1} for observations with reasonably small reweighted residuals and 
+#' \eqn{0} for observations with large reweighted residuals.
+#' @returnItem df  an integer vector giving the respective degrees of freedom 
+#' of the obtained reweighted model fits, i.e., the number of nonzero 
+#' coefficient estimates.
+#' @returnItem raw.coefficients  a numeric vector or matrix containing the 
+#' respective coefficient estimates from the raw fits.  
+#' @returnItem raw.fitted.values  a numeric vector or matrix containing the 
+#' respective fitted values of the response from the raw fits.
+#' @returnItem raw.residuals  a numeric vector or matrix containing the 
+#' respective residuals from the raw fits.
 #' @returnItem raw.center  a numeric vector giving the robust center estimates 
-#' of the residuals from the raw fits (\code{"sparseLTSGrid"}); or a 
-#' numeric giving the robust center estimate of the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem raw.scale  a numeric vector giving the robust scale estimates 
-#' of the residuals from the raw fits (\code{"sparseLTSGrid"}); or a 
-#' numeric giving the robust scale estimate of the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem raw.cnp2  a numeric vector giving the consistency factors 
-#' applied to the scale estimates of the residuals from the raw fits 
-#' (\code{"sparseLTSGrid"}); or a numeric giving the consistency factor from 
-#' the optimal raw fit (\code{"optSparseLTSGrid"}).
-#' @returnItem raw.wt  an integer matrix in which each column contains binary 
-#' weights that indicate outliers of the corresponding raw fit, i.e., the 
-#' weights used for the reweighted fits (\code{"sparseLTSGrid"}); or an 
-#' integer vector containing the outlier weights of the optimal raw fit 
-#' (\code{"optSparseLTSGrid"}).
-#' @returnItem crit  a character string specifying the optimality criterion used 
-#' for selecting the optimal model.
-#' @returnItem critValues  a numeric vector containing the values of the 
-#' optimality criterion from the reweighted fits (\code{"sparseLTSGrid"}); or 
-#' an object of class \code{"perrySparseLTSGrid"} (inheriting from 
-#' \code{"\link[perry]{perryTuning}"}) that contains the estimated prediction 
-#' errors of the reweighted and raw fits (\code{"optSparseLTSGrid"}).
-#' @returnItem sOpt  an integer giving the optimal reweighted fit (only 
-#' \code{"sparseLTSGrid"}).
-#' @returnItem raw.critValues  a numeric vector containing the values of the 
-#' optimality criterion from the raw fits (only \code{"sparseLTSGrid"}).
-#' @returnItem raw.sOpt  an integer giving the optimal raw fit (only 
-#' \code{"sparseLTSGrid"}).
+#' of the corresponding raw residuals.
+#' @returnItem raw.scale  a numeric vector giving the robust scale estimates of 
+#' the corresponding raw residuals.
+#' @returnItem raw.cnp2  a numeric value giving the consistency factor applied 
+#' to the scale estimate of the raw residuals.
+#' @returnItem raw.wt  an integer vector or matrix containing binary weights 
+#' that indicate outliers from the respective raw fits, i.e., the weights used 
+#' for the reweighted fits.
+#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC 
+#' values and indicating the final model (only returned if argument \code{crit} 
+#' is \code{"BIC"} and argument \code{lambda} contains more than one value for 
+#' the penalty parameter).
 #' @returnItem x  the predictor matrix (if \code{model} is \code{TRUE}).
 #' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
-#' @note Package \pkg{robustHD} has a built-in back end for sparse least 
-#' trimmed squares using the C++ library Armadillo.  Another back end is 
-#' available through package \pkg{sparseLTSEigen}, which uses the C++ library 
-#' Eigen.  The latter is faster, currently does not work on 32-bit \R for 
-#' Windows.
+#' @note \code{sparseLTSGrid()} is a wrapper function for \code{sparseLTS()} 
+#' that only differs in the default values for the penalty parameter 
+#' \code{lambda}.
+#' 
+#' Package \pkg{robustHD} has a built-in back end for sparse least trimmed 
+#' squares using the C++ library Armadillo.  Another back end is available 
+#' through package \pkg{sparseLTSEigen}, which uses the C++ library Eigen.  The 
+#' latter is faster, currently does not work on 32-bit \R for Windows.
+#' 
+#' For both C++ back ends, parallel computing is implemented via OpenMP 
+#' (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{sparseLTS}}, 
-#' \code{\link[=coef.sparseLTS]{coef.sparseLTSGrid}}, 
-#' \code{\link[=fitted.sparseLTS]{fitted.sparseLTSGrid}}, 
-#' \code{\link[=plot.seqModel]{plot.sparseLTSGrid}}, 
-#' \code{\link{diagnosticPlot}}, 
-#' \code{\link[=predict.sparseLTS]{predict.sparseLTSGrid}}, 
-#' \code{\link[=residuals.sparseLTS]{residuals.sparseLTSGrid}}, 
-#' \code{\link[=wt.sparseLTS]{wt.sparseLTSGrid}}, 
+#' @seealso \code{\link{coef.sparseLTS}}, \code{\link{fitted.sparseLTS}}, 
+#' \code{\link{plot.sparseLTS}}, \code{\link{predict.sparseLTS}}, 
+#' \code{\link{residuals.sparseLTS}}, \code{\link{wt.sparseLTS}}, 
+#' \code{\link[robustbase]{ltsReg}}
 #' 
-#' @example inst/doc/examples/example-sparseLTSGrid.R
+#' @example inst/doc/examples/example-sparseLTS.R
 #' 
-#' @keywords multivariate robust
+#' @keywords regression robust
 #' 
 #' @export 
 #' @import Rcpp 
+#' @import RcppArmadillo
 
-sparseLTSGrid <- function(x, ...) UseMethod("sparseLTSGrid")
+sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 
 
-#' @rdname sparseLTSGrid
-#' @method sparseLTSGrid formula
+#' @rdname sparseLTS
+#' @method sparseLTS formula
 #' @export
 
-sparseLTSGrid.formula <- function(formula, data, ...) {
-    # get function call
-    call <- match.call()
-    call[[1]] <- as.name("sparseLTSGrid")
-    # prepare model frame
-    mf <- match.call(expand.dots = FALSE)
-    m <- match(c("formula", "data"), names(mf), 0)
-    mf <- mf[c(1, m)]
-    mf$drop.unused.levels <- TRUE
-    mf[[1]] <- as.name("model.frame")
-    mf <- eval(mf, parent.frame())
-    mt <- attr(mf, "terms")
-    if(is.empty.model(mt)) stop("empty model")
-    # extract response and candidate predictors from model frame
-    y <- model.response(mf, "numeric")
-    x <- model.matrix(mt, mf)
-    # check if the specified model contains an intercept
-    # if so, remove the column for intercept and use 'intercept=TRUE'
-    # otherwise use 'intercept=FALSE'
-    whichIntercept <- match("(Intercept)", colnames(x), nomatch = 0)
-    intercept <- whichIntercept > 0
-    if(intercept) x <- x[, -whichIntercept, drop = FALSE]
-    # call default method
-    fit <- sparseLTSGrid(x, y, intercept=intercept, ...)
-    fit$call <- call  # add call to return object
-    fit$terms <- mt   # add model terms to return object
-    fit
+sparseLTS.formula <- function(formula, data, ...) {
+  # get function call
+  call <- match.call()
+  call[[1]] <- as.name("sparseLTS")
+  # prepare model frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0)
+  mf <- mf[c(1, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  if(is.empty.model(mt)) stop("empty model")
+  # extract response and candidate predictors from model frame
+  y <- model.response(mf, "numeric")
+  x <- model.matrix(mt, mf)
+  # check if the specified model contains an intercept
+  # if so, remove the column for intercept and use 'intercept=TRUE'
+  # otherwise use 'intercept=FALSE'
+  whichIntercept <- match("(Intercept)", colnames(x), nomatch = 0)
+  intercept <- whichIntercept > 0
+  if(intercept) x <- x[, -whichIntercept, drop = FALSE]
+  # call default method
+  fit <- sparseLTS(x, y, intercept=intercept, ...)
+  fit$call <- call  # add call to return object
+  fit$terms <- mt   # add model terms to return object
+  fit
 }
 
 
-#' @rdname sparseLTSGrid
-#' @method sparseLTSGrid default
+#' @rdname sparseLTS
+#' @method sparseLTS default
 #' @export
 
-sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
-        ..., crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe, 
-        costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1, 
-        ncores = 1, cl = NULL, seed = NULL, model = TRUE) {
-    # initializations
-    call <- match.call()
-    call[[1]] <- as.name("sparseLTSGrid")
-    if(missing(lambda)) {
-        # if penalty parameter is not supplied, use a small fraction of a 
-        # robust estimate of the smallest value that sets all coefficients 
-        # to zero
-        lower <- if(nrow(x) > ncol(x)) 0 else 0.1
-        lambda <- seq(from=1, to=lower, by=-0.1)
-        mode <- "fraction"
+sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
+                              alpha = 0.75, intercept = TRUE, 
+                              nsamp = c(500, 10), 
+                              initial = c("sparse", "hyperplane", "random"), 
+                              ncstep = 2, use.correction = TRUE, 
+                              tol = .Machine$double.eps^0.5, 
+                              eps = .Machine$double.eps, use.Gram, 
+                              crit = c("BIC", "PE", "none"), 
+                              splits = foldControl(), cost = rtmspe, 
+                              costArgs = list(), 
+                              selectBest = c("hastie", "min"), 
+                              seFactor = 1, ncores = 1, cl = NULL, 
+                              seed = NULL, model = TRUE, ...) {
+  ## initializations
+  call <- match.call()
+  call[[1]] <- as.name("sparseLTS")
+  n <- length(y)
+  x <- addColnames(as.matrix(x))
+  d <- dim(x)
+  if(!isTRUE(n == d[1])) stop(sprintf("'x' must have %d rows", n))
+  if(missing(lambda)) {
+    # if penalty parameter is not supplied, use a small fraction of a 
+    # robust estimate of the smallest value that sets all coefficients 
+    # to zero
+    lambda <- 0.05
+    mode <- "fraction"
+  } else {
+    # otherwise check the supplied penalty parameter
+    if(!is.numeric(lambda) || length(lambda) == 0 || any(!is.finite(lambda))) {
+      stop("missing or invalid value of 'lambda'")
+    }
+    if(any(negative <- lambda < 0)) {
+      lambda[negative] <- 0
+      warning("negative value for 'lambda', using no penalization")
+    }
+    lambda <- sort.int(unique(lambda), decreasing=TRUE)
+    mode <- match.arg(mode)
+  }
+  crit <- if(length(lambda) == 1) "none" else match.arg(crit)
+  intercept <- isTRUE(intercept)
+  if(mode == "fraction" && any(lambda > 0) && crit != "PE") { 
+    # fraction of a robust estimate of the smallest value for the penalty 
+    # parameter that sets all coefficients to zero (based on bivariate 
+    # winsorization)
+    lambda <- lambda * 
+      lambda0(x, y, intercept=intercept, tol=tol, eps=eps, ...)
+  }
+  alpha <- rep(alpha, length.out=1)
+  if(!isTRUE(is.numeric(alpha) && 0.5 <= alpha && alpha <= 1)) {
+    stop("'alpha' must be between 0.5 and 1")
+  }
+  nsamp <- rep(nsamp, length.out=2)
+  if(!is.numeric(nsamp) || any(!is.finite(nsamp))) {
+    nsamp <- formals$nsamp()
+    warning("missing or infinite values in 'nsamp'; using default values")
+  } else nsamp <- as.integer(nsamp)
+  ncstep <- rep(as.integer(ncstep), length.out=1)
+  if(!is.numeric(ncstep) || !is.finite(ncstep)) {
+    ncstep <- formals()$ncstep
+    warning("missing or infinite value of 'ncstep'; using default value")
+  } else ncstep <- as.integer(ncstep)
+  tol <- rep(tol, length.out=1)
+  if(!is.numeric(tol) || !is.finite(tol)) {
+    tol <- formals()$tol
+    warning("missing or infinite value of 'tol'; using default value")
+  }
+  eps <- rep(eps, length.out=1)
+  if(!is.numeric(eps) || !is.finite(eps)) {
+    eps <- formals()$eps
+    warning("missing or infinite value of 'eps'; using default value")
+  }
+  if(missing(use.Gram)) {
+    h <- ceiling(alpha*n)  # subset sizes are different from 'ltsReg'
+    use.Gram <- d[2] >= min(h, 100)
+  } else use.Gram <- isTRUE(use.Gram)
+  ncores <- rep(ncores, length.out=1)
+  if(is.na(ncores)) ncores <- detectCores()  # use all available cores
+  if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+    ncores <- 1  # use default value
+    warning("invalid value of 'ncores'; using default value")
+  } else ncores <- as.integer(ncores)
+  
+  ## compute sparse LTS
+  if(crit == "PE") {
+    stop("not implemented yet")
+  } else {
+    initial <- match.arg(initial)
+    if(h < d[2] && type == "hyperplane") type <- "sparse"
+    if(!is.null(seed)) set.seed(seed)  # set seed of random number generator
+    
+    ## the same initial subsets are used for all values of lambda, except when 
+    ## the initial subsets are based on lasso solutions with 3 observations 
+    ## (since in the latter case the initial subsets depend on lambda)
+    subsets <- switch(initial, random=randomSubsets(n, h, nsamp[1]), 
+                      hyperplane=hyperplaneSubsets(x, y, h, nsamp[1]))
+    
+    ## call internal function to obtain raw fits
+    if(length(lambda) == 1) {
+      fit <- fastSparseLTS(x=x, y=y, lambda=lambda, h=h, nsamp=nsamp, 
+                           initial=subsets, intercept=intercept, ncstep=ncstep, 
+                           tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores)
     } else {
-        # otherwise check the supplied penalty parameter
-        if(!is.numeric(lambda) || length(lambda) == 0 || any(!is.finite(lambda))) {
-            stop("missing or invalid value of 'lambda'")
-        }
-        if(any(negative <- lambda < 0)) {
-            lambda[negative] <- 0
-            warning("negative value for 'lambda', using no penalization")
-        }
-        mode <- match.arg(mode)
-        lambda <- sort(unique(lambda), decreasing=TRUE)
+      names(lambda) <- seq_along(lambda)
+      fit <- lapply(lambda, fastSparseLTS, x=x, y=y, h=h, nsamp=nsamp, 
+                    initial=subsets, intercept=intercept, ncstep=ncstep, 
+                    tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores, 
+                    drop=FALSE)
+      names(fit) <- names(lambda)
+      fit <- list(best=sapply(fit, function(x) sort(x$best)), 
+                  coefficients=sapply(fit, "[[", "coefficients"), 
+                  residuals=sapply(fit, "[[", "residuals"), 
+                  crit=sapply(fit, "[[", "crit"), 
+                  center=sapply(fit, "[[", "center"), 
+                  scale=sapply(fit, "[[", "scale"))
     }
-    crit <- match.arg(crit)
-    model <- isTRUE(model)
-    # fit models and find optimal lambda
-    if(crit == "BIC") {
-        if(!is.null(seed)) set.seed(seed)
-        # check grid of lambda values
-        if(mode == "fraction" && any(lambda > 0)) { 
-            # fraction of a robust estimate of the smallest value for the 
-            # penalty parameter that sets all coefficients to zero (based on 
-            # bivariate winsorization)
-            lambda <- lambda * lambda0(x, y, ...)
-        }
-        # fit sparse LTS models along supplied grid
-        # parallel computing is performed on the C++ level inside sparseLTS()
-        fit <- lapply(lambda, 
-            function(l, x, y, ...) {
-                sparseLTS(x, y, lambda=l, mode="lambda", ..., 
-                    ncores=ncores, model=FALSE)
-            }, x, y, ...)
-        names(fit) <- seq_along(lambda)
-        # select the optimal reweighted and raw model via BIC
-        critValues <- sapply(fit, BIC, fit="both")
-        raw.critValues <- critValues["raw",]
-        critValues <- critValues["reweighted",]
-        sOpt <- unname(which.min(critValues))
-        raw.sOpt <- unname(which.min(raw.critValues))
-        # combine information from the models into suitable data structures
-        best <- sapply(fit, function(x) x$best)
-        objective <- sapply(fit, function(x) x$objective)
-        coef <- do.call(cbind, lapply(fit, coef, fit="reweighted"))
-        fitted <- sapply(fit, fitted, fit="reweighted")
-        residuals <- sapply(fit, residuals, fit="reweighted")
-        center <- sapply(fit, function(x) x$center)
-        scale <- sapply(fit, function(x) x$scale)
-        lambda <- sapply(fit, function(x) x$lambda)
-        intercept <- fit[[1]]$intercept
-        alpha <- fit[[1]]$alpha
-        quan <- fit[[1]]$quan
-        cnp2 <- sapply(fit, function(x) x$cnp2)
-        wt <- sapply(fit, wt, fit="reweighted")
-        df <- sapply(fit, function(x) x$df)
-        raw.coef <- do.call(cbind, lapply(fit, coef, fit="raw"))
-        raw.fitted <- sapply(fit, fitted, fit="raw")
-        raw.residuals <- sapply(fit, residuals, fit="raw")
-        raw.center <- sapply(fit, function(x) x$raw.center)
-        raw.scale <- sapply(fit, function(x) x$raw.scale)
-        raw.cnp2 <- sapply(fit, function(x) x$raw.cnp2)
-        raw.wt <- sapply(fit, wt, fit="raw")
-        # construct return object
-        fit <- list(best=best, objective=objective, coefficients=coef, 
-            fitted.values=fitted, residuals=residuals, center=center, 
-            scale=scale, lambda=lambda, intercept=intercept, alpha=alpha, 
-            quan=quan, cnp2=cnp2, wt=wt, df=df, raw.coefficients=raw.coef, 
-            raw.fitted.values=raw.fitted, raw.residuals=raw.residuals, 
-            raw.center=raw.center, raw.scale=raw.scale, raw.cnp2=raw.cnp2, 
-            raw.wt=raw.wt, crit=crit, critValues=critValues, sOpt=sOpt, 
-            raw.critValues=raw.critValues, raw.sOpt=raw.sOpt)
-        class(fit) <- "sparseLTSGrid"
-    } else if(crit == "PE") {
-        # select the optimal reweighted and raw model via prediction error
-        selectBest <- match.arg(selectBest)
-        critValues <- perrySparseLTSGrid(x, y, lambda, mode, ..., 
-            splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
-            seFactor=seFactor, ncores=ncores, cl=cl, seed=seed)
-        # fit sparse LTS models for optimal lambdas
-        if(mode == "fraction") lambda <- critValues$tuning$lambda
-        sOpt <- critValues$best
-        if(sOpt[1] == sOpt[2]) {
-            # same optimal lambda for reweighted and raw estimator, only one 
-            # call to sparseLTS() necessary
-            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], mode="lambda", 
-                ..., ncores=ncores, model=FALSE)
-        } else {
-            # call sparseLTS() with respective optimal lambda for reweighted 
-            # and raw estimator
-            fit <- sparseLTS(x, y, lambda=lambda[sOpt[1]], mode="lambda", 
-                ..., ncores=ncores, model=FALSE)
-            raw.fit <- sparseLTS(x, y, lambda=lambda[sOpt[2]], mode="lambda", 
-                ..., ncores=ncores, model=FALSE)
-            # combine results
-            fitNames <- names(fit)
-            rawNames <- c("best", "objective", 
-                fitNames[substr(fitNames, 1, 3) == "raw"])
-            fit[rawNames] <- raw.fit[rawNames]
-        }
-        # add prediction error information
-        names(lambda) <- seq_along(lambda)
-        fit$lambda <- lambda
-        fit$crit <- crit
-        fit$critValues <- critValues
-        if(model) fit$call <- NULL  # ensure correct order of components
-        class(fit) <- "optSparseLTSGrid"
+    ## correct scale estimate
+    q <- qnorm(0.9875)  # quantile of the normal distribution
+    qn <- qnorm((h+n)/ (2*n))  # quantile for consistency factor
+    cdelta <- 1 / sqrt(1 - (2*n)/(h/qn) * dnorm(qn))  # consistency factor
+    s <- fit$scale * cdelta
+    ## find good observations
+    if(length(lambda) == 1) ok <- abs((fit$residuals - fit$center)/s) <= q
+    else ok <- abs(scale(fit$residuals, fit$center, s)) <= q
+    ## convert to 0/1 weights identifying outliers
+    raw.wt <- ok
+    storage.mode(raw.wt) <- "integer"
+    
+    ## keep information on raw estimator
+    raw.fit <- fit
+    raw.cdelta <- cdelta
+    raw.s <- s
+    nOk <- if(length(lambda) == 1) sum(raw.wt) else colSums(raw.wt)
+    
+    ## compute reweighted estimator
+    # compute lasso fits with good observations
+    if(length(lambda) == 1) {
+      fit <- fastLasso(x, y, lambda=lambda, subset=which(ok), 
+                       intercept=intercept, eps=eps, 
+                       use.Gram=use.Gram)
+    } else {
+      fit <- lapply(seq_along(lambda), function(i) {
+        fastLasso(x, y, lambda=lambda[i], subset=which(ok[, i]), 
+                  intercept=intercept, eps=eps, 
+                  use.Gram=use.Gram, drop=FALSE)
+      })
+      names(fit) <- names(lambda)
+      fit <- list(coefficients=sapply(fit, "[[", "coefficients"), 
+                  fitted.values=sapply(fit, "[[", "fitted.values"), 
+                  residuals=sapply(fit, "[[", "residuals"))
     }
-    # construct return object
-    if(model) {
-        if(fit$intercept) x <- addIntercept(x)
-        fit$x <- x
-        fit$y <- y
+    ## compute consistency factor
+    qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
+    cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))
+    cdelta[nOk == n] <- 1
+    ## compute 0/1 weights identifying outliers
+    if(length(lambda) == 1) {
+      # compute residual center and scale estimates
+      center <- sum(raw.wt*fit$residuals)/nOk
+      centeredResiduals <- fit$residuals - center
+      s <- sqrt(sum(raw.wt*centeredResiduals^2)/(nOk-1)) * cdelta
+      # compute outlier weights
+      wt <- as.integer(abs(centeredResiduals/s) <= q)
+    } else {
+      # compute residual center and scale estimates
+      center <- colSums(raw.wt*fit$residuals)/nOk
+      centeredResiduals <- sweep(fit$residuals, 2, center, check.margin=FALSE)
+      s <- sqrt(colSums(raw.wt*centeredResiduals^2)/(nOk-1)) * cdelta
+      # compute outlier weights
+      wt <- abs(sweep(centeredResiduals, 2, s, "/", check.margin=FALSE)) <= q
+      storage.mode(wt) <- "integer"
+    }
+    
+    ## construct return object
+    if(intercept) x <- addIntercept(x)
+    if(length(lambda) == 1) {
+      df <- modelDf(fit$coefficients, tol)
+      raw.df <- modelDf(raw.fit$coefficients, tol)
+    } else {
+      df <- apply(fit$coefficients, 2, modelDf, tol)
+      raw.df <- apply(raw.fit$coefficients, 2, modelDf, tol)
+    }
+    fit <- list(best=raw.fit$best, objective=raw.fit$crit, 
+                coefficients=copyNames(from=x, to=fit$coefficients), 
+                fitted.values=copyNames(from=y, to=fit$fitted.values), 
+                residuals=copyNames(from=y, to=fit$residuals), center=center, 
+                scale=s, lambda=lambda, intercept=intercept, alpha=alpha, 
+                quan=h, cnp2=cdelta, wt=copyNames(from=y, to=wt), df=df, 
+                raw.coefficients=copyNames(from=x, to=raw.fit$coefficients), 
+                raw.fitted.values=copyNames(from=y, to=y-raw.fit$residuals),
+                raw.residuals=copyNames(from=y, to=raw.fit$residuals), 
+                raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta,
+                raw.wt=copyNames(from=y, to=raw.wt), raw.df=raw.df)
+    class(fit) <- "sparseLTS"
+    
+    ## add information on the optimal model
+    if(length(lambda) > 1 && crit == "BIC") {
+      fit$crit <- bicSelect(fit, fit="both")
+    }
+    
+    ## return results
+    if(isTRUE(model)) {
+      fit$x <- x
+      fit$y <- y
     }
     fit$call <- call
     fit
+  }
+}
+
+
+## internal function to compute raw sparse LTS
+fastSparseLTS <- function(lambda, x, y, h, nsamp = c(500, 10), 
+                          initial = NULL, intercept = TRUE, 
+                          ncstep = 2, tol = .Machine$double.eps^0.5, 
+                          eps = .Machine$double.eps, use.Gram = TRUE, 
+                          ncores = 1, drop = TRUE) {
+  # check whether initial subsets based on lasso solutions need to be computed
+  if(is.null(initial)) {
+    initial <- sparseSubsets(x, y, lambda=lambda, h=h, nsamp=nsamp[1], 
+                             intercept=intercept, eps=eps, use.Gram=use.Gram)
+  }
+  # call C++ function
+  callBackend <- getBackend()
+  fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
+                     R_initial=initial, R_intercept=intercept, R_ncstep=ncstep, 
+                     R_nkeep=nsamp[2], R_tol=tol, R_eps=eps, R_useGram=use.Gram, 
+                     R_ncores=ncores)
+  if(drop) {
+    # drop the dimension of selected components
+    which <- c("best", "coefficients", "residuals")
+    fit[which] <- lapply(fit[which], drop)
+  }
+  fit
 }
 
 
 ## internal function for estimating the prediction error of sparse LTS models 
 ## over a grid of lambda values
-perrySparseLTSGrid <- function(x, y, lambda, mode, ..., splits = foldControl(), 
-        cost = rtmspe, costArgs = list(), selectBest = c("hastie", "min"), 
-        seFactor = 1, ncores = 1, cl = NULL, seed = NULL) {
-    # call function perryTuning() to perform prediction error estimation
-    call <- as.call(list(sparseLTS, mode=mode, ...))
-    out <- perryTuning(call, x=x, y=y, tuning=list(lambda=lambda), 
-        splits=splits, predictArgs=list(fit="both"), cost=cost, 
-        costArgs=costArgs, selectBest=selectBest, seFactor=seFactor, 
-        ncores=ncores, cl=cl, seed=seed)
-    # modify results
-    if(mode == "fraction" && any(lambda > 0)) {
-        # penalty parameters supplied as fractions, make sure that result 
-        # contains absolute values
-        out$tuning$lambda <- lambda * lambda0(x, y, ...)
-    }
-    class(out) <- c("perrySparseLTSGrid", class(out))
-    out
+perrySparseLTS <- function(x, y, lambda, mode, ..., 
+                           splits = foldControl(), cost = rtmspe, 
+                           costArgs = list(), selectBest = c("hastie", "min"), 
+                           seFactor = 1, ncores = 1, cl = NULL, seed = NULL) {
+  # call function perryTuning() to perform prediction error estimation
+  call <- as.call(list(sparseLTS, mode=mode, ...))
+  call$crit <- "none"
+  out <- perryTuning(call, x=x, y=y, tuning=list(lambda=lambda), splits=splits, 
+                     predictArgs=list(fit="both"), cost=cost, costArgs=costArgs, 
+                     selectBest=selectBest, seFactor=seFactor, ncores=ncores, 
+                     cl=cl, seed=seed)
+  # modify results
+  if(mode == "fraction" && any(lambda > 0)) {
+    # penalty parameters supplied as fractions, make sure that result 
+    # contains absolute values
+    out$tuning$lambda <- lambda * lambda0(x, y, ...)
+  }
+  class(out) <- c("perrySparseLTS", class(out))
+  out
+}
+
+
+## wrapper function for sparse LTS over a grid of lambda values
+## only differs in the default value for the penalty parameter
+
+#' @rdname sparseLTS
+#' @export 
+sparseLTSGrid <- function(x, ...) UseMethod("sparseLTSGrid")
+
+
+#' @rdname sparseLTS
+#' @method sparseLTSGrid formula
+#' @export
+sparseLTSGrid.formula <- function(formula, data, ...) {
+  # get function call
+  call <- match.call()
+  call[[1]] <- as.name("sparseLTSGrid")
+  # prepare model frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0)
+  mf <- mf[c(1, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  if(is.empty.model(mt)) stop("empty model")
+  # extract response and candidate predictors from model frame
+  y <- model.response(mf, "numeric")
+  x <- model.matrix(mt, mf)
+  # check if the specified model contains an intercept
+  # if so, remove the column for intercept and use 'intercept=TRUE'
+  # otherwise use 'intercept=FALSE'
+  whichIntercept <- match("(Intercept)", colnames(x), nomatch = 0)
+  intercept <- whichIntercept > 0
+  if(intercept) x <- x[, -whichIntercept, drop = FALSE]
+  # call default method
+  fit <- sparseLTSGrid(x, y, intercept=intercept, ...)
+  fit$call <- call  # add call to return object
+  fit$terms <- mt   # add model terms to return object
+  fit
+}
+
+
+#' @rdname sparseLTS
+#' @method sparseLTSGrid default
+#' @export
+sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
+                                  ...) {
+  # get function call
+  call <- match.call()
+  call[[1]] <- as.name("sparseLTSGrid")
+  # initializations
+  if(missing(lambda)) {
+    # if penalty parameter is not supplied, use fractions of a robust estimate 
+    # of the smallest value that sets all coefficients to zero
+    lower <- if(nrow(x) > ncol(x)) 0 else 0.1
+    lambda <- seq(from=1, to=lower, by=-0.1)
+    mode <- "fraction"
+  }
+  fit <- sparseLTS(x, y, lambda=lambda, mode=mode, ...)
+  fit$call <- call  # add call to return object
+  fit
 }

@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #include "fastSparseLTS.h"
@@ -140,15 +140,15 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
-	NumericVector Rcpp_y(R_y);			// response
+	mat x(Rcpp_x.begin(), n, p, false);		// reuse memory
+	NumericVector Rcpp_y(R_y);			  // response
 	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	double lambda = as<double>(R_lambda);
 	IntegerVector Rcpp_initial(R_initial);
 	const int h = Rcpp_initial.size();
 	uvec initial(h);
 	for(int i = 0; i < h; i++) {
-		initial(i) = Rcpp_initial[i];	// copy data
+		initial(i) = Rcpp_initial[i] - 1;	// copy data
 	}
 	bool useIntercept = as<bool>(R_intercept);
 	double eps = as<double>(R_eps);
@@ -164,7 +164,7 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 		coefficients(0) = subset.intercept;
 	}
 	return List::create(
-			Named("indices") = subset.indices,
+			Named("indices") = subset.indices + 1,
 			Named("coefficients") = coefficients,
 			Named("residuals") = subset.residuals,
 			Named("crit") = subset.crit,
@@ -178,8 +178,8 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
-	NumericVector Rcpp_y(R_y);			// response
+	mat x(Rcpp_x.begin(), n, p, false);		// reuse memory
+	NumericVector Rcpp_y(R_y);			  // response
 	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	double lambda = as<double>(R_lambda);
 	List Rcpp_subset(R_subset);
@@ -195,7 +195,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	NumericVector Rcpp_crit = Rcpp_subset["crit"];
 	Subset subset(n, p, h);
 	for(int i = 0; i < h; i++) {
-		subset.indices(i) = Rcpp_indices[i];
+		subset.indices(i) = Rcpp_indices[i] - 1;
 	}
 	if(useIntercept) {
 		subset.intercept = Rcpp_coefficients[0];
@@ -218,7 +218,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 		coefficients(0) = subset.intercept;
 	}
 	return List::create(
-			Named("indices") = subset.indices,
+			Named("indices") = subset.indices + 1,
 			Named("coefficients") = coefficients,
 			Named("residuals") = subset.residuals,
 			Named("crit") = subset.crit,
@@ -262,10 +262,10 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 	umat subsetMat(h, nsamp);
 	for(int j = 0; j < nsamp; j++) {
 		for(int i = 0; i < h; i++) {
-			subsetMat(i,j) = Rcpp_subsetMat(i,j);	// copy data
+			subsetMat(i,j) = Rcpp_subsetMat(i,j) - 1; // copy data
 		}
 	}
-	NumericVector Rcpp_crits(R_crits);				// values
+	NumericVector Rcpp_crits(R_crits);				    // values
 	vec crits(Rcpp_crits.begin(), nsamp, false);	// reuse memory
 	int nkeep = as<int>(R_nkeep);
 	// call native C++ function
@@ -285,7 +285,7 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 		critsOut(k) = subset.crit;
 	}
 	return List::create(
-			Named("subsetMat") = subsetMatOut,
+			Named("subsetMat") = subsetMatOut + 1,
 			Named("crits") = critsOut,
 			Named("nkeep") = nkeep
 			);
@@ -389,12 +389,12 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 	}
 
 	// find optimal subset
-	int which = 0;					// initial optimal subset
+	int which = 0;					      // initial optimal subset
 	double minCrit = R_PosInf;		// initial minimum of objective function
 	for(int k = 0; k < nkeep; k++) {
 		Subset subsetK = subsets[k];
 		if(subsetK.crit < minCrit) {
-			which = k;				// update optimal subset
+			which = k;				      // update optimal subset
 			minCrit = subsetK.crit;	// update minimum of objective function
 		}
 	}
@@ -402,7 +402,7 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 	// return results
 	Subset best = subsets[which];
 	center = subsetMean(best.residuals, best.indices);  // residual center
-	scale = partialScale(best.residuals, center, h);	// uncorrected residual scale
+	scale = partialScale(best.residuals, center, h);	  // uncorrected residual scale
 	return best;
 }
 
@@ -414,8 +414,8 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
-	NumericVector Rcpp_y(R_y);			// response
+	mat x(Rcpp_x.begin(), n, p, false);		// reuse memory
+	NumericVector Rcpp_y(R_y);			  // response
 	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	double lambda = as<double>(R_lambda);
 	IntegerMatrix Rcpp_initial(R_initial);	// matrix of initial subsets
@@ -423,7 +423,8 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	umat initial(h, nsamp);
 	for(int j = 0; j < nsamp; j++) {
 		for(int i = 0; i < h; i++) {
-			initial(i,j) = Rcpp_initial(i,j);	// can't use the same memory-saving conversion for integer matrices
+      // can't use the same memory-saving conversion for integer matrices
+			initial(i,j) = Rcpp_initial(i,j) - 1;
 		}
 	}
 	bool useIntercept = as<bool>(R_intercept);
@@ -445,7 +446,7 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 		coefficients(0) = best.intercept;
 	}
 	return List::create(
-			Named("best") = best.indices,
+			Named("best") = best.indices + 1,
 			Named("coefficients") = coefficients,
 			Named("residuals") = best.residuals,
 			Named("crit") = best.crit,

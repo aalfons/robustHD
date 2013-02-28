@@ -1,8 +1,8 @@
 Package: robustHD
 Type: Package
 Title: Robust methods for high-dimensional data
-Version: 0.2.2
-Date: 2012-10-30
+Version: 0.3.0
+Date: 2013-02-28
 Depends:
     R (>= 2.14.1),
     Rcpp (>= 0.9.10),
@@ -24,31 +24,5 @@ Description: Robust methods for high-dimensional data, in particular linear
 License: GPL (>= 2)
 LazyLoad: yes
 Authors@R: person("Andreas", "Alfons",
-    email = "andreas.alfons@kuleuven.be",
+    email = "alfons@ese.eur.nl",
     role = c("aut", "cre"))
-Collate:
-    'accessors.R'
-    'AIC.R'
-    'backend.R'
-    'coef.R'
-    'corHuber.R'
-    'fastLasso.R'
-    'fitted.R'
-    'fortify.R'
-    'initialSubsets.R'
-    'lambda0.R'
-    'perry.R'
-    'plot.R'
-    'predict.R'
-    'print.R'
-    'residuals.R'
-    'rlars.R'
-    'seqModel.R'
-    'sparseLTS.R'
-    'standardize.R'
-    'subset.R'
-    'test.R'
-    'utils.R'
-    'weights.R'
-    'winsorize.R'
-    'zzz.R'

@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #ifndef _robustHD_INITIALSUBSETS_H
@@ -13,7 +13,7 @@
 #include "utils.h"
 
 // functions to export to R
-RcppExport SEXP R_initialSubsetsSparse(SEXP R_x, SEXP R_y, SEXP R_subsets,
-		SEXP R_h, SEXP R_lambda, SEXP R_intercept, SEXP R_eps, SEXP R_useGram);
+RcppExport SEXP R_sparseSubsets(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_h, 
+    SEXP R_subsets, SEXP R_intercept, SEXP R_eps, SEXP R_useGram);
 
 #endif

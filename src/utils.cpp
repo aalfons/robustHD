@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #include "utils.h"
@@ -86,7 +86,7 @@ SEXP R_findSmallest(SEXP R_x, SEXP R_h) {
 	NumericVector Rcpp_x(R_x);
 	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
 	int h = as<int>(R_h);
-	uvec indices = findSmallest(x, h);	// call native C++ function
+	uvec indices = findSmallest(x, h) + 1;	// call native C++ function
 	return wrap(indices.memptr(), indices.memptr() + indices.n_elem);
 }
 
@@ -115,7 +115,7 @@ SEXP R_partialOrder(SEXP R_x, SEXP R_h) {
 	NumericVector Rcpp_x(R_x);
 	vec x(Rcpp_x.begin(), Rcpp_x.size(), false);	// reuse memory
 	int h = as<int>(R_h);
-	uvec indices = partialOrder(x, h);	// call native C++ function
+	uvec indices = partialOrder(x, h) + 1;	// call native C++ function
 	return wrap(indices.memptr(), indices.memptr() + indices.n_elem);
 }
 

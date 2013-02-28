@@ -1,7 +1,7 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus University Rotterdam
+# ------------------------------------
 
 ## class 'lmrob'
 
@@ -61,7 +61,8 @@ BIC.rlm <- function(object, ...) {
 #' default is to use \eqn{2} as in the classical definition of the AIC.
 #' 
 #' @return  
-#' A numeric vector giving the information criteria for the requested fits.
+#' A numeric vector or matrix giving the information criteria for the requested 
+#' fits.
 #' 
 #' @note Computing information criteria for several objects supplied via the 
 #' \code{\dots} argument (as for the default methods of \code{\link[stats]{AIC}} 
@@ -86,22 +87,23 @@ BIC.rlm <- function(object, ...) {
 #' @import stats
 #' @export
 
-AIC.sparseLTS <- function(object, ..., fit = c("reweighted", "raw", "both"), 
-        k = 2) {
-    n <- length(residuals(object))  # number of observations
-    fit <- match.arg(fit)
-    if(fit == "reweighted") {
-        sigma2 <- object$scale^2
-        df <- object$df
-    } else if(fit == "raw") {
-        sigma2 <- object$raw.scale^2
-        df <- modelDf(coef(object, fit="raw"))
-    } else {
-        sigma2 <- c(reweighted=object$scale, raw=object$raw.scale)^2
-        df <- c(reweighted=object$df, raw=modelDf(coef(object, fit="raw")))
-    }
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(sigma2)) + df * k
+AIC.sparseLTS <- function(object, ..., 
+                          fit = c("reweighted", "raw", "both"), 
+                          k = 2) {
+  n <- length(residuals(object))  # number of observations
+  fit <- match.arg(fit)
+  if(fit == "reweighted") {
+    sigma2 <- object$scale^2
+    df <- object$df
+  } else if(fit == "raw") {
+    sigma2 <- object$raw.scale^2
+    df <- object$raw.df
+  } else {
+    sigma2 <- cbind(reweighted=object$scale, raw=object$raw.scale)^2
+    df <- cbind(reweighted=object$df, raw=object$raw.df)
+  }
+  # compute AIC with the same terms as R does for linear models
+  n * (log(2 * pi) + 1 + log(sigma2)) + df * k
 }
 
 
@@ -110,55 +112,18 @@ AIC.sparseLTS <- function(object, ..., fit = c("reweighted", "raw", "both"),
 #' @export
 
 BIC.sparseLTS <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
+  n <- length(residuals(object))  # number of observations
+  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
 }
 
 
-#' @rdname AIC.sparseLTS
-#' @method AIC sparseLTSGrid
-#' @export
-
-AIC.sparseLTSGrid <- function(object, ..., 
-        fit = c("reweighted", "raw", "both"), 
-        k = 2) {
-    n <- nrow(residuals(object, s=NULL))  # number of observations
-    fit <- match.arg(fit)
-    if(fit == "reweighted") {
-        sigma2 <- object$scale^2
-        df <- object$df
-    } else if(fit == "raw") {
-        sigma2 <- object$raw.scale^2
-        df <- apply(coef(object, s=NULL, fit="raw"), 2, modelDf)
-    } else {
-        sigma2 <- c(reweighted=object$scale, raw=object$raw.scale)^2
-        df <- c(reweighted=object$df, 
-            raw=apply(coef(object, s=NULL, fit="raw"), 2, modelDf))
-    }
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(sigma2)) + df * k
+## internal function returning an object of class "BIC" so that the optimal 
+## model can be retrieved for a sequence of models
+bicSelect <- function(object, ...) {
+  values <- BIC(object, ...)
+  if(is.null(dim(values))) best <- which.min(unname(values))
+  else best <- apply(values, 2, which.min)
+  bic <- list(values=values, best=best)
+  class(bic) <- "bicSelect"
+  bic
 }
-
-
-#' @rdname AIC.sparseLTS
-#' @method BIC sparseLTSGrid
-#' @export
-
-BIC.sparseLTSGrid <- function(object, ...) {
-    n <- nrow(residuals(object, s=NULL))  # number of observations
-    AIC(object, ..., k=log(n))            # call AIC method with penalty for BIC
-}
-
-
-#' @rdname AIC.sparseLTS
-#' @method AIC optSparseLTSGrid
-#' @export
-
-AIC.optSparseLTSGrid <- AIC.sparseLTS
-
-
-#' @rdname AIC.sparseLTS
-#' @method BIC optSparseLTSGrid
-#' @export
-
-BIC.optSparseLTSGrid <- BIC.sparseLTS
