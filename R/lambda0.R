@@ -52,8 +52,7 @@
 #' selection based on least angle regression. \emph{Journal of the American 
 #' Statistical Association}, \bold{102}(480), 1289--1299.
 #' 
-#' @seealso \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}, 
-#' \code{\link{winsorize}}
+#' @seealso \code{\link{sparseLTS}}, \code{\link{winsorize}}
 #' 
 #' @example inst/doc/examples/example-lambda0.R
 #' 

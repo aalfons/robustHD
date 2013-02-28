@@ -101,8 +101,7 @@ lambda0(x, y)
   \bold{102}(480), 1289--1299.
 }
 \seealso{
-  \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}},
-  \code{\link{winsorize}}
+  \code{\link{sparseLTS}}, \code{\link{winsorize}}
 }
 \keyword{robust}
 \keyword{utilities}

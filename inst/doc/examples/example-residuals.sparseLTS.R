@@ -25,7 +25,7 @@ residuals(fit, fit = "both")
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+fitGrid <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # extract residuals
 residuals(fitGrid)
 residuals(fitGrid, fit = "both")

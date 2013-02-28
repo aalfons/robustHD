@@ -17,7 +17,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit sparse LTS model over a grid of values for lambda
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+fitGrid <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 
 ## compute AIC and BIC
 AIC(fitGrid)

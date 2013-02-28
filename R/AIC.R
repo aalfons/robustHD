@@ -77,8 +77,7 @@ BIC.rlm <- function(object, ...) {
 #' Schwarz, G. (1978) Estimating the dimension of a model. \emph{The Annals of 
 #' Statistics}, \bold{6}(2), 461--464.
 #' 
-#' @seealso \code{\link[stats]{AIC}}, \code{\link{sparseLTS}}, 
-#' \code{\link{sparseLTSGrid}}
+#' @seealso \code{\link[stats]{AIC}}, \code{\link{sparseLTS}}
 #' 
 #' @example inst/doc/examples/example-AIC.R
 #' 

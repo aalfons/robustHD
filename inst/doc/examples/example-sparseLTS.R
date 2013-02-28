@@ -20,4 +20,4 @@ sparseLTS(x, y, lambda = 0.05, mode = "fraction")
 
 ## fit sparse LTS models over a grid of values for lambda
 frac <- seq(0.25, 0.05, by = -0.05)
-sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+sparseLTS(x, y, lambda = frac, mode = "fraction")

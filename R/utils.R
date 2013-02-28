@@ -17,6 +17,15 @@ addIntercept <- function(x, check = FALSE) {
   } else x
 }
 
+## check steps for coef(), fitted(), residuals(), predict(), ... methods
+checkSteps <- function(s, sMin, sMax) {
+  if(!is.numeric(s) || length(s) == 0 || any(!is.finite(s)) || 
+       any(s < sMin) || any(s > sMax)) {
+    stop(sprintf("invalid step, must be between %d and %d", sMin, sMax))
+  }
+  s
+}
+
 ## copy names from a vector or matrix to another vector or matrix
 copyNames <- function(from, to, which = "col", target = "row") {
   # read names from source
@@ -29,6 +38,19 @@ copyNames <- function(from, to, which = "col", target = "row") {
   else if(target == "col") colnames(to) <- nam
   # return object
   to
+}
+
+## drop dimension in case of matrix with one column
+dropCol <- function(x) {
+  d <- dim(x)
+  if(is.null(d[2]) || d[2] != 1) x
+  else if(d[1] == 1) {
+    # drop() drops all names for a 1x1 matrix
+    names <- rownames(x)
+    x <- drop(x)
+    names(x) <- names
+    x
+  } else drop(x)
 }
 
 ## find indices of h smallest observations
@@ -51,4 +73,11 @@ hyperplane <- function(x) {
 ## obtain the degrees of freedom of a model (number of nonzero parameters)
 modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
   length(which(abs(beta) > tol))
+}
+
+## find indices of h smallest observations
+partialOrder <- function(x, h) {
+  # call C++ function
+  callBackend <- getBackend()
+  callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h))
 }
