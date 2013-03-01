@@ -421,7 +421,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                 raw.residuals=copyNames(from=y, to=raw.fit$residuals), 
                 raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta,
                 raw.wt=copyNames(from=y, to=raw.wt), raw.df=raw.df)
-    class(fit) <- "sparseLTS"
+    class(fit) <- c("sparseLTS", "seqModel")
     
     ## add information on the optimal model
     if(length(lambda) > 1 && crit == "BIC") {

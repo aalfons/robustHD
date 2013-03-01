@@ -3,31 +3,48 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-## class 'lmrob'
 
-AIC.lmrob <- AIC.lmrob.S <- function(object, ..., k = 2) {
-    n <- length(residuals(object))  # number of observations
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(object$scale^2)) + (object$rank) * k
+## overload BIC for class 'lm'
+
+AIC.lm <- function(object, ..., k = 2) {
+  res <- residuals(object)  # residuals
+  n <- length(res)          # number of observations
+  # compute AIC with the same terms as R does for linear models, except for 
+  # degrees of freedom in the penalty (R uses df+1 instead of df!!!)
+  n * (log(2 * pi) + 1 - log(n) + log(sum(res^2))) + object$rank * k
 }
 
-BIC.lmrob <- BIC.lmrob.S <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
+BIC.lm <- function(object, ...) {
+  n <- length(residuals(object))  # number of observations
+  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
+}
+
+
+## class 'lmrob'
+
+AIC.lmrob <- function(object, ..., k = 2) {
+  n <- length(residuals(object))  # number of observations
+  # compute AIC with the same terms as R does for linear models
+  n * (log(2 * pi) + 1 + log(object$scale^2)) + object$rank * k
+}
+
+BIC.lmrob <- function(object, ...) {
+  n <- length(residuals(object))  # number of observations
+  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
 }
 
 
 ## class 'rlm'
 
 AIC.rlm <- function(object, ..., k = 2) {
-    n <- length(residuals(object))  # number of observations
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(object$s^2)) + (object$rank) * k
+  n <- length(residuals(object))  # number of observations
+  # compute AIC with the same terms as R does for linear models
+  n * (log(2 * pi) + 1 + log(object$s^2)) + object$rank * k
 }
 
 BIC.rlm <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
+  n <- length(residuals(object))  # number of observations
+  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
 }
 
 
