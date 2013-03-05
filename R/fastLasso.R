@@ -21,6 +21,5 @@ fastLasso <- function(x, y, lambda, subset = NULL, intercept = TRUE,
                      R_intercept=isTRUE(intercept), R_eps=eps, 
                      R_useGram=isTRUE(use.Gram))
   if(drop) fit <- lapply(fit, drop)  # drop the dimension of the components
-
   fit
 }

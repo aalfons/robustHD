@@ -19,7 +19,7 @@
     ncstep = 2, use.correction = TRUE,
     tol = .Machine$double.eps^0.5,
     eps = .Machine$double.eps, use.Gram,
-    crit = c("BIC", "PE", "none"), splits = foldControl(),
+    crit = c("BIC", "PE"), splits = foldControl(),
     cost = rtmspe, costArgs = list(),
     selectBest = c("hastie", "min"), seFactor = 1,
     ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
@@ -127,9 +127,8 @@
   \item{crit}{a character string specifying the optimality
   criterion to be used for selecting the final model.
   Possible values are \code{"BIC"} for the Bayes
-  information criterion, \code{"PE"} for resampling-based
-  prediction error estimation, and \code{"none"} to not
-  select a final model.}
+  information criterion and \code{"PE"} for
+  resampling-based prediction error estimation.}
 
   \item{splits}{an object giving data splits to be used for
   prediction error estimation (see

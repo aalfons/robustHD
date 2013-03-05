@@ -449,7 +449,7 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 			Named("best") = best.indices + 1,
 			Named("coefficients") = coefficients,
 			Named("residuals") = best.residuals,
-			Named("crit") = best.crit,
+			Named("objective") = best.crit,
 			Named("center") = center,
 			Named("scale") = scale
 			);

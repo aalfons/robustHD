@@ -46,25 +46,23 @@ getComponent.sparseLTS <- function(x, which, s = NA,
                      }
                    })
     # check selected steps and extract corresponding parts of the component
-    if(sMax > 1) {
-      haveNA <- !is.null(s) && isTRUE(is.na(s))
-      if(haveNA) s <- getSOpt(x, fit=fit)  # optimal step size (could be NULL)
-      if(!is.null(s)) {
-        if(haveNA && fit == "both") s[2] <- sMax + s[2]
-        else if(fit == "both" && is.list(s)) {
-          # list of steps for each fit
-          s <- rep(s, length.out=2)
-          s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
-          s <- c(s[[1]], sMax+s[[2]])
-        } else {
-          s <- checkSteps(s, sMin=1, sMax=sMax)
-          if(fit == "both") s <- c(s, sMax+s)
-        }
-        if(is.null(dim(comp))) comp <- comp[s]  # extract selected steps
-        else {
-          comp <- comp[, s, drop=FALSE]           # extract selected steps
-          if(isTRUE(drop)) comp <- dropCol(comp)  # drop dimension if requested
-        }
+    if(!is.null(s)) {
+      if(isTRUE(is.na(s))) {
+        s <- getSOpt(x, fit=fit)  # optimal step size as default
+        if(fit == "both") s[2] <- sMax + s[2]
+      } else if(fit == "both" && is.list(s)) {
+        # list of steps for each fit
+        s <- rep(s, length.out=2)
+        s <- lapply(s, checkSteps, sMin=1, sMax=sMax)
+        s <- c(s[[1]], sMax+s[[2]])
+      } else {
+        s <- checkSteps(s, sMin=1, sMax=sMax)
+        if(fit == "both") s <- c(s, sMax+s)
+      }
+      if(is.null(dim(comp))) comp <- comp[s]  # extract selected steps
+      else {
+        comp <- comp[, s, drop=FALSE]           # extract selected steps
+        if(isTRUE(drop)) comp <- dropCol(comp)  # drop dimension if requested
       }
     }
   } else {

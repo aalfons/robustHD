@@ -72,8 +72,8 @@
 #' \code{FALSE}.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Possible values are \code{"BIC"} for 
-#' the Bayes information criterion, \code{"PE"} for resampling-based prediction 
-#' error estimation, and \code{"none"} to not select a final model.
+#' the Bayes information criterion and \code{"PE"} for resampling-based 
+#' prediction error estimation.
 #' @param splits  an object giving data splits to be used for prediction error 
 #' estimation (see \code{\link[perry]{perryTuning}}).
 #' @param cost  a cost function measuring prediction loss (see 
@@ -236,9 +236,8 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                               ncstep = 2, use.correction = TRUE, 
                               tol = .Machine$double.eps^0.5, 
                               eps = .Machine$double.eps, use.Gram, 
-                              crit = c("BIC", "PE", "none"), 
-                              splits = foldControl(), cost = rtmspe, 
-                              costArgs = list(), 
+                              crit = c("BIC", "PE"), splits = foldControl(), 
+                              cost = rtmspe, costArgs = list(), 
                               selectBest = c("hastie", "min"), 
                               seFactor = 1, ncores = 1, cl = NULL, 
                               seed = NULL, model = TRUE, ...) {
@@ -267,7 +266,9 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     lambda <- sort.int(unique(lambda), decreasing=TRUE)
     mode <- match.arg(mode)
   }
-  crit <- if(length(lambda) == 1) "none" else match.arg(crit)
+  if(length(lambda) == 1) crit <- "none" 
+  else if(missing(crit)) crit <- match.arg(crit) 
+  else crit <- match.arg(crit, choices=c(formals()$crit, "none"))
   intercept <- isTRUE(intercept)
   if(mode == "fraction" && any(lambda > 0) && crit != "PE") { 
     # fraction of a robust estimate of the smallest value for the penalty 
@@ -340,7 +341,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
       fit <- list(best=sapply(fit, function(x) sort(x$best)), 
                   coefficients=sapply(fit, "[[", "coefficients"), 
                   residuals=sapply(fit, "[[", "residuals"), 
-                  crit=sapply(fit, "[[", "crit"), 
+                  objective=sapply(fit, "[[", "objective"), 
                   center=sapply(fit, "[[", "center"), 
                   scale=sapply(fit, "[[", "scale"))
     }
@@ -410,7 +411,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
       df <- apply(fit$coefficients, 2, modelDf, tol)
       raw.df <- apply(raw.fit$coefficients, 2, modelDf, tol)
     }
-    fit <- list(best=raw.fit$best, objective=raw.fit$crit, 
+    fit <- list(best=raw.fit$best, objective=raw.fit$objective, 
                 coefficients=copyNames(from=x, to=fit$coefficients), 
                 fitted.values=copyNames(from=y, to=fit$fitted.values), 
                 residuals=copyNames(from=y, to=fit$residuals), center=center, 
@@ -424,9 +425,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     class(fit) <- c("sparseLTS", "seqModel")
     
     ## add information on the optimal model
-    if(length(lambda) > 1 && crit == "BIC") {
-      fit$crit <- bicSelect(fit, fit="both")
-    }
+    if(crit == "BIC") fit$crit <- bicSelect(fit, fit="both")
     
     ## return results
     if(isTRUE(model)) {
