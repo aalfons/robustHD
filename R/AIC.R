@@ -3,51 +3,6 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-
-## overload BIC for class 'lm'
-
-AIC.lm <- function(object, ..., k = 2) {
-  res <- residuals(object)  # residuals
-  n <- length(res)          # number of observations
-  # compute AIC with the same terms as R does for linear models, except for 
-  # degrees of freedom in the penalty (R uses df+1 instead of df!!!)
-  n * (log(2 * pi) + 1 - log(n) + log(sum(res^2))) + object$rank * k
-}
-
-BIC.lm <- function(object, ...) {
-  n <- length(residuals(object))  # number of observations
-  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
-}
-
-
-## class 'lmrob'
-
-AIC.lmrob <- function(object, ..., k = 2) {
-  n <- length(residuals(object))  # number of observations
-  # compute AIC with the same terms as R does for linear models
-  n * (log(2 * pi) + 1 + log(object$scale^2)) + object$rank * k
-}
-
-BIC.lmrob <- function(object, ...) {
-  n <- length(residuals(object))  # number of observations
-  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
-}
-
-
-## class 'rlm'
-
-AIC.rlm <- function(object, ..., k = 2) {
-  n <- length(residuals(object))  # number of observations
-  # compute AIC with the same terms as R does for linear models
-  n * (log(2 * pi) + 1 + log(object$s^2)) + object$rank * k
-}
-
-BIC.rlm <- function(object, ...) {
-  n <- length(residuals(object))  # number of observations
-  AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
-}
-
-
 #' Information criteria for sparse LTS regression models
 #' 
 #' Compute the Akaike or Bayes information criterion for sparse least trimmed 
@@ -135,7 +90,43 @@ BIC.sparseLTS <- function(object, ...) {
 
 ## internal function returning an object of class "BIC" so that the optimal 
 ## model can be retrieved for a sequence of models
-bicSelect <- function(object, ...) {
+
+# generic function
+bicSelect <- function(object, ...) UseMethod("bicSelect")
+
+# method for a list of models
+bicSelect.seqModel <- function(object, ...) {
+  # initializations
+  residuals <- residuals(object)
+  n <- nrow(residuals)  # number of observations
+  df <- object$df       # degrees of freedom
+  penalty <- log(n)     # penalty for BIC
+  # define function to compute the BIC
+  if(object$robust) {
+    # BIC based on robust residual scale estimate
+    scale <- object$scale
+    critFun <- function(k) {
+      n * (log(2 * pi) + 1 + log(scale[k]^2)) + df[k] * penalty
+    }
+  } else {
+    # BIC based on likelihood
+    # R uses (df + 1) in BIC penalty for (weighted) linear models!!!
+    critFun <- function(k) {
+      n * (log(2 * pi) + 1 - log(n) + 
+             log(sum(residuals[, k]^2))) + df[k] * penalty
+    }
+  }
+  # compute BIC values of the submodels
+  values <- sapply(seq_along(df), critFun)
+  # return BIC object
+  bic <- list(values=values, best=which.min(values) - 1)
+  class(bic) <- "bicSelect"
+  bic
+}
+
+# method for sparse LTS models
+bicSelect.sparseLTS <- function(object, ...) {
+  # compute BIC values
   values <- BIC(object, ...)
   if(is.null(dim(values))) best <- which.min(unname(values))
   else best <- apply(values, 2, which.min)

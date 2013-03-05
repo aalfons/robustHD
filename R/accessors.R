@@ -4,7 +4,7 @@
 # ------------------------------------
 
 ## get component 'best'
-# generic function
+
 getBest <- function(x, ...) UseMethod("getBest")
 
 # get index of final model according to BIC
@@ -19,10 +19,8 @@ getBest.default <- function(x, ...) NULL
 # (coefficients, fitted values, residuals, ...), so checks for the 
 # arguments are necessary
 
-# generic function
 getComponent <- function(x, which, ...) UseMethod("getComponent")
 
-# method for class "sparseLTS"
 getComponent.sparseLTS <- function(x, which, s = NA, 
                                    fit = c("reweighted", "raw", "both"), 
                                    drop = !is.null(s), ...) {
@@ -81,14 +79,23 @@ getComponent.sparseLTS <- function(x, which, s = NA,
 
 
 ## get residual scale
+
 getScale <- function(x, ...) UseMethod("getScale")
+
+getScale.default <- function(x, ...) mad(residuals(x))  # use MAD by default
+
+getScale.lmrob <- function(x, ...) x$scale
+
+getScale.lts <- function(x, ...) x$scale
+
+getScale.rlm <- function(x, ...) x$s
 
 getScale.sparseLTS <- function(x, s = NA, fit = "reweighted", ...) {
   getComponent(x, "scale", s=s, fit=fit, ...)
 }
 
-
 ## get optimal step
+
 getSOpt <- function(x, ...) UseMethod("getSOpt")
 
 getSOpt.sparseLTS <- function(x, fit = "reweighted", ...) {

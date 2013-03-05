@@ -20,6 +20,9 @@ getRegControl <- function(fun) {
   if(identical(fun, lmrob)) {
     fun <- .lmrob.fit
     useFormula <- FALSE
+  } else if(identical(fun, ltsReg)) {
+    fun <- .ltsReg
+    useFormula <- FALSE
   } else if(identical(fun, rlm)) {
     fun <- .rlm
     useFormula <- FALSE
@@ -48,5 +51,10 @@ getRegControl <- function(fun) {
   fit
 }
 
-## wrapper function for lmrob.fit() with different default arguments
+## wrapper function for ltsReg() that does not return original data
+.ltsReg <- function(x, y, model = FALSE, x.ret = FALSE, y.ret = FALSE, ...) {
+  rlm(x, y, model=FALSE, x.ret=FALSE, y.ret=FALSE, ...)
+}
+
+## wrapper function for rlm() with different default arguments
 .rlm <- function(x, y, maxit = 500, ...) rlm(x, y, maxit=maxit, ...)

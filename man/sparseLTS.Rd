@@ -119,10 +119,12 @@
 
   \item{use.Gram}{a logical indicating whether the Gram
   matrix of the explanatory variables should be precomputed
-  in the lasso fits (the default is \code{TRUE}).  If the
-  number of variables is large (e.g., larger than the
-  number of observations), computation may be faster when
-  this is set to \code{FALSE}.}
+  in the lasso fits on the subsamples.  If the number of
+  variables is large, computation may be faster when this
+  is set to \code{FALSE}.  The default is to use
+  \code{TRUE} if the number of variables is smaller than
+  the number of observations in the subsamples and smaller
+  than 100, and \code{FALSE} otherwise.}
 
   \item{crit}{a character string specifying the optimality
   criterion to be used for selecting the final model.
@@ -180,6 +182,9 @@
   An object of class \code{"sparseLTS"} with the following
   components:
 
+  \item{lambda}{a numeric vector giving the values of the
+  penalty parameter.}
+
   \item{best}{an integer vector or matrix containing the
   respective best subsets of \eqn{h} observations found and
   used for computing the raw estimates.}
@@ -206,19 +211,6 @@
   \item{scale}{a numeric vector giving the robust scale
   estimates of the corresponding reweighted residuals.}
 
-  \item{lambda}{a numeric vector giving the values of the
-  penalty parameter.}
-
-  \item{intercept}{a logical indicating whether the model
-  includes a constant term.}
-
-  \item{alpha}{a numeric value giving the percentage of the
-  residuals for which the \eqn{L_{1}}{L1} penalized sum of
-  squares was minimized.}
-
-  \item{quan}{the number \eqn{h} of observations used to
-  compute the raw estimates.}
-
   \item{cnp2}{a numeric vector giving the respective
   consistency factors applied to the scale estimates of the
   reweighted residuals.}
@@ -233,6 +225,16 @@
   \item{df}{an integer vector giving the respective degrees
   of freedom of the obtained reweighted model fits, i.e.,
   the number of nonzero coefficient estimates.}
+
+  \item{intercept}{a logical indicating whether the model
+  includes a constant term.}
+
+  \item{alpha}{a numeric value giving the percentage of the
+  residuals for which the \eqn{L_{1}}{L1} penalized sum of
+  squares was minimized.}
+
+  \item{quan}{the number \eqn{h} of observations used to
+  compute the raw estimates.}
 
   \item{raw.coefficients}{a numeric vector or matrix
   containing the respective coefficient estimates from the

@@ -66,10 +66,11 @@
 #' @param eps  a small positive numeric value used to determine whether the 
 #' variability within a variable is too small (an effective zero).
 #' @param use.Gram  a logical indicating whether the Gram matrix of the 
-#' explanatory variables should be precomputed in the lasso fits (the default 
-#' is \code{TRUE}).  If the number of variables is large (e.g., larger than the 
-#' number of observations), computation may be faster when this is set to 
-#' \code{FALSE}.
+#' explanatory variables should be precomputed in the lasso fits on the 
+#' subsamples.  If the number of variables is large, computation may be faster 
+#' when this is set to \code{FALSE}.  The default is to use \code{TRUE} if the 
+#' number of variables is smaller than the number of observations in the 
+#' subsamples and smaller than 100, and \code{FALSE} otherwise.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Possible values are \code{"BIC"} for 
 #' the Bayes information criterion and \code{"PE"} for resampling-based 
@@ -105,6 +106,8 @@
 #' @param \dots  additional arguments to be passed down.
 #' 
 #' @returnClass sparseLTS
+#' @returnItem lambda  a numeric vector giving the values of the penalty 
+#' parameter.
 #' @returnItem best  an integer vector or matrix containing the respective best 
 #' subsets of \eqn{h} observations found and used for computing the raw 
 #' estimates.
@@ -121,14 +124,6 @@
 #' the corresponding reweighted residuals.
 #' @returnItem scale  a numeric vector giving the robust scale estimates of the 
 #' corresponding reweighted residuals.
-#' @returnItem lambda  a numeric vector giving the values of the penalty 
-#' parameter.
-#' @returnItem intercept  a logical indicating whether the model includes a 
-#' constant term.
-#' @returnItem alpha  a numeric value giving the percentage of the residuals for 
-#' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.
-#' @returnItem quan  the number \eqn{h} of observations used to compute the raw 
-#' estimates.
 #' @returnItem cnp2  a numeric vector giving the respective consistency factors 
 #' applied to the scale estimates of the reweighted residuals.
 #' @returnItem wt  an integer vector or matrix containing binary weights that 
@@ -138,6 +133,12 @@
 #' @returnItem df  an integer vector giving the respective degrees of freedom 
 #' of the obtained reweighted model fits, i.e., the number of nonzero 
 #' coefficient estimates.
+#' @returnItem intercept  a logical indicating whether the model includes a 
+#' constant term.
+#' @returnItem alpha  a numeric value giving the percentage of the residuals for 
+#' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.
+#' @returnItem quan  the number \eqn{h} of observations used to compute the raw 
+#' estimates.
 #' @returnItem raw.coefficients  a numeric vector or matrix containing the 
 #' respective coefficient estimates from the raw fits.  
 #' @returnItem raw.fitted.values  a numeric vector or matrix containing the 
@@ -267,8 +268,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     mode <- match.arg(mode)
   }
   if(length(lambda) == 1) crit <- "none" 
-  else if(missing(crit)) crit <- match.arg(crit) 
-  else crit <- match.arg(crit, choices=c(formals()$crit, "none"))
+  else if(!identical(crit, "none")) crit <- match.arg(crit) 
   intercept <- isTRUE(intercept)
   if(mode == "fraction" && any(lambda > 0) && crit != "PE") { 
     # fraction of a robust estimate of the smallest value for the penalty 
@@ -411,12 +411,12 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
       df <- apply(fit$coefficients, 2, modelDf, tol)
       raw.df <- apply(raw.fit$coefficients, 2, modelDf, tol)
     }
-    fit <- list(best=raw.fit$best, objective=raw.fit$objective, 
+    fit <- list(lambda=lambda, best=raw.fit$best, objective=raw.fit$objective, 
                 coefficients=copyNames(from=x, to=fit$coefficients), 
                 fitted.values=copyNames(from=y, to=fit$fitted.values), 
                 residuals=copyNames(from=y, to=fit$residuals), center=center, 
-                scale=s, lambda=lambda, intercept=intercept, alpha=alpha, 
-                quan=h, cnp2=cdelta, wt=copyNames(from=y, to=wt), df=df, 
+                scale=s, cnp2=cdelta, wt=copyNames(from=y, to=wt), df=df, 
+                intercept=intercept, alpha=alpha, quan=h, 
                 raw.coefficients=copyNames(from=x, to=raw.fit$coefficients), 
                 raw.fitted.values=copyNames(from=y, to=y-raw.fit$residuals),
                 raw.residuals=copyNames(from=y, to=raw.fit$residuals), 
