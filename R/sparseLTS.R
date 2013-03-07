@@ -268,7 +268,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     mode <- match.arg(mode)
   }
   if(length(lambda) == 1) crit <- "none" 
-  else if(!identical(crit, "none")) crit <- match.arg(crit) 
+  else if(!identical(crit, "none")) crit <- match.arg(crit)
   intercept <- isTRUE(intercept)
   if(mode == "fraction" && any(lambda > 0) && crit != "PE") { 
     # fraction of a robust estimate of the smallest value for the penalty 
@@ -422,16 +422,13 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                 raw.residuals=copyNames(from=y, to=raw.fit$residuals), 
                 raw.center=raw.fit$center, raw.scale=raw.s, raw.cnp2=raw.cdelta,
                 raw.wt=copyNames(from=y, to=raw.wt), raw.df=raw.df)
-    class(fit) <- c("sparseLTS", "seqModel")
+    class(fit) <- "sparseLTS"
     
     ## add information on the optimal model
     if(crit == "BIC") fit$crit <- bicSelect(fit, fit="both")
     
     ## return results
-    if(isTRUE(model)) {
-      fit$x <- x
-      fit$y <- y
-    }
+    if(isTRUE(model)) fit[c("x", "y")] <- list(x=x, y=y)
     fit$call <- call
     fit
   }

@@ -12,13 +12,35 @@ print.bicSelect <- function(x, best = TRUE, ...) {
   # print optimal model if requested
   if(isTRUE(best)) {
     best <- x$best
-    text <- "Best model:"
+    text <- "Index of best model:"
     if(length(best) == 1) {
       best <- as.matrix(best)
       dimnames(best) <- list(text, "")
-    } else cat("\nBest model:\n")
+    } else cat("\n", text, "\n", sep="")
     print(best, ...)
   }
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print seqModel
+print.seqModel <- function(x, zeros = FALSE, ...) {
+  # print function call
+  if(!is.null(call <- x$call)) {
+    cat("\nCall:\n")
+    dput(x$call)
+  }
+  # print predictor sequence
+  active <- t(x$active)
+  steps <- seq_len(ncol(active))
+  dimnames(active) <- list("Var", steps)
+  cat("\nSequence of moves:\n")
+  print(active, ...)
+  # print coefficients of optimal submodel
+  cat("\nCoefficients of optimal submodel:\n")
+  print(coef(x, zeros=zeros), ...)
+  # print index of optimal submodel
+  cat(sprintf("\nOptimal step: %d\n", getSOpt(x)))
   # return object invisibly
   invisible(x)
 }

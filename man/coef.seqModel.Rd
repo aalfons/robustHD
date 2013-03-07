@@ -1,7 +1,12 @@
-\name{coef.sparseLTS}
+\name{coef.seqModel}
+\alias{coef.rlars}
+\alias{coef.seqModel}
 \alias{coef.sparseLTS}
-\title{Extract coefficients from sparse LTS regression models}
+\title{Extract coefficients from a sequence of regression models}
 \usage{
+  \method{coef}{seqModel} (object, s = NA, zeros = TRUE,
+    drop = !is.null(s), ...)
+
   \method{coef}{sparseLTS} (object, s = NA,
     fit = c("reweighted", "raw", "both"), zeros = TRUE,
     drop = !is.null(s), ...)
@@ -10,16 +15,19 @@
   \item{object}{the model fit from which to extract
   coefficients.}
 
-  \item{s}{an integer vector giving the indices of the
-  models for which to extract coefficients.  If \code{fit}
-  is \code{"both"}, this can be a list with two components,
-  with the first component giving the indices of the
-  reweighted fits and the second the indices of the raw
-  fits.  The default is to use the optimal model for each
-  of the requested estimators.  Note that the optimal
-  models may not correspond to the same value of the
-  penalty parameter for the reweighted and the raw
-  estimator.}
+  \item{s}{for the \code{"seqModel"} method, an integer
+  vector giving the steps of the submodels for which to
+  extract coefficients (the default is to use the optimal
+  submodel).  For the \code{"sparseLTS"} method, an integer
+  vector giving the indices of the models for which to
+  extract coefficients.  If \code{fit} is \code{"both"},
+  this can be a list with two components, with the first
+  component giving the indices of the reweighted fits and
+  the second the indices of the raw fits.  The default is
+  to use the optimal model for each of the requested
+  estimators.  Note that the optimal models may not
+  correspond to the same value of the penalty parameter for
+  the reweighted and the raw estimator.}
 
   \item{fit}{a character string specifying which
   coefficients to extract. Possible values are
@@ -33,17 +41,20 @@
   (\code{FALSE}).}
 
   \item{drop}{a logical indicating whether to reduce the
-  dimension to a vector in case of only one model.}
+  dimension to a vector in case of only one submodel.}
 
-  \item{\dots}{currently ignored.}
+  \item{\dots}{additional arguments are currently ignored.}
 }
 \value{
   A numeric vector or matrix containing the requested
   regression coefficients.
 }
 \description{
-  Extract coefficients from sparse least trimmed squares
-  regression models.
+  Extract coefficients from a sequence of regression
+  models, such as submodels along a robust least angle
+  regression sequence, or sparse least trimmed squares
+  regression models for a grid of values for the penalty
+  parameter.
 }
 \examples{
 ## generate data
@@ -63,28 +74,31 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## sparse LTS
+
+## robust LARS
 # fit model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
+fitRlars <- rlars(x, y, sMax = 25)
 # extract coefficients
-coef(fit, zeros = FALSE)
-coef(fit, fit = "both", zeros = FALSE)
+coef(fitRlars, zeros = FALSE)
+coef(fitRlars, s = 0:4, zeros = FALSE)
+
 
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # extract coefficients
-coef(fitGrid, zeros = FALSE)
-coef(fitGrid, fit = "both", zeros = FALSE)
-coef(fitGrid, s = NULL, zeros = FALSE)
-coef(fitGrid, fit = "both", s = NULL, zeros = FALSE)
+coef(fitSparseLTS, zeros = FALSE)
+coef(fitSparseLTS, fit = "both", zeros = FALSE)
+coef(fitSparseLTS, s = NULL, zeros = FALSE)
+coef(fitSparseLTS, fit = "both", s = NULL, zeros = FALSE)
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link[stats]{coef}}, \code{\link{sparseLTS}}
+  \code{\link[stats]{coef}}, \code{\link{rlars}},
+  \code{\link{sparseLTS}}
 }
 \keyword{regression}
 

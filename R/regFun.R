@@ -51,9 +51,9 @@ getRegControl <- function(fun) {
   fit
 }
 
-## wrapper function for ltsReg() that does not return original data
-.ltsReg <- function(x, y, model = FALSE, x.ret = FALSE, y.ret = FALSE, ...) {
-  rlm(x, y, model=FALSE, x.ret=FALSE, y.ret=FALSE, ...)
+## wrapper function for ltsReg() that handles constant column for intercept
+.ltsReg <- function(x, y, intercept, ...) {
+  ltsReg(removeIntercept(x), y, intercept=TRUE, ...)
 }
 
 ## wrapper function for rlm() with different default arguments

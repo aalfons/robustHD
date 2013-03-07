@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #include <R.h>
@@ -218,10 +218,10 @@ SEXP R_fastLars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_robust, SEXP R_c,
 		double prob = as<double>(R_prob);
 		double tol = as<double>(R_tol);
 		CorHuberControl corControl(c, prob, tol);
-		active = fastLars(x, y, sMax, corControl, robust, scaleFun, ncores);
+		active = fastLars(x, y, sMax, corControl, robust, scaleFun, ncores) + 1;
 	} else {
 		CorPearsonControl corControl;
-		active = fastLars(x, y, sMax, corControl, false, scaleFun, ncores);
+		active = fastLars(x, y, sMax, corControl, false, scaleFun, ncores) + 1;
 	}
 	// call native C++ function
 	return wrap(active.memptr(), active.memptr() + active.n_elem);

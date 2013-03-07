@@ -1,7 +1,12 @@
-\name{fitted.sparseLTS}
+\name{fitted.seqModel}
+\alias{fitted.rlars}
+\alias{fitted.seqModel}
 \alias{fitted.sparseLTS}
-\title{Extract fitted values from sparse LTS regression models}
+\title{Extract fitted values from a sequence of regression models}
 \usage{
+  \method{fitted}{seqModel} (object, s = NA,
+    drop = !is.null(s), ...)
+
   \method{fitted}{sparseLTS} (object, s = NA,
     fit = c("reweighted", "raw", "both"),
     drop = !is.null(s), ...)
@@ -10,9 +15,13 @@
   \item{object}{the model fit from which to extract fitted
   values.}
 
-  \item{s}{an integer vector giving the indices of the
-  models for which to extract fitted values.  If \code{fit}
-  is \code{"both"}, this can be a list with two components,
+  \item{s}{for the \code{"seqModel"} method, an integer
+  vector giving the steps of the submodels for which to
+  extract the fitted values (the default is to use the
+  optimal submodel).  For the \code{"sparseLTS"} method, an
+  integer vector giving the indices of the models for which
+  to extract fitted values.  If \code{fit} is
+  \code{"both"}, this can be a list with two components,
   with the first component giving the indices of the
   reweighted fits and the second the indices of the raw
   fits.  The default is to use the optimal model for each
@@ -29,17 +38,20 @@
   for the fitted values from both estimators.}
 
   \item{drop}{a logical indicating whether to reduce the
-  dimension to a vector in case of only one model.}
+  dimension to a vector in case of only one step.}
 
-  \item{\dots}{currently ignored.}
+  \item{\dots}{additional arguments are currently ignored.}
 }
 \value{
   A numeric vector or matrix containing the requested
   fitted values.
 }
 \description{
-  Extract fitted values from sparse least trimmed squares
-  regression models.
+  Extract fitted values from a sequence of regression
+  models, such as submodels along a robust least angle
+  regression sequence, or sparse least trimmed squares
+  regression models for a grid of values for the penalty
+  parameter.
 }
 \examples{
 ## generate data
@@ -59,28 +71,30 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## sparse LTS
+
+## robust LARS
 # fit model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-# extract fitted values
-fitted(fit)
-fitted(fit, fit = "both")
+fitRlars <- rlars(x, y, sMax = 25)
+# extract coefficients
+fitted(fitRlars)
+fitted(fitRlars, s = 0:4)
+
 
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTS(x, y, lambda = frac, mode = "fraction")
-# extract fitted values
-fitted(fitGrid)
-fitted(fitGrid, fit = "both")
-fitted(fitGrid, s = NULL)
-fitted(fitGrid, fit = "both", s = NULL)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# extract coefficients
+fitted(fitSparseLTS)
+fitted(fitSparseLTS, fit = "both")
+fitted(fitSparseLTS, s = NULL)
+fitted(fitSparseLTS, fit = "both", s = NULL)
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link[stats:fitted.values]{fitted}},
+  \code{\link[stats]{fitted}}, \code{\link{rlars}},
   \code{\link{sparseLTS}}
 }
 \keyword{regression}

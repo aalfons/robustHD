@@ -21,6 +21,27 @@ getBest.default <- function(x, ...) NULL
 
 getComponent <- function(x, which, ...) UseMethod("getComponent")
 
+getComponent.seqModel <- function(x, component, s = NA, 
+                                  drop = !is.null(s), ...) {
+  # extract component
+  comp <- x[[component]]
+  # check selected steps
+  if(!is.null(s)) {
+    sRange <- range(x$s)  # range of computed steps
+    if(isTRUE(is.na(s))) s <- getSOpt(x)  # defaults to optimal step size
+    else s <- checkSteps(s, sMin=sRange[1], sMax=sRange[2])  # check steps
+  }
+  # extract corresponding parts of the component
+  # the extra check for NULL is necessary if only one submodel along the 
+  # sequence was computed
+  if(!is.null(s)) {
+    if(is.null(dim(comp))) comp <- comp[s - sRange[1] + 1]
+    else comp <- comp[, s - sRange[1] + 1, drop=FALSE]
+  }
+  # drop dimension if requested and return component
+  if(isTRUE(drop)) dropCol(comp) else comp
+}
+
 getComponent.sparseLTS <- function(x, which, s = NA, 
                                    fit = c("reweighted", "raw", "both"), 
                                    drop = !is.null(s), ...) {
@@ -57,12 +78,11 @@ getComponent.sparseLTS <- function(x, which, s = NA,
         s <- checkSteps(s, sMin=1, sMax=sMax)
         if(fit == "both") s <- c(s, sMax+s)
       }
-      if(is.null(dim(comp))) comp <- comp[s]  # extract selected steps
-      else {
-        comp <- comp[, s, drop=FALSE]           # extract selected steps
-        if(isTRUE(drop)) comp <- dropCol(comp)  # drop dimension if requested
-      }
+      # extract selected steps
+      if(is.null(dim(comp))) comp <- comp[s]
+      else comp <- comp[, s, drop=FALSE]
     }
+    if(isTRUE(drop)) comp <- dropCol(comp)  # drop dimension if requested
   } else {
     # extract component
     comp <- switch(fit, reweighted=x[[which]], raw=x[[raw.which]],
@@ -78,25 +98,90 @@ getComponent.sparseLTS <- function(x, which, s = NA,
 }
 
 
-## get residual scale
+#' Extract the residual scale of a robust regression model
+#' 
+#' Extract the robust scale estimate of the residuals from a robust regression 
+#' model.
+#' 
+#' Methods are implemented for models of class \code{"lmrob"} (see 
+#' \code{\link[robustbase]{lmrob}}), \code{"lts"} (see 
+#' \code{\link[robustbase]{ltsReg}}), \code{"rlm"} (see 
+#' \code{\link[MASS]{rlm}}), \code{"seqModel"} (see \code{\link{rlars}}) and 
+#' \code{"sparseLTS"} (see \code{\link{sparseLTS}}).  The default method 
+#' computes the MAD of the residuals.
+#' 
+#' @param x  the model fit from which to extract the robust residual scale 
+#' estimate.
+#' @param s  an integer vector giving the indices of the models from which 
+#' to extract the robust residual scale estimate.  If \code{fit} is 
+#' \code{"both"}, this can be a list with two components, with the first 
+#' component giving the indices of the reweighted fits and the second the 
+#' indices of the raw fits.  The default is to use the optimal model for 
+#' each of the requested estimators.  Note that the optimal models may not 
+#' correspond to the same value of the penalty parameter for the reweighted 
+#' and the raw estimator.
+#' @param fit  a character string specifying from which fit to extract the 
+#' robust residual scale estimate.  Possible values are \code{"reweighted"} 
+#' (the default) for the residual scale of the reweighted fit, \code{"raw"} for 
+#' the residual scale of the raw fit, or \code{"both"} for the residual scale 
+#' of both fits.
+#' @param \dots  additional arguments to be passed down to methods.
+#' 
+#' @return  
+#' A numeric vector or matrix giving the robust residual scale estimates for 
+#' the requested model fits.
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link[=AIC.seqModel]{AIC}}, \code{\link[robustbase]{lmrob}}, 
+#' \code{\link[robustbase]{ltsReg}}, \code{\link[MASS]{rlm}}, 
+#' \code{\link{rlars}}, \code{\link{sparseLTS}}
+#' 
+#' @examples 
+#' data("coleman")
+#' fit <- lmrob(Y ~ ., data=coleman)
+#' getScale(fit)
+#' 
+#' @keywords regression
+#' 
+#' @import stats
+#' @export
 
 getScale <- function(x, ...) UseMethod("getScale")
 
+#' @S3method getScale default
 getScale.default <- function(x, ...) mad(residuals(x))  # use MAD by default
 
+#' @S3method getScale lmrob
 getScale.lmrob <- function(x, ...) x$scale
 
+#' @S3method getScale lts
 getScale.lts <- function(x, ...) x$scale
 
+#' @S3method getScale rlm
 getScale.rlm <- function(x, ...) x$s
 
-getScale.sparseLTS <- function(x, s = NA, fit = "reweighted", ...) {
+#' @S3method getScale seqModel
+getScale.seqModel <- function(x, ...) x$scale
+
+#' @rdname getScale
+#' @method getScale sparseLTS
+#' @export
+getScale.sparseLTS <- function(x, s = NA, 
+                               fit = c("reweighted", "raw", "both"), 
+                               ...) {
   getComponent(x, "scale", s=s, fit=fit, ...)
 }
 
 ## get optimal step
 
 getSOpt <- function(x, ...) UseMethod("getSOpt")
+
+getSOpt.seqModel <- function(x, ...) {
+  sOpt <- getBest(x$crit)
+  if(!is.null(sOpt)) sOpt <- sOpt + x$s[1] - 1
+  sOpt
+}
 
 getSOpt.sparseLTS <- function(x, fit = "reweighted", ...) {
   sOpt <- getBest(x$crit)

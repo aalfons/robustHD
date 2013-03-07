@@ -17,6 +17,27 @@ addIntercept <- function(x, check = FALSE) {
   } else x
 }
 
+## check the number of predictors to sequence for robust and groupwise LARS
+## sequence predictors as long as there are twice as many observations
+checkSMax <- function(sMax, n, p, robust = TRUE) {
+  sMax <- rep(as.integer(sMax), length.out=1)
+  bound <- min(p, if(robust) floor(n/2) else n-1)
+  if(!isTRUE(is.finite(sMax)) || sMax > bound) sMax <- bound
+  sMax
+}
+
+## check the steps along the sequence for robust and groupwise LARS
+## sequence predictors as long as there are twice as many observations
+checkSRange <- function(s, sMax = NA) {
+  s <- as.integer(s)
+  if(length(s) == 0) s <- c(0, sMax)
+  else if(length(s) == 1) s <- c(0, s)
+  else s <- s[1:2]
+  if(!isTRUE(is.finite(s[1]))) s[1] <- 0
+  if(!isTRUE(is.finite(s[2]))) s[2] <- sMax
+  s
+}
+
 ## check steps for coef(), fitted(), residuals(), predict(), ... methods
 checkSteps <- function(s, sMin, sMax) {
   if(!is.numeric(s) || length(s) == 0 || any(!is.finite(s)) || 
@@ -80,4 +101,31 @@ partialOrder <- function(x, h) {
   # call C++ function
   callBackend <- getBackend()
   callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h))
+}
+
+## get pca scores corresponding to eigenvalues larger than 1
+pcaScores <- function(x, kMax) {
+  # check maximum number of principal components
+  d <- dim(x)
+  kMax <- rep(kMax, length.out=1)
+  if(!isTRUE(is.finite(kMax)) || !isTRUE(kMax <= min(d[2], d[1]-1))) {
+    kMax <- min(d[2], d[1]-1)
+  }
+  # fit PCA and extract scores
+  pca <- PCAgrid(x, k=kMax, scores=TRUE)
+  sdev <- pca$sdev
+  k <- which.min(sdev[sdev >= 1])
+  pca$scores[, seq_len(k), drop=FALSE]
+}
+
+## remove intercept column from design matrix
+removeIntercept <- function(x, pos) {
+  haveVector <- is.null(dim(x))
+  if(missing(pos)) {
+    names <- if(haveVector) names(x) else colnames(x)
+    pos <- match("(Intercept)", names, nomatch = 0)
+  }
+  if(pos > 0) {
+    if(haveVector) x[-pos] else x[, -pos, drop=FALSE]
+  } else x
 }
