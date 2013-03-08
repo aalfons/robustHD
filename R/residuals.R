@@ -50,7 +50,7 @@
 residuals.seqModel <- function(object, s = NA, standardized = FALSE, 
                                drop = !is.null(s), ...) {
   ## extract residuals
-  residuals <- getComponent(object, "residuals", s=s, drop=drop, ...)
+  residuals <- getComponent(object, "residuals", s=s, drop=FALSE, ...)
   ## if requested, standardize residuals
   if(isTRUE(standardized)) {
     if(object$robust) {
@@ -59,10 +59,48 @@ residuals.seqModel <- function(object, s = NA, standardized = FALSE,
       # standardize selected residuals
       if(is.null(dim(residuals))) residuals <- residuals / scale
       else residuals <- sweep(residuals, 2, scale, "/", check.margin=FALSE)
-    } else stop("not implemented yet")
+    } else {
+      # extract predictor matrix
+      terms <- delete.response(object$terms)  # extract terms for model matrix
+      if(is.null(x <- object$x)) {
+        x <- try(model.matrix(terms), silent=TRUE)
+        if(inherits(x, "try-error")) stop("model data not available")
+      }
+      # extract information on sequence and steps
+      active <- object$active
+      s <- getComponent(object, "s", s=s, ...)
+      assign <- object$assign
+      if(is.null(assign)) {
+        # compute degrees of freedom of the submodels along sequence
+        df <- s + 1  # account for intercept
+        # sequenced variables (including intercept)
+        sequenced <- c(1, active[seq_len(max(s))] + 1)
+      } else {
+        # list of column indices for each predictor group
+        assign <- split(seq_along(assign), assign)
+        # compute degrees of freedom of the submodels along sequence
+        firstActive <- active[seq_len(max(s))]
+        p <- sapply(assign[firstActive], length) # number of variables per group
+        df <- cumsum(c(1, unname(p)))[s+1]       # degrees of freedom
+        # groupwise sequenced variables (including intercept)
+        sequenced <- c(1, unlist(assign[firstActive], use.names=FALSE) + 1)
+      }
+      # compute the diagonal of the hat matrix for the selected steps
+      hii <- sapply(df, function(k) {
+        xk <- x[, sequenced[seq_len(k)], drop=FALSE]
+        diag(xk %*% solve(t(xk) %*% xk) %*% t(xk))
+      })
+      # compute residual scale
+      n <- nrow(residuals)
+      scale <- sapply(seq_along(s), function(j) {
+        sqrt((1 - hii[, j]) * sum(residuals[, j]^2) / (n - df[j]))
+      })
+      # standardize residuals
+      residuals <- residuals / scale
+    }
   }
-  ## return residuals
-  residuals
+  # drop dimension if requested and return residuals
+  if(isTRUE(drop)) dropCol(residuals) else residuals
 }
 
 

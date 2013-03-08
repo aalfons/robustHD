@@ -78,7 +78,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 fitRlars <- rlars(x, y, sMax = 25)
 # extract coefficients
 residuals(fitRlars)
-residuals(fitRlars, s = 0:4)
+residuals(fitRlars, s = 1:5)
 
 
 ## sparse LTS over a grid of values for lambda

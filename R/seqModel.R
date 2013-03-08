@@ -14,7 +14,7 @@ seqModel <- function(x, y, active, sMin = 0, sMax = NA, assign = NULL,
   n <- length(y)
   haveAssign <- !is.null(assign)
   if(haveAssign && !is.list(assign)) {
-    # column indices for each block in list form
+    # list of column indices for each predictor group
     assign <- split(seq_len(length(assign)), assign)
   }
   if(robust) callRegFun <- getCallFun(regArgs)
@@ -31,7 +31,7 @@ seqModel <- function(x, y, active, sMin = 0, sMax = NA, assign = NULL,
     s <- 0:sMax
     # compute degrees of freedom of the submodels along sequence
     firstActive <- active[seq_len(sMax)]
-    p <- sapply(assign[firstActive], length)  # number of variables in each block
+    p <- sapply(assign[firstActive], length)  # number of variables per group
     df <- cumsum(c(1, unname(p)))             # degrees of freedom
     # only fit submodels while the degrees of freedom does not become 
     # larger than the requested maximum
