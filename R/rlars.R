@@ -147,9 +147,12 @@
 #' selection based on least angle regression. \emph{Journal of the American 
 #' Statistical Association}, \bold{102}(480), 1289--1299.
 #' 
-#' @seealso \code{\link{coef.seqModel}}, \code{\link{fitted.seqModel}}, 
-#' \code{\link{residuals.seqModel}}, \code{\link{predict.seqModel}}, 
-#' \code{\link{plot.seqModel}}
+#' @seealso \code{\link[=coef.seqModel]{coef}}, 
+#' \code{\link[=fitted.seqModel]{fitted}}, 
+#' \code{\link[=plot.seqModel]{plot}}, 
+#' \code{\link[=predict.seqModel]{predict}}, 
+#' \code{\link[=residuals.seqModel]{residuals}}, 
+#' \code{\link[robustbase]{lmrob}}
 #' 
 #' @example inst/doc/examples/example-rlars.R
 #' 

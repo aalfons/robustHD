@@ -247,7 +247,7 @@ y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit robust LARS model
-rlars(x, y)
+rlars(x, y, sMax = 10)
 }
 \author{
   Andreas Alfons, based on code by Jafar A. Khan, Stefan
@@ -260,11 +260,12 @@ rlars(x, y)
   \bold{102}(480), 1289--1299.
 }
 \seealso{
-  \code{\link{coef.seqModel}},
-  \code{\link{fitted.seqModel}},
-  \code{\link{residuals.seqModel}},
-  \code{\link{predict.seqModel}},
-  \code{\link{plot.seqModel}}
+  \code{\link[=coef.seqModel]{coef}},
+  \code{\link[=fitted.seqModel]{fitted}},
+  \code{\link[=plot.seqModel]{plot}},
+  \code{\link[=predict.seqModel]{predict}},
+  \code{\link[=residuals.seqModel]{residuals}},
+  \code{\link[robustbase]{lmrob}}
 }
 \keyword{regression}
 \keyword{robust}

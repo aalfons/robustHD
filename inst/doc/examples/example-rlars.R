@@ -16,4 +16,4 @@ y <- c(x %*% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit robust LARS model
-rlars(x, y)
+rlars(x, y, sMax = 10)

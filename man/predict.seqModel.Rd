@@ -82,7 +82,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 
 ## robust LARS
 # fit model
-fitRlars <- rlars(x, y, sMax = 25)
+fitRlars <- rlars(x, y, sMax = 10)
 # extract coefficients
 predict(fitRlars)
 predict(fitRlars, s = 1:5)

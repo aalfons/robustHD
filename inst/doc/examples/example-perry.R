@@ -15,6 +15,12 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x %*% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
+
+## fit and evaluate robust LARS model
+fitRlars <- rlars(x, y, sMax = 10)
+perry(fitRlars)
+
 ## fit and evaluate sparse LTS model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-repCV(fit)
+frac <- seq(0.25, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+perry(fitSparseLTS)

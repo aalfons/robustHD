@@ -325,13 +325,12 @@ sparseLTS(x, y, lambda = frac, mode = "fraction")
   Andreas Alfons
 }
 \seealso{
-  \code{\link{coef.sparseLTS}},
-  \code{\link{fitted.sparseLTS}},
-  \code{\link{plot.sparseLTS}},
-  \code{\link{predict.sparseLTS}},
-  \code{\link{residuals.sparseLTS}},
-  \code{\link{wt.sparseLTS}},
-  \code{\link[robustbase]{ltsReg}}
+  \code{\link[=coef.sparseLTS]{coef}},
+  \code{\link[=fitted.sparseLTS]{fitted}},
+  \code{\link[=plot.sparseLTS]{plot}},
+  \code{\link[=predict.sparseLTS]{predict}},
+  \code{\link[=residuals.sparseLTS]{residuals}},
+  \code{\link{wt}}, \code{\link[robustbase]{ltsReg}}
 }
 \keyword{regression}
 \keyword{robust}
