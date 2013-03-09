@@ -21,7 +21,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 fitRlars <- rlars(x, y, sMax = 10)
 # create plots
 plot(fitRlars, method = "coef")
-# plot(fitRlars, method = "crit")
+plot(fitRlars, method = "crit")
 # plot(fitRlars, method = "diagnostic")
 
 
@@ -31,5 +31,5 @@ frac <- seq(0.25, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # create plots
 plot(fitSparseLTS, method = "coef")
-# plot(fitSparseLTS, method = "crit")
+plot(fitSparseLTS, method = "crit")
 # plot(fitSparseLTS, method = "diagnostic")

@@ -5,10 +5,10 @@
 
 #' Plot a sequence of regression models
 #' 
-#' Produce a plot of the coefficients or values of the optimality criterion for 
-#' a sequence of regression models, such as submodels along a robust least 
-#' angle regression sequence, or sparse least trimmed squares regression models 
-#' for a grid of values for the penalty parameter.
+#' Produce a plot of the coefficients, the values of the optimality criterion, 
+#' or diagnostic plots for a sequence of regression models, such as submodels 
+#' along a robust least angle regression sequence, or sparse least trimmed 
+#' squares regression models for a grid of values for the penalty parameter.
 #' 
 #' @method plot seqModel
 #' @aliases plot.rlars
@@ -223,9 +223,9 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
 #' corresponding coefficient values from the last step (i.e., the number of 
 #' blank characters to be prepended to the label).
 #' @param \dots  for the generic function, additional arguments to be passed 
-#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTSGrid"} 
-#' methods, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
+#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTS"} methods, 
+#' additional arguments to be passed down to \code{\link[ggplot2]{geom_line}} 
+#' and \code{\link[ggplot2]{geom_point}}.
 #' 
 #' @return  
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
@@ -233,9 +233,9 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
 #' @author Andreas Alfons
 #' 
 #' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}}, 
-#' \code{\link{sparseLTSGrid}}
+#' \code{\link{sparseLTS}}
 #' 
-#' @example inst/doc/examples/example-coefPlot.rlars.R
+#' @example inst/doc/examples/example-coefPlot.R
 #' 
 #' @keywords hplot
 #' 
@@ -332,3 +332,108 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 }
 
 # ----------------------
+
+#' Optimality criterion plot of a sequence of regression models
+#' 
+#' Produce a plot of the values of the optimality criterion for a sequence of 
+#' regression models, such as submodels along a robust least angle regression 
+#' sequence, or sparse least trimmed squares regression models for a grid of 
+#' values for the penalty parameter.
+#' 
+#' @aliases critPlot.rlars
+#' 
+#' @param x  the model fit to be plotted.
+#' @param fit  a character string specifying for which estimator to produce the 
+#' plot.  Possible values are \code{"reweighted"} (the default) for the 
+#' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both 
+#' estimators.
+#' @param size  a numeric vector of length two giving the line width and the 
+#' point size, respectively.
+#' @param \dots  for the generic function, additional arguments to be passed 
+#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTS"} methods, 
+#' additional arguments to be passed down to \code{\link[ggplot2]{geom_line}} 
+#' and \code{\link[ggplot2]{geom_point}}.  
+#' 
+#' @return  
+#' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}}, 
+#' \code{\link{sparseLTS}}
+#' 
+#' @example inst/doc/examples/example-critPlot.R
+#' 
+#' @keywords hplot
+#' 
+#' @export
+
+critPlot <- function(x, ...) UseMethod("critPlot")
+
+
+#' @rdname critPlot
+#' @method critPlot seqModel
+#' @export
+
+critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
+  ## extract information from object
+  crit <- x$crit
+  if(is.null(crit)) stop("optimality criterion data not available")
+  ## construct data frame for ggplot2 graphics
+  critData <- fortify(crit, data=data.frame(step=x$s))
+  ## call workhorse function
+  ggCritPlot(critData, abscissa="step", size=size, ...)
+}
+
+
+#' @rdname critPlot
+#' @method critPlot sparseLTS
+#' @export
+
+critPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
+                               size = c(0.5, 2), ...) {
+  ## initializations
+  crit <- x$crit
+  if(is.null(crit)) stop("optimality criterion data not available")
+  fit <- match.arg(fit)
+  select <- if(fit == "both") NULL else fit
+  ## construct data frame for ggplot2 graphics
+  critData <- fortify(crit, data=data.frame(lambda=x$lambda), select=select)
+  ## call workhorse function
+  p <- ggCritPlot(critData, abscissa="lambda", size=size, ...)
+  if(fit == "both") {
+    # split plot into different panels
+    p <- p + facet_grid(. ~ fit)
+  }
+  p
+}
+
+
+## workhorse function
+ggCritPlot <- function(data, abscissa = c("index", "step", "lambda"), 
+                       size = c(0.5, 2), main = NULL, xlab, ylab, ..., 
+                       mapping) {
+  # initializations
+  abscissa <- match.arg(abscissa)
+  crit <- setdiff(names(data), c("fit", "index", "step", "lambda"))
+  size <- as.numeric(size)
+  size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+  size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+  # define default axis labels
+  if(missing(xlab)) {
+    xlab <- switch(abscissa, index="Index", step="Step", lambda="lambda")
+  }
+  if(missing(ylab)) ylab <- crit
+  # define aesthetic mapping for plotting coefficients
+  mapping <- aes_string(x=abscissa, y=crit)
+  # draw minor grid lines for each step, but leave 
+  # major grid lines and tick marks pretty
+  gridX <- unique(data[, abscissa])
+  # create plot
+  scale_x <- if(abscissa == "lambda") scale_x_reverse else scale_x_continuous
+  ggplot(data, mapping) + 
+    geom_line(size=size[1], ...) + 
+    geom_point(size=size[2], ...) + 
+    scale_x(minor_breaks=gridX) + 
+    labs(title=main, x=xlab, y=ylab)
+}

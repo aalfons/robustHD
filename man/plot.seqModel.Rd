@@ -28,11 +28,12 @@
   \code{\link[ggplot2]{ggplot}}).
 }
 \description{
-  Produce a plot of the coefficients or values of the
-  optimality criterion for a sequence of regression models,
-  such as submodels along a robust least angle regression
-  sequence, or sparse least trimmed squares regression
-  models for a grid of values for the penalty parameter.
+  Produce a plot of the coefficients, the values of the
+  optimality criterion, or diagnostic plots for a sequence
+  of regression models, such as submodels along a robust
+  least angle regression sequence, or sparse least trimmed
+  squares regression models for a grid of values for the
+  penalty parameter.
 }
 \examples{
 ## generate data
@@ -58,7 +59,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 fitRlars <- rlars(x, y, sMax = 10)
 # create plots
 plot(fitRlars, method = "coef")
-# plot(fitRlars, method = "crit")
+plot(fitRlars, method = "crit")
 # plot(fitRlars, method = "diagnostic")
 
 
@@ -68,7 +69,7 @@ frac <- seq(0.25, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # create plots
 plot(fitSparseLTS, method = "coef")
-# plot(fitSparseLTS, method = "crit")
+plot(fitSparseLTS, method = "crit")
 # plot(fitSparseLTS, method = "diagnostic")
 }
 \author{

@@ -53,7 +53,7 @@
 
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
-  \code{"seqModel"} and \code{"sparseLTSGrid"} methods,
+  \code{"seqModel"} and \code{"sparseLTS"} methods,
   additional arguments to be passed down to
   \code{\link[ggplot2]{geom_line}} and
   \code{\link[ggplot2]{geom_point}}.}
@@ -72,31 +72,42 @@
 \examples{
 ## generate data
 # example is not high-dimensional to keep computation time low
+library("mvtnorm")
 set.seed(1234)  # for reproducibility
 n <- 100  # number of observations
 p <- 25   # number of variables
 beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
 sigma <- 0.5      # controls signal-to-noise ratio
 epsilon <- 0.1    # contamination level
-x <- replicate(p, rnorm(n))     # predictor matrix
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
 e <- rnorm(n)                   # error terms
 i <- 1:ceiling(epsilon*n)       # observations to be contaminated
 e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## fit robust LARS model
-fit <- rlars(x, y)
 
-## create plot
-coefPlot(fit, zeros = FALSE)
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# create plot
+coefPlot(fitRlars)
+
+
+## sparse LTS over a grid of values for lambda
+# fit model
+frac <- seq(0.25, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# create plot
+coefPlot(fitSparseLTS)
 }
 \author{
   Andreas Alfons
 }
 \seealso{
   \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}},
-  \code{\link{sparseLTSGrid}}
+  \code{\link{sparseLTS}}
 }
 \keyword{hplot}
 
