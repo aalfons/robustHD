@@ -73,7 +73,7 @@ x[i,] <- x[i,] + 5              # bad leverage points
 fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
 # extract outlier weights
 wt(fit)
-wt(fit, fit = "both")
+head(wt(fit, fit = "both"))
 
 ## sparse LTS over a grid of values for lambda
 # fit model
@@ -81,9 +81,9 @@ frac <- seq(0.25, 0.05, by = -0.05)
 fitGrid <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # extract outlier weights
 wt(fitGrid)
-wt(fitGrid, fit = "both")
-wt(fitGrid, s = NULL)
-wt(fitGrid, fit = "both", s = NULL)
+head(wt(fitGrid, fit = "both"))
+head(wt(fitGrid, s = NULL))
+head(wt(fitGrid, fit = "both", s = NULL))
 }
 \author{
   Andreas Alfons

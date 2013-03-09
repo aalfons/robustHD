@@ -173,6 +173,7 @@ getScale.sparseLTS <- function(x, s = NA,
   getComponent(x, "scale", s=s, fit=fit, ...)
 }
 
+
 ## get optimal step
 
 getSOpt <- function(x, ...) UseMethod("getSOpt")

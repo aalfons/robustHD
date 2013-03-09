@@ -19,17 +19,17 @@ x[i,] <- x[i,] + 5              # bad leverage points
 ## robust LARS
 # fit model
 fitRlars <- rlars(x, y, sMax = 10)
-# extract coefficients
+# extract fitted values
 fitted(fitRlars)
-fitted(fitRlars, s = 1:5)
+head(fitted(fitRlars, s = 1:5))
 
 
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
-# extract coefficients
+# extract fitted values
 fitted(fitSparseLTS)
-fitted(fitSparseLTS, fit = "both")
-fitted(fitSparseLTS, s = NULL)
-fitted(fitSparseLTS, fit = "both", s = NULL)
+head(fitted(fitSparseLTS, fit = "both"))
+head(fitted(fitSparseLTS, s = NULL))
+head(fitted(fitSparseLTS, fit = "both", s = NULL))

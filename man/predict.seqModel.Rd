@@ -83,20 +83,20 @@ x[i,] <- x[i,] + 5              # bad leverage points
 ## robust LARS
 # fit model
 fitRlars <- rlars(x, y, sMax = 10)
-# extract coefficients
+# compute fitted values via predict method
 predict(fitRlars)
-predict(fitRlars, s = 1:5)
+head(predict(fitRlars, s = 1:5))
 
 
 ## sparse LTS over a grid of values for lambda
 # fit model
 frac <- seq(0.25, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
-# extract coefficients
+# compute fitted values via predict method
 predict(fitSparseLTS)
-predict(fitSparseLTS, fit = "both")
-predict(fitSparseLTS, s = NULL)
-predict(fitSparseLTS, fit = "both", s = NULL)
+head(predict(fitSparseLTS, fit = "both"))
+head(predict(fitSparseLTS, s = NULL))
+head(predict(fitSparseLTS, fit = "both", s = NULL))
 }
 \author{
   Andreas Alfons

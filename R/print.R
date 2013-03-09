@@ -3,7 +3,6 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-
 #' @S3method print bicSelect
 print.bicSelect <- function(x, best = TRUE, ...) {
   # print BIC values
@@ -23,6 +22,15 @@ print.bicSelect <- function(x, best = TRUE, ...) {
   invisible(x)
 }
 
+#' @S3method print fitSelect
+print.fitSelect <- function(x, ...) {
+  # indices of the best reweighted and raw fit
+  cat("\nIndex of best model:\n")
+  print(x$best, ...)
+  # return object invisibly
+  invisible(x)
+}
+
 #' @S3method print seqModel
 print.seqModel <- function(x, zeros = FALSE, ...) {
   # print function call
@@ -37,10 +45,15 @@ print.seqModel <- function(x, zeros = FALSE, ...) {
   cat("\nSequence of moves:\n")
   print(active, ...)
   # print coefficients of optimal submodel
-  cat("\nCoefficients of optimal submodel:\n")
+  sOpt <- getSOpt(x)
+  if(is.null(sOpt)) {
+    sOpt <- x$s  # only one step
+    text <- c("Coefficients:", "Step:")
+  } else text <- c("Coefficients of optimal submodel:", "Optimal step:")
+  cat("\n", text[1], "\n", sep="")
   print(coef(x, zeros=zeros), ...)
   # print index of optimal submodel
-  cat(sprintf("\nOptimal step: %d\n", getSOpt(x)))
+  cat("\n", text[2], sprintf(" %d\n", sOpt), sep="")
   # return object invisibly
   invisible(x)
 }

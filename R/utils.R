@@ -61,6 +61,26 @@ copyNames <- function(from, to, which = "col", target = "row") {
   to
 }
 
+## utility function to get default labels for plot
+defaultLabels <- function(x) UseMethod("defaultLabels")
+
+defaultLabels.seqModel <- defaultLabels.sparseLTS <- function(x) {
+  as.character(seq_along(removeIntercept(coef(x))))
+}
+
+defaultLabels.grplars <- function(x) {
+  assign <- x$assign
+  labels <- split(as.character(assign), assign)
+  p <- sapply(labels, length)  # number of variables per group
+  append <- which(p > 1)
+  labels[append] <- mapply(function(l, p) paste(l, seq_len(p), sep="."), 
+                           labels[append], p[append], SIMPLIFY=FALSE)
+  unsplit(labels, assign)
+}
+
+## utility function to get default main plot title
+defaultMain <- function() "Coefficient path" 
+
 ## drop dimension in case of matrix with one column
 dropCol <- function(x) {
   d <- dim(x)
