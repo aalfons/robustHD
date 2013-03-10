@@ -17,6 +17,16 @@ addIntercept <- function(x, check = FALSE) {
   } else x
 }
 
+# ## backtransform regression coefficients to original scale (including intercept)
+# backtransform <- function(beta, muY, sigmaY, mu, sigma) {
+#   apply(beta, 2, 
+#         function(b) {
+#           b <- b * sigmaY / sigma
+#           a <- muY - sum(b * mu)  # intercept
+#           c("(Intercept)"=a, b)
+#         })
+# }
+
 ## check the number of predictors to sequence for robust and groupwise LARS
 ## sequence predictors as long as there are twice as many observations
 checkSMax <- function(sMax, n, p, robust = TRUE) {
@@ -94,6 +104,15 @@ dropCol <- function(x) {
   } else drop(x)
 }
 
+# ## find argument names of functions
+# findArgNames <- function(..., removeDots = TRUE) {
+#   argNames <- unique(unlist(lapply(list(...), function(f) names(formals(f)))))
+#   if(removeDots) {
+#     argNames <- setdiff(argNames, "...")
+#   }
+#   argNames
+# }
+
 ## find indices of h smallest observations
 findSmallest <- function(x, h) {
   # call C++ function
@@ -123,6 +142,13 @@ partialOrder <- function(x, h) {
   callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h))
 }
 
+# ## find indices of h smallest observations
+# partialSort <- function(x, h) {
+#   # call C++ function
+#   callBackend <- getBackend()
+#   callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
+# }
+
 ## get pca scores corresponding to eigenvalues larger than 1
 pcaScores <- function(x, kMax) {
   # check maximum number of principal components
@@ -149,3 +175,9 @@ removeIntercept <- function(x, pos) {
     if(haveVector) x[-pos] else x[, -pos, drop=FALSE]
   } else x
 }
+
+# ## prepend something to column names of a matrix
+# prependColnames <- function(x, prefix) {
+#   colnames(x) <- paste(prefix, colnames(x), sep=".")
+#   x
+# }

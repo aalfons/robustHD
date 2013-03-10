@@ -10,6 +10,9 @@ getBest <- function(x, ...) UseMethod("getBest")
 # get index of final model according to BIC
 getBest.bicSelect <- function(x, ...) x$best
 
+# get index of best reweighted and raw fit
+getBest.fitSelect <- function(x, ...) x$best
+
 # return NULL by default
 getBest.default <- function(x, ...) NULL
 
@@ -25,18 +28,17 @@ getComponent.seqModel <- function(x, component, s = NA,
                                   drop = !is.null(s), ...) {
   # extract component
   comp <- x[[component]]
-  # check selected steps
-  if(!is.null(s)) {
-    sRange <- range(x$s)  # range of computed steps
-    if(isTRUE(is.na(s))) s <- getSOpt(x)  # defaults to optimal step size
-    else s <- checkSteps(s, sMin=sRange[1], sMax=sRange[2])  # check steps
-  }
-  # extract corresponding parts of the component
-  # the extra check for NULL is necessary if only one submodel along the 
-  # sequence was computed
-  if(!is.null(s)) {
-    if(is.null(dim(comp))) comp <- comp[s - sRange[1] + 1]
-    else comp <- comp[, s - sRange[1] + 1, drop=FALSE]
+  # check selected steps and extract corresponding parts of the component
+  steps <- x$s  # computed steps
+  if(length(steps) > 1) {
+    if(!is.null(s)) {
+      # check selected steps
+      if(isTRUE(is.na(s))) s <- getSOpt(x)  # defaults to optimal step
+      else s <- checkSteps(s, sMin=steps[1], sMax=steps[length(steps)])
+      # extract corresponding parts of the component
+      if(is.null(dim(comp))) comp <- comp[s - steps[1] + 1]
+      else comp <- comp[, s - steps[1] + 1, drop=FALSE]
+    }
   }
   # drop dimension if requested and return component
   if(isTRUE(drop)) dropCol(comp) else comp
@@ -67,7 +69,7 @@ getComponent.sparseLTS <- function(x, which, s = NA,
     # check selected steps and extract corresponding parts of the component
     if(!is.null(s)) {
       if(isTRUE(is.na(s))) {
-        s <- getSOpt(x, fit=fit)  # optimal step size as default
+        s <- getSOpt(x, fit=fit)  # defaults to optimal step
         if(fit == "both") s[2] <- sMax + s[2]
       } else if(fit == "both" && is.list(s)) {
         # list of steps for each fit

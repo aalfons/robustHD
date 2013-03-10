@@ -1,0 +1,132 @@
+\name{fortify.seqModel}
+\alias{fortify.rlars}
+\alias{fortify.seqModel}
+\alias{fortify.sparseLTS}
+\title{Convert a sequence of regression models into a data frame for plotting}
+\usage{
+  \method{fortify}{seqModel} (model, data, s = NA, ...)
+
+  \method{fortify}{sparseLTS} (model, data, s = NA,
+    fit = c("reweighted", "raw", "both"), ...)
+}
+\arguments{
+  \item{model}{the model fit to be converted.}
+
+  \item{data}{currently ignored.}
+
+  \item{s}{for the \code{"seqModel"} method, an integer
+  vector giving the steps of the submodels to be converted
+  (the default is to use the optimal submodel).  For the
+  \code{"sparseLTS"} method, an integer vector giving the
+  indices of the models to be converted (the default is to
+  use the optimal model for each of the requested fits).}
+
+  \item{fit}{a character string specifying which fit to
+  convert.  Possible values are \code{"reweighted"} (the
+  default) to convert the reweighted fit, \code{"raw"} to
+  convert the raw fit, or \code{"both"} to convert both
+  fits.}
+
+  \item{\dots}{currently ignored.}
+}
+\value{
+  A data frame containing the columns listed below, as well
+  as additional information stored in the attributes
+  \code{"qqLine"} (intercepts and slopes of the respective
+  reference lines to be displayed in residual Q-Q plots),
+  \code{"q"} (quantiles of the Mahalanobis distribution
+  used as cutoff points for detecting leverage points), and
+  \code{"facets"} (default faceting formula for the
+  diagnostic plots).
+
+  \item{step}{the steps (for the \code{"seqModel"} method)
+  or indices (for the \code{"sparseLTS"} method) of the
+  models (only returned if more than one model is
+  requested).}
+
+  \item{fit}{the model fits (only returned if both the
+  reweighted and raw fit are requested in the
+  \code{"sparseLTS"} method).}
+
+  \item{index}{the indices of the observations.}
+
+  \item{fitted}{the fitted values.}
+
+  \item{residual}{the standardized residuals.}
+
+  \item{theoretical}{the corresponding theoretical
+  quantiles from the standard normal distribution.}
+
+  \item{qqd}{the absolute distances from a reference line
+  through the first and third sample and theoretical
+  quartiles.}
+
+  \item{rd}{the robust Mahalanobis distances computed via
+  the MCD (see \code{\link[robustbase]{covMcd}}).}
+
+  \item{xyd}{the pairwise maxima of the absolute values of
+  the standardized residuals and the robust Mahalanobis
+  distances, divided by the respective other outlier
+  detection cutoff point.}
+
+  \item{weight}{the weights indicating regression
+  outliers.}
+
+  \item{leverage}{logicals indicating leverage points
+  (i.e., outliers in the predictor space).}
+
+  \item{classification}{a factor with levels
+  \code{"outlier"} (regression outliers) and \code{"good"}
+  (data points following the model).}
+}
+\description{
+  Supplement the fitted values and residuals of a sequence
+  of regression models (such as robust least angle
+  regression models or sparse least trimmed squares
+  regression models) with other useful information for
+  diagnostic plots.
+}
+\examples{
+## generate data
+# example is not high-dimensional to keep computation time low
+library("mvtnorm")
+set.seed(1234)  # for reproducibility
+n <- 100  # number of observations
+p <- 25   # number of variables
+beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
+sigma <- 0.5      # controls signal-to-noise ratio
+epsilon <- 0.1    # contamination level
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
+e <- rnorm(n)                   # error terms
+i <- 1:ceiling(epsilon*n)       # observations to be contaminated
+e[i] <- e[i] + 5                # vertical outliers
+y <- c(x \%*\% beta + sigma * e)  # response
+x[i,] <- x[i,] + 5              # bad leverage points
+
+
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# convert to data for plotting
+head(fortify(fitRlars))
+
+
+## sparse LTS over a grid of values for lambda
+# fit model
+frac <- seq(0.25, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# convert to data for plotting
+head(fortify(fitSparseLTS))
+head(fortify(fitSparseLTS, fit = "both"))
+}
+\author{
+  Andreas Alfons
+}
+\seealso{
+  \code{\link[ggplot2]{fortify}},
+  \code{\link{diagnosticPlot}}, \code{\link{sparseLTS}},
+  \code{\link{sparseLTS}}
+}
+\keyword{utilities}
+

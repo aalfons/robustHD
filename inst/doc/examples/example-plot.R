@@ -22,7 +22,7 @@ fitRlars <- rlars(x, y, sMax = 10)
 # create plots
 plot(fitRlars, method = "coef")
 plot(fitRlars, method = "crit")
-# plot(fitRlars, method = "diagnostic")
+plot(fitRlars, method = "diagnostic")
 
 
 ## sparse LTS over a grid of values for lambda
@@ -32,4 +32,4 @@ fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # create plots
 plot(fitSparseLTS, method = "coef")
 plot(fitSparseLTS, method = "crit")
-# plot(fitSparseLTS, method = "diagnostic")
+plot(fitSparseLTS, method = "diagnostic")

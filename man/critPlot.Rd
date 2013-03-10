@@ -75,6 +75,7 @@ frac <- seq(0.25, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # create plot
 critPlot(fitSparseLTS)
+critPlot(fitSparseLTS, fit = "both")
 }
 \author{
   Andreas Alfons

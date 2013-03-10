@@ -1,3 +1,11 @@
+Changes in robustHD version 0.3.0
+
+    + Redesign of the class structure.
+    
+    + fortify() and diagnosticPlot() methods for class "seqModel".
+
+
+
 Changes in robustHD version 0.2.2
 
     + rlars() now supports data cleaning RLARS, with an extra PCA step for 
