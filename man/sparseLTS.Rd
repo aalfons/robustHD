@@ -3,9 +3,6 @@
 \alias{sparseLTS}
 \alias{sparseLTS.default}
 \alias{sparseLTS.formula}
-\alias{sparseLTSGrid}
-\alias{sparseLTSGrid.default}
-\alias{sparseLTSGrid.formula}
 \title{Sparse least trimmed squares regression}
 \usage{
   sparseLTS(x, ...)
@@ -23,13 +20,6 @@
     cost = rtmspe, costArgs = list(),
     selectBest = c("hastie", "min"), seFactor = 1,
     ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
-
-  sparseLTSGrid(x, ...)
-
-  \method{sparseLTSGrid}{formula} (formula, data, ...)
-
-  \method{sparseLTSGrid}{default} (x, y, lambda,
-    mode = c("lambda", "fraction"), ...)
 }
 \arguments{
   \item{formula}{a formula describing the model.}
@@ -274,17 +264,7 @@
   \item{y}{the response variable (if \code{model} is
   \code{TRUE}).}
 
-  \item{call}{the matched function call.}
-}
-\description{
-  Compute least trimmed squares regression with an
-  \eqn{L_{1}}{L1} penalty on the regression coefficients,
-  which allows for sparse model estimates.
-}
-\note{
-  \code{sparseLTSGrid()} is a wrapper function for
-  \code{sparseLTS()} that only differs in the default
-  values for the penalty parameter \code{lambda}.
+  \item{call}{the matched function call.
 
   Package \pkg{robustHD} has a built-in back end for sparse
   least trimmed squares using the C++ library Armadillo.
@@ -294,7 +274,12 @@
   \R for Windows.
 
   For both C++ back ends, parallel computing is implemented
-  via OpenMP (\url{http://openmp.org/}).
+  via OpenMP (\url{http://openmp.org/}).}
+}
+\description{
+  Compute least trimmed squares regression with an
+  \eqn{L_{1}}{L1} penalty on the regression coefficients,
+  which allows for sparse model estimates.
 }
 \examples{
 ## generate data

@@ -52,6 +52,7 @@ predict.seqModel        Predict from a sequence of regression models
 residuals.seqModel      Extract residuals from a sequence of regression
                         models
 rlars                   Robust least angle regression
+robustHD-deprecated     Deprecated functions in package 'robustHD'
 robustHD-package        Robust methods for high-dimensional data
 sparseLTS               Sparse least trimmed squares regression
 standardize             Data standardization

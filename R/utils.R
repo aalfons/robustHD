@@ -41,10 +41,13 @@ checkSMax <- function(sMax, n, p, robust = TRUE) {
 checkSRange <- function(s, sMax = NA) {
   s <- as.integer(s)
   if(length(s) == 0) s <- c(0, sMax)
-  else if(length(s) == 1) s <- c(0, s)
-  else s <- s[1:2]
-  if(!isTRUE(is.finite(s[1]))) s[1] <- 0
-  if(!isTRUE(is.finite(s[2]))) s[2] <- sMax
+  else if(length(s) == 1) {
+    s <- if(isTRUE(is.finite(s))) rep.int(s, 2) else c(0, sMax)
+  } else {
+    s <- s[1:2]
+    if(!isTRUE(is.finite(s[1]))) s[1] <- 0
+    if(!isTRUE(is.finite(s[2]))) s[2] <- sMax
+  }
   s
 }
 

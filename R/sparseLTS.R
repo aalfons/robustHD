@@ -162,10 +162,6 @@
 #' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
 #' @returnItem call  the matched function call.
 #' 
-#' @note \code{sparseLTSGrid()} is a wrapper function for \code{sparseLTS()} 
-#' that only differs in the default values for the penalty parameter 
-#' \code{lambda}.
-#' 
 #' Package \pkg{robustHD} has a built-in back end for sparse least trimmed 
 #' squares using the C++ library Armadillo.  Another back end is available 
 #' through package \pkg{sparseLTSEigen}, which uses the C++ library Eigen.  The 
@@ -487,17 +483,59 @@ perrySparseLTS <- function(x, y, lambda, mode, ...,
 }
 
 
-## wrapper function for sparse LTS over a grid of lambda values
-## only differs in the default value for the penalty parameter
+#' Deprecated functions in package \pkg{robustHD}
+#' 
+#' These functions are provided for compatibility with older versions only, and 
+#' may be defunct as soon as the next release.
+#' 
+#' \code{sparseLTSGrid()} is a wrapper function for \code{\link{sparseLTS}} 
+#' that only differs in the default values for the penalty parameter 
+#' \code{lambda}.
+#' 
+#' @name robustHD-deprecated
+#' 
+#' @param formula  a formula describing the model.
+#' @param data  an optional data frame, list or environment (or object coercible 
+#' to a data frame by \code{\link{as.data.frame}}) containing the variables in 
+#' the model.  If not found in data, the variables are taken from 
+#' \code{environment(formula)}, typically the environment from which 
+#' \code{sparseLTSGrid} is called.
+#' @param x  a numeric matrix containing the predictor variables.
+#' @param y  a numeric vector containing the response variable.
+#' @param lambda  a numeric vector of non-negative values to be used as penalty 
+#' parameter.
+#' @param mode  a character string specifying the type of penalty parameter.  If 
+#' \code{"lambda"}, \code{lambda} gives the grid of values for the penalty 
+#' parameter directly.  If \code{"fraction"}, the smallest value of the penalty 
+#' parameter that sets all coefficients to 0 is first estimated based on 
+#' bivariate winsorization, then \code{lambda} gives the fractions of that 
+#' estimate to be used (hence all values of \code{lambda} should be in the 
+#' interval [0,1] in that case).
+#' @param \dots  additional arguments to be passed down, eventually to 
+#' \code{\link{sparseLTS}}.
+#' 
+#' @author Andreas Alfons
+#' 
+#' @seealso \code{\link[base]{Deprecated}}
+#' 
+#' @keywords regression robust
 
-#' @rdname sparseLTS
-#' @export 
-sparseLTSGrid <- function(x, ...) UseMethod("sparseLTSGrid")
+NULL
 
 
-#' @rdname sparseLTS
+#' @rdname robustHD-deprecated
+#' @export
+
+sparseLTSGrid <- function(x, ...) {
+  .Deprecated("sparseLTS")
+  UseMethod("sparseLTSGrid")
+}
+
+
+#' @rdname robustHD-deprecated
 #' @method sparseLTSGrid formula
 #' @export
+
 sparseLTSGrid.formula <- function(formula, data, ...) {
   # get function call
   call <- match.call()
@@ -528,9 +566,10 @@ sparseLTSGrid.formula <- function(formula, data, ...) {
 }
 
 
-#' @rdname sparseLTS
+#' @rdname robustHD-deprecated
 #' @method sparseLTSGrid default
 #' @export
+
 sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
                                   ...) {
   # get function call

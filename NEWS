@@ -2,6 +2,12 @@ Changes in robustHD version 0.3.0
 
     + Redesign of the class structure.
     
+    + Functionality of sparseLTSGrid() now included in sparseLTS(); 
+      sparseLTSGrid() is now a deprecated wrapper function.
+    
+    + New argument 's' in rlars() to select the steps along the sequence for 
+      which to compute submodels
+    
     + fortify() and diagnosticPlot() methods for class "seqModel".
 
 

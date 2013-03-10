@@ -35,7 +35,7 @@
 #' 
 #' @seealso \code{\link{sparseLTS}}
 #' 
-#' @example inst/doc/examples/example-wt.sparseLTS.R
+#' @example inst/doc/examples/example-wt.R
 #' 
 #' @keywords regression
 #' 
