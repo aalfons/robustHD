@@ -25,7 +25,7 @@ print.bicSelect <- function(x, best = TRUE, ...) {
 #' @S3method print fitSelect
 print.fitSelect <- function(x, ...) {
   # indices of the best reweighted and raw fit
-  cat("\nIndex of best model:\n")
+  cat("Index of best model:\n")
   print(x$best, ...)
   # return object invisibly
   invisible(x)

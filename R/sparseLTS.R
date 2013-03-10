@@ -195,10 +195,10 @@ sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 #' @export
 
 sparseLTS.formula <- function(formula, data, ...) {
-  # get function call
-  call <- match.call()
-  call[[1]] <- as.name("sparseLTS")
-  # prepare model frame
+  ## get function call
+  matchedCall <- match.call()
+  matchedCall[[1]] <- as.name("sparseLTS")
+  ## prepare model frame
   mf <- match.call(expand.dots = FALSE)
   m <- match(c("formula", "data"), names(mf), 0)
   mf <- mf[c(1, m)]
@@ -207,19 +207,22 @@ sparseLTS.formula <- function(formula, data, ...) {
   mf <- eval(mf, parent.frame())
   mt <- attr(mf, "terms")
   if(is.empty.model(mt)) stop("empty model")
-  # extract response and candidate predictors from model frame
+  ## extract response and candidate predictors from model frame
   y <- model.response(mf, "numeric")
   x <- model.matrix(mt, mf)
+  ## call default method
   # check if the specified model contains an intercept
   # if so, remove the column for intercept and use 'intercept=TRUE'
   # otherwise use 'intercept=FALSE'
   whichIntercept <- match("(Intercept)", colnames(x), nomatch = 0)
   intercept <- whichIntercept > 0
-  if(intercept) x <- x[, -whichIntercept, drop = FALSE]
-  # call default method
-  fit <- sparseLTS(x, y, intercept=intercept, ...)
-  fit$call <- call  # add call to return object
-  fit$terms <- mt   # add model terms to return object
+  if(intercept) {
+    x <- x[, -whichIntercept, drop = FALSE]
+    fit <- sparseLTS(x, y, intercept=TRUE, ...)
+  } else fit <- sparseLTS(x, y, intercept=FALSE, ...)
+  # return results
+  fit$call <- matchedCall  # add call to return object
+  fit$terms <- mt          # add model terms to return object
   fit
 }
 
@@ -241,8 +244,8 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                               seFactor = 1, ncores = 1, cl = NULL, 
                               seed = NULL, model = TRUE, ...) {
   ## initializations
-  call <- match.call()
-  call[[1]] <- as.name("sparseLTS")
+  matchedCall <- match.call()
+  matchedCall[[1]] <- as.name("sparseLTS")
   n <- length(y)
   x <- addColnames(as.matrix(x))
   d <- dim(x)
@@ -266,14 +269,14 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     mode <- match.arg(mode)
   }
   if(length(lambda) == 1) crit <- "none" 
-  else if(!identical(crit, "none")) crit <- match.arg(crit)
+  else crit <- match.arg(crit)
   intercept <- isTRUE(intercept)
-  if(mode == "fraction" && any(lambda > 0) && crit != "PE") { 
+  if(mode == "fraction" && any(lambda > 0)) { 
     # fraction of a robust estimate of the smallest value for the penalty 
     # parameter that sets all coefficients to zero (based on bivariate 
     # winsorization)
-    lambda <- lambda * 
-      lambda0(x, y, intercept=intercept, tol=tol, eps=eps, ...)
+    if(crit == "PE") frac <- lambda
+    lambda <- lambda * lambda0(x, y, intercept=intercept, tol=tol, eps=eps, ...)
   }
   alpha <- rep(alpha, length.out=1)
   if(!isTRUE(is.numeric(alpha) && 0.5 <= alpha && alpha <= 1)) {
@@ -312,7 +315,38 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
   
   ## compute sparse LTS
   if(crit == "PE") {
-    stop("not implemented yet")
+    # set up function call to be passed to perryTuning()
+    remove <- c("x", "y", "lambda", "crit", "splits", "cost", "costArgs", 
+                "selectBest", "seFactor", "ncores", "cl", "seed")
+    remove <- match(remove, names(matchedCall), nomatch=0)
+    call <- matchedCall[-remove]
+    # call function perryTuning() to perform prediction error estimation
+    tuning <- list(lambda=if(mode == "fraction") frac else lambda)
+    selectBest <- match.arg(selectBest)
+    fit <- perryTuning(call, x=x, y=y, tuning=tuning, splits=splits, 
+                       predictArgs=list(fit="both"), cost=cost, 
+                       costArgs=costArgs, selectBest=selectBest, 
+                       seFactor=seFactor, ncores=ncores, cl=cl, 
+                       seed=seed)
+    # fit final model
+    lambdaOpt <- unique(lambda[fit$best])
+    call$x <- matchedCall$x
+    call$y <- matchedCall$y
+    call$lambda <- lambdaOpt
+    call$mode <- NULL
+    call$ncores <- matchedCall$ncores
+    finalModel <- eval(call)
+    # if optimal tuning parameter is different for reweighted and raw fit, 
+    # add information that indicates optimal values
+    if(length(lambdaOpt)) {
+      crit <- list(best=c(reweighted=1, raw=2))
+      class(crit) <- "fitSelect"
+      finalModel$crit <- crit
+    }
+    # modify results
+    if(mode == "fraction" && any(lambda > 0)) fit$tuning$lambda <- lambda
+    fit$finalModel <- finalModel
+    class(fit) <- c("perrySparseLTS", class(fit))
   } else {
     initial <- match.arg(initial)
     if(h < d[2] && type == "hyperplane") type <- "sparse"
@@ -425,11 +459,12 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     ## add information on the optimal model
     if(crit == "BIC") fit$crit <- bicSelect(fit, fit="both")
     
-    ## return results
+    ## add model data if requested
     if(isTRUE(model)) fit[c("x", "y")] <- list(x=x, y=y)
-    fit$call <- call
-    fit
   }
+  ## return results
+  fit$call <- matchedCall
+  fit
 }
 
 
@@ -456,30 +491,6 @@ fastSparseLTS <- function(lambda, x, y, h, nsamp = c(500, 10),
     fit[which] <- lapply(fit[which], drop)
   }
   fit
-}
-
-
-## internal function for estimating the prediction error of sparse LTS models 
-## over a grid of lambda values
-perrySparseLTS <- function(x, y, lambda, mode, ..., 
-                           splits = foldControl(), cost = rtmspe, 
-                           costArgs = list(), selectBest = c("hastie", "min"), 
-                           seFactor = 1, ncores = 1, cl = NULL, seed = NULL) {
-  # call function perryTuning() to perform prediction error estimation
-  call <- as.call(list(sparseLTS, mode=mode, ...))
-  call$crit <- "none"
-  out <- perryTuning(call, x=x, y=y, tuning=list(lambda=lambda), splits=splits, 
-                     predictArgs=list(fit="both"), cost=cost, costArgs=costArgs, 
-                     selectBest=selectBest, seFactor=seFactor, ncores=ncores, 
-                     cl=cl, seed=seed)
-  # modify results
-  if(mode == "fraction" && any(lambda > 0)) {
-    # penalty parameters supplied as fractions, make sure that result 
-    # contains absolute values
-    out$tuning$lambda <- lambda * lambda0(x, y, ...)
-  }
-  class(out) <- c("perrySparseLTS", class(out))
-  out
 }
 
 

@@ -9,6 +9,9 @@ Changes in robustHD version 0.3.0
       which to compute submodels
     
     + fortify() and diagnosticPlot() methods for class "seqModel".
+    
+    + Bugfix in predict() method for "sparseLTS" if object was computed without 
+      intercept.
 
 
 

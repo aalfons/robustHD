@@ -112,9 +112,11 @@ predict.sparseLTS <- function(object, newdata, s = NA,
     # otherwise use the terms object to extract model matrix
     if(is.null(terms)) {
       newdata <- as.matrix(newdata)
-      # add a column of ones to the new data matrix 
-      # (unless it already contains intercept column)
-      newdata <- addIntercept(newdata, check=TRUE)
+      if(object$intercept) {
+        # if model has an intercept, add a column of ones to the new 
+        # data matrix (unless it already contains intercept column)
+        newdata <- addIntercept(newdata, check=TRUE)
+      }
       # check dimensions of new data
       p <- if(is.null(d)) length(coef) else d[1]
       if(ncol(newdata) != p) {

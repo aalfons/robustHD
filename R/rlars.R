@@ -173,8 +173,8 @@ rlars <- function(x, ...) UseMethod("rlars")
 
 rlars.formula <- function(formula, data, ...) {
   ## initializations
-  call <- match.call()  # get function call
-  call[[1]] <- as.name("rlars")
+  matchedCall <- match.call()  # get function call
+  matchedCall[[1]] <- as.name("rlars")
   # prepare model frame
   mf <- match.call(expand.dots = FALSE)
   m <- match(c("formula", "data"), names(mf), 0)
@@ -192,8 +192,8 @@ rlars.formula <- function(formula, data, ...) {
   ## call default method
   out <- rlars.default(x, y, ...)
   if(inherits(out, "rlars")) {
-    out$call <- call  # add call to return object
-    out$terms <- mt   # add model terms to return object
+    out$call <- matchedCall  # add call to return object
+    out$terms <- mt          # add model terms to return object
   }
   out
 }
@@ -213,8 +213,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
                           ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
                           tol = .Machine$double.eps^0.5, ...) {
   ## initializations
-  call <- match.call()  # get function call
-  call[[1]] <- as.name("rlars")
+  matchedCall <- match.call()  # get function call
+  matchedCall[[1]] <- as.name("rlars")
   n <- length(y)
   x <- addColnames(as.matrix(x))
   p <- ncol(x)
@@ -241,8 +241,35 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
-    if(!identical(crit, "none")) crit <- match.arg(crit)
-    if(crit == "PE") stop("not implemented yet")
+    s <- checkSRange(s, sMax=sMax)
+    if(s[1] > s[2]) s[1] <- s[2]
+    crit <- if(s[1] == s[2]) "none" else match.arg(crit)
+    if(crit == "PE") {
+      # set up function call to be passed to perryTuning()
+      remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
+                  "selectBest", "seFactor", "ncores", "cl", "seed")
+      remove <- match(remove, names(matchedCall), nomatch=0)
+      call <- matchedCall[-remove]
+      # call function perryTuning() to perform prediction error estimation
+      s <- seq(from=s[1], to=s[2])
+      tuning <- list(s=s)
+      selectBest <- match.arg(selectBest)
+      out <- perryTuning(call, x=x, y=y, tuning=tuning, splits=splits, 
+                         predictArgs=list(fit="both"), cost=cost, 
+                         costArgs=costArgs, selectBest=selectBest, 
+                         seFactor=seFactor, ncores=ncores, cl=cl, 
+                         seed=seed)
+      # fit final model
+      call$x <- matchedCall$x
+      call$y <- matchedCall$y
+      call$s <- s[out$best]
+      call$ncores <- matchedCall$ncores
+      out$finalModel <- eval(call)
+      out$call <- matchedCall
+      # assign class and return object
+      class(out) <- c("perryRlars", "perrySeqModel", class(out))
+      return(out)
+    }
   }
   
   ## prepare the data
@@ -314,7 +341,6 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     # add ones to matrix of predictors to account for intercept
     x <- addIntercept(x)
     # call function to fit models along the sequence
-    s <- checkSRange(s, sMax=sMax)
     out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2], robust=TRUE, 
                     regFun=regFun, useFormula=regControl$useFormula, 
                     regArgs=regArgs, crit=crit, cl=cl)
@@ -323,7 +349,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     # add model data to result if requested
     if(isTRUE(model)) out[c("x", "y")] <- list(x=x, y=y)
     if(winsorize) out$w <- w
-    out$call <- call  # add call to return object
+    out$call <- matchedCall  # add call to return object
     class(out) <- c("rlars", class(out))
     out
   } else active

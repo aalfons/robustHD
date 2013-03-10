@@ -37,7 +37,6 @@ checkSMax <- function(sMax, n, p, robust = TRUE) {
 }
 
 ## check the steps along the sequence for robust and groupwise LARS
-## sequence predictors as long as there are twice as many observations
 checkSRange <- function(s, sMax = NA) {
   s <- as.integer(s)
   if(length(s) == 0) s <- c(0, sMax)
@@ -172,7 +171,7 @@ removeIntercept <- function(x, pos) {
   haveVector <- is.null(dim(x))
   if(missing(pos)) {
     names <- if(haveVector) names(x) else colnames(x)
-    pos <- match("(Intercept)", names, nomatch = 0)
+    pos <- match("(Intercept)", names, nomatch=0)
   }
   if(pos > 0) {
     if(haveVector) x[-pos] else x[, -pos, drop=FALSE]
