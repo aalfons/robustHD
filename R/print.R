@@ -31,6 +31,38 @@ print.fitSelect <- function(x, ...) {
   invisible(x)
 }
 
+#' @S3method print perrySeqModel
+#' @import perry
+print.perrySeqModel <- function(x, ...) {
+  # print prediction error results
+  perry:::print.perryTuning(x, best=FALSE, final=FALSE, ...)
+  # print optimal step
+  sOpt <- as.matrix(x$tuning[x$best, "s"])
+  cat(sprintf("\nOptimal step: %d\n", sOpt))
+  # print final model
+  cat("\nFinal model:\n")
+  print(x$finalModel, ...)
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print perrySparseLTS
+#' @import perry
+print.perrySparseLTS <- function(x, ...) {
+  # print prediction error results
+  perry:::print.perryTuning(x, best=FALSE, final=FALSE, ...)
+  # print optimal value for penalty parameter
+  optimalLambda <- x$tuning[x$best, "lambda"]
+  names(optimalLambda) <- names(x$best)
+  cat("\nOptimal lambda:\n")
+  print(optimalLambda, ...)
+  # print final model
+  cat("\nFinal model:\n")
+  print(x$finalModel, ...)
+  # return object invisibly
+  invisible(x)
+}
+
 #' @S3method print seqModel
 print.seqModel <- function(x, zeros = FALSE, ...) {
   # print function call
@@ -52,7 +84,7 @@ print.seqModel <- function(x, zeros = FALSE, ...) {
   } else text <- c("Coefficients of optimal submodel:", "Optimal step:")
   cat("\n", text[1], "\n", sep="")
   print(coef(x, zeros=zeros), ...)
-  # print index of optimal submodel
+  # print optimal step
   cat("\n", text[2], sprintf(" %d\n", sOpt), sep="")
   # return object invisibly
   invisible(x)
@@ -86,6 +118,7 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
       lambda <- as.matrix(lambda)
       dimnames(lambda) <- list(text[1], "")
       print(lambda, ...)
+      scale <- t(scale)
       dimnames(scale) <- list(text[2], colnames(coefficients))
       print(scale, ...)
     } else {
@@ -103,25 +136,6 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
     } else dimnames(info) <- list(text, "")
     print(info, ...)
   }
-  # return object invisibly
-  invisible(x)
-}
-
-#' @S3method print perrySparseLTS
-#' @import perry
-print.perrySparseLTS <- function(x, ...) {
-  # print prediction error results
-  perry:::print.perryTuning(x, best=FALSE, ...)
-  # print optimal value for penalty parameter
-  optimalLambda <- x$tuning[x$best, "lambda"]
-  if(length(optimalLambda) > 1) {
-    names(optimalLambda) <- names(x$best)
-    cat("\nOptimal lambda:\n")
-  } else {
-    optimalLambda <- matrix(optimalLambda, 
-                            dimnames=list("Optimal lambda:", ""))
-  }
-  print(optimalLambda, ...)
   # return object invisibly
   invisible(x)
 }

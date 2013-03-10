@@ -1,6 +1,8 @@
 \name{diagnosticPlot}
 \alias{diagnosticPlot}
 \alias{diagnosticPlot.default}
+\alias{diagnosticPlot.perrySeqModel}
+\alias{diagnosticPlot.perrySparseLTS}
 \alias{diagnosticPlot.rlars}
 \alias{diagnosticPlot.seqModel}
 \alias{diagnosticPlot.sparseLTS}
@@ -10,8 +12,12 @@
 
   \method{diagnosticPlot}{seqModel} (x, s = NA, ...)
 
+  \method{diagnosticPlot}{perrySeqModel} (x, ...)
+
   \method{diagnosticPlot}{sparseLTS} (x, s = NA,
     fit = c("reweighted", "raw", "both"), ...)
+
+  \method{diagnosticPlot}{perrySparseLTS} (x, ...)
 
   \method{diagnosticPlot}{default} (x,
     which = c("all", "rqq", "rindex", "rfit", "rdiag"),
@@ -72,10 +78,14 @@
 
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
-  \code{"seqModel"} and \code{"sparseLTS"} methods,
-  additional arguments to be passed down to the default
-  method.  For the default method, additional arguments to
-  be passed down to \code{\link[ggplot2]{geom_point}}.}
+  \code{"perrySeqModel"} and \code{"perrySparseLTS"}
+  method, additional arguments to be passed down to the
+  \code{"seqModel"} and \code{"sparseLTS"} method,
+  respectively.  For the \code{"seqModel"} and
+  \code{"sparseLTS"} methods, additional arguments to be
+  passed down to the default method.  For the default
+  method, additional arguments to be passed down to
+  \code{\link[ggplot2]{geom_point}}.}
 }
 \value{
   If only one plot is requested, an object of class

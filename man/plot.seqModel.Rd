@@ -1,4 +1,6 @@
 \name{plot.seqModel}
+\alias{plot.perrySeqModel}
+\alias{plot.perrySparseLTS}
 \alias{plot.rlars}
 \alias{plot.seqModel}
 \alias{plot.sparseLTS}
@@ -7,8 +9,14 @@
   \method{plot}{seqModel} (x,
     method = c("coefficients", "crit", "diagnostic"), ...)
 
+  \method{plot}{perrySeqModel} (x,
+    method = c("crit", "diagnostic"), ...)
+
   \method{plot}{sparseLTS} (x,
     method = c("coefficients", "crit", "diagnostic"), ...)
+
+  \method{plot}{perrySparseLTS} (x,
+    method = c("crit", "diagnostic"), ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}
@@ -16,9 +24,10 @@
   \item{method}{a character string specifying the type of
   plot.  Possible values are \code{"coefficients"} to plot
   the coefficients from the submodels via
-  \code{\link{coefPlot}}, \code{"crit"} to plot the values
-  of the optimality criterion for the submodels via
-  \code{\link{critPlot}}, or \code{"diagnostic"} for
+  \code{\link{coefPlot}} (only for the \code{"seqModel"}
+  and \code{"sparseLTS"} methods), \code{"crit"} to plot
+  the values of the optimality criterion for the submodels
+  via \code{\link{critPlot}}, or \code{"diagnostic"} for
   diagnostic plots via \code{\link{diagnosticPlot}}.}
 
   \item{\dots}{additional arguments to be passed down.}

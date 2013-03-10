@@ -1,5 +1,7 @@
 \name{critPlot}
 \alias{critPlot}
+\alias{critPlot.perrySeqModel}
+\alias{critPlot.perrySparseLTS}
 \alias{critPlot.rlars}
 \alias{critPlot.seqModel}
 \alias{critPlot.sparseLTS}
@@ -9,9 +11,14 @@
 
   \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
+  \method{critPlot}{perrySeqModel} (x, ...)
+
   \method{critPlot}{sparseLTS} (x,
     fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
     ...)
+
+  \method{critPlot}{perrySparseLTS} (x,
+    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{x}{the model fit to be plotted.}
@@ -30,7 +37,10 @@
   \code{"seqModel"} and \code{"sparseLTS"} methods,
   additional arguments to be passed down to
   \code{\link[ggplot2]{geom_line}} and
-  \code{\link[ggplot2]{geom_point}}.}
+  \code{\link[ggplot2]{geom_point}}.  For the
+  \code{"perrySeqModel"} and \code{"perrySparseLTS"}
+  methods, additional arguments to be passed down to
+  \code{\link[perry]{perryPlot}}.}
 }
 \value{
   An object of class \code{"ggplot"} (see
@@ -81,7 +91,8 @@ critPlot(fitSparseLTS, fit = "both")
   Andreas Alfons
 }
 \seealso{
-  \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}},
+  \code{\link[ggplot2]{ggplot}},
+  \code{\link[perry]{perryPlot}}, \code{\link{rlars}},
   \code{\link{sparseLTS}}
 }
 \keyword{hplot}

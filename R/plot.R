@@ -16,7 +16,8 @@
 #' @param x  the model fit to be plotted.
 #' @param method  a character string specifying the type of plot.  Possible 
 #' values are \code{"coefficients"} to plot the coefficients from the submodels 
-#' via \code{\link{coefPlot}}, \code{"crit"} to plot the values of the 
+#' via \code{\link{coefPlot}} (only for the \code{"seqModel"} and 
+#' \code{"sparseLTS"} methods), \code{"crit"} to plot the values of the 
 #' optimality criterion for the submodels via \code{\link{critPlot}}, or 
 #' \code{"diagnostic"} for diagnostic plots via \code{\link{diagnosticPlot}}.
 #' @param \dots  additional arguments to be passed down.
@@ -47,6 +48,19 @@ plot.seqModel <- function(x, method = c("coefficients", "crit", "diagnostic"),
 
 
 #' @rdname plot.seqModel
+#' @method plot perrySeqModel
+#' @export 
+
+plot.perrySeqModel <- function(x, method = c("crit", "diagnostic"), ...) {
+  ## initializations
+  method <- match.arg(method)
+  ## call plot function
+  if(method == "crit") critPlot(x, ...)
+  else diagnosticPlot(x, ...)
+}
+
+
+#' @rdname plot.seqModel
 #' @method plot sparseLTS
 #' @export 
 
@@ -59,6 +73,19 @@ plot.sparseLTS <- function(x, method = c("coefficients", "crit", "diagnostic"),
   ## call plot function
   if(method == "coefficients") coefPlot(x, ...)
   else if(method == "crit") critPlot(x, ...)
+  else diagnosticPlot(x, ...)
+}
+
+
+#' @rdname plot.seqModel
+#' @method plot perrySparseLTS
+#' @export 
+
+plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
+  ## initializations
+  method <- match.arg(method)
+  ## call plot function
+  if(method == "crit") critPlot(x, ...)
   else diagnosticPlot(x, ...)
 }
 
@@ -352,15 +379,17 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 #' @param \dots  for the generic function, additional arguments to be passed 
 #' down to methods.  For the \code{"seqModel"} and \code{"sparseLTS"} methods, 
 #' additional arguments to be passed down to \code{\link[ggplot2]{geom_line}} 
-#' and \code{\link[ggplot2]{geom_point}}.  
+#' and \code{\link[ggplot2]{geom_point}}.    For the \code{"perrySeqModel"} and 
+#' \code{"perrySparseLTS"} methods, additional arguments to be passed down to 
+#' \code{\link[perry]{perryPlot}}.
 #' 
 #' @return  
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}}, 
-#' \code{\link{sparseLTS}}
+#' @seealso \code{\link[ggplot2]{ggplot}}, \code{\link[perry]{perryPlot}}, 
+#' \code{\link{rlars}}, \code{\link{sparseLTS}}
 #' 
 #' @example inst/doc/examples/example-critPlot.R
 #' 
@@ -387,6 +416,32 @@ critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
 
 
 #' @rdname critPlot
+#' @method critPlot perrySeqModel
+#' @export 
+
+critPlot.perrySeqModel <- function(x, ...) {
+  ## local plot function for prediction error results to override defaults
+  localPlot <- function(x, method = c("line", "dot", "box", "density"), 
+                        xlab = "Step", ...) {
+    # initializations
+    if(x$splits$R == 1) {
+      choices <- eval(formals()[["method"]])
+      if(identical(method, choices)) method <- "line"
+      else method <- match.arg(method, c("line", "dot"))
+    } else method <- match.arg(method)
+    # call perryPlot() for prediction error results
+    p <- perryPlot(x, method=method, xlab=xlab, ...)
+    if(method != "density") {
+      p <- p + scale_x_continuous(minor_breaks=fits(x))
+    }
+    p
+  }
+  ## call local plot function
+  localPlot(x, ...)
+}
+
+
+#' @rdname critPlot
 #' @method critPlot sparseLTS
 #' @export
 
@@ -406,6 +461,42 @@ critPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
     p <- p + facet_grid(. ~ fit)
   }
   p
+}
+
+
+#' @rdname critPlot
+#' @method critPlot perrySparseLTS
+#' @export 
+
+critPlot.perrySparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
+                                    ...) {
+  ## local plot function for prediction error results to override defaults
+  localPlot <- function(x, method = c("line", "dot", "box", "density"), 
+                        fit = select, select = "reweighted", xlab = "lambda", 
+                        ...) {
+    # initializations
+    if(x$splits$R == 1) {
+      choices <- eval(formals()[["method"]])
+      if(identical(method, choices)) method <- "line"
+      else method <- match.arg(method, c("line", "dot"))
+    } else method <- match.arg(method)
+    # call perryPlot() for prediction error results
+    if(is.null(fit)) p <- perryPlot(x, method=method, xlab=xlab, ...)
+    else {
+      p <- perryPlot(x, method=method, select=fit, facets=NULL, xlab=xlab, ...)
+    }
+    if(method != "density") {
+      p <- p + scale_x_reverse(minor_breaks=x$tuning[, "lambda"])
+    }
+    p
+  }
+  ## call local plot function
+  if(missing(fit)) localPlot(x, ...)
+  else {
+    fit <- match.arg(fit)
+    if(fit == "both") fit <- NULL
+    localPlot(x, fit=fit, ...)
+  }
 }
 
 
@@ -552,10 +643,12 @@ labelify <- function(data, which, id.n = NULL) {
 #' outliers, which can be different for the different plots.  See 
 #' \dQuote{Details} for more information.
 #' @param \dots  for the generic function, additional arguments to be passed 
-#' down to methods.  For the \code{"seqModel"} and \code{"sparseLTS"} methods, 
-#' additional arguments to be passed down to the default method.  For the 
-#' default method, additional arguments to be passed down to 
-#' \code{\link[ggplot2]{geom_point}}.
+#' down to methods.  For the \code{"perrySeqModel"} and \code{"perrySparseLTS"} 
+#' method, additional arguments to be passed down to the \code{"seqModel"} and 
+#' \code{"sparseLTS"} method, respectively.  For the \code{"seqModel"} and 
+#' \code{"sparseLTS"} methods, additional arguments to be passed down to the 
+#' default method.  For the default method, additional arguments to be passed 
+#' down to \code{\link[ggplot2]{geom_point}}.
 #' 
 #' @return  
 #' If only one plot is requested, an object of class \code{"ggplot"} (see 
@@ -587,6 +680,16 @@ diagnosticPlot.seqModel <- function(x, s = NA, ...) {
 
 
 #' @rdname diagnosticPlot
+#' @method diagnosticPlot perrySeqModel
+#' @export
+
+diagnosticPlot.perrySeqModel <- function(x, ...) {
+  # call method for component 'finalModel'
+  diagnosticPlot(x$finalModel, ...)
+}
+
+
+#' @rdname diagnosticPlot
 #' @method diagnosticPlot sparseLTS
 #' @export
 
@@ -595,6 +698,16 @@ diagnosticPlot.sparseLTS <- function(x, s = NA,
                                      ...) {
   # call default method with all information required for plotting
   diagnosticPlot(fortify(x, s=s, fit=fit), ...)
+}
+
+
+#' @rdname diagnosticPlot
+#' @method diagnosticPlot perrySparseLTS
+#' @export
+
+diagnosticPlot.perrySparseLTS <- function(x, ...) {
+  # call method for component 'finalModel'
+  diagnosticPlot(x$finalModel, ...)
 }
 
 

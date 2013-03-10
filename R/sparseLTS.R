@@ -105,7 +105,15 @@
 #' a column of ones is added to \code{x} to account for the intercept.
 #' @param \dots  additional arguments to be passed down.
 #' 
-#' @returnClass sparseLTS
+#' @return 
+#' If \code{crit} is \code{"PE"}, an object of class \code{"perrySparseLTS"} 
+#' (inheriting from class \code{"perryTuning"}, see 
+#' \code{\link[perry]{perryTuning}}).  It contains information on the 
+#' prediction error criterion, and includes the final model with the optimal 
+#' tuning paramter as component \code{finalModel}.
+#' 
+#' Otherwise an object of class \code{"sparseLTS"} with the following 
+#' components:
 #' @returnItem lambda  a numeric vector giving the values of the penalty 
 #' parameter.
 #' @returnItem best  an integer vector or matrix containing the respective best 

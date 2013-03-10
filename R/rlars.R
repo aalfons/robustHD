@@ -104,6 +104,12 @@
 #' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
 #' the sequenced predictors.
 #'  
+#' Else if \code{crit} is \code{"PE"}, an object of class \code{"perryRlars"} 
+#' (inheriting from classes \code{"perrySeqModel"} and \code{"perryTuning"}, 
+#' see \code{\link[perry]{perryTuning}}).  It contains information on the 
+#' prediction error criterion, and includes the final model as component 
+#' \code{finalModel}.
+#' 
 #' Otherwise an object of class \code{"rlars"} (inheriting from class 
 #' \code{"seqModel"}) with the following components:
 #' @returnItem active  an integer vector containing the indices of the 
