@@ -188,7 +188,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// initialize object for subset
-	NumericVector Rcpp_indices = Rcpp_subset["indices"];
+	IntegerVector Rcpp_indices = Rcpp_subset["indices"];
 	const int h = Rcpp_indices.size();
 	NumericVector Rcpp_coefficients = Rcpp_subset["coefficients"];
 	NumericVector Rcpp_residuals = Rcpp_subset["residuals"];
@@ -262,7 +262,7 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 	umat subsetMat(h, nsamp);
 	for(int j = 0; j < nsamp; j++) {
 		for(int i = 0; i < h; i++) {
-			subsetMat(i,j) = Rcpp_subsetMat(i,j) - 1; // copy data
+			subsetMat(i,j) = Rcpp_subsetMat(i,j); // copy data
 		}
 	}
 	NumericVector Rcpp_crits(R_crits);				    // values
@@ -285,7 +285,7 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 		critsOut(k) = subset.crit;
 	}
 	return List::create(
-			Named("subsetMat") = subsetMatOut + 1,
+			Named("subsetMat") = subsetMatOut,
 			Named("crits") = critsOut,
 			Named("nkeep") = nkeep
 			);

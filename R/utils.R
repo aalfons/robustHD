@@ -27,6 +27,16 @@ addIntercept <- function(x, check = FALSE) {
 #         })
 # }
 
+## call C++ back end
+#' @useDynLib robustHD
+callBackend <- function(..., PACKAGE) {
+  if(exists(".CallSparseLTSEigen")) {
+    # RcppEigen back end from package sparseLTSEigen
+    callFun <- get(".CallSparseLTSEigen")
+    callFun(...)
+  } else .Call(..., PACKAGE="robustHD")  # built-in RcppArmadillo back end
+}
+
 ## check the number of predictors to sequence for robust and groupwise LARS
 ## sequence predictors as long as there are twice as many observations
 checkSMax <- function(sMax, n, p, robust = TRUE) {
@@ -118,7 +128,6 @@ dropCol <- function(x) {
 ## find indices of h smallest observations
 findSmallest <- function(x, h) {
   # call C++ function
-  callBackend <- getBackend()
   callBackend("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h))
 }
 
@@ -140,14 +149,12 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
 ## find indices of h smallest observations
 partialOrder <- function(x, h) {
   # call C++ function
-  callBackend <- getBackend()
   callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h))
 }
 
 # ## find indices of h smallest observations
 # partialSort <- function(x, h) {
 #   # call C++ function
-#   callBackend <- getBackend()
 #   callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
 # }
 

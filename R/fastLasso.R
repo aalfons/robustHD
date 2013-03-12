@@ -15,7 +15,6 @@ fastLasso <- function(x, y, lambda, subset = NULL, intercept = TRUE,
     subset <- subset
   }
   # call C++ function
-  callBackend <- getBackend()
   fit <- callBackend("R_fastLasso", R_x=x, R_y=y, R_lambda=lambda, 
                      R_useSubset=useSubset, R_subset=subset, 
                      R_intercept=isTRUE(intercept), R_eps=eps, 

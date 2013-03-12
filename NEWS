@@ -2,8 +2,12 @@ Changes in robustHD version 0.3.0
 
     + Redesign of the class structure.
     
+    + Redesign of how C++ back end is called.
+    
     + Functionality of sparseLTSGrid() now included in sparseLTS(); 
       sparseLTSGrid() is now a deprecated wrapper function.
+    
+    + Restructured internal code for computing initial subsets for sparse LTS.
     
     + New argument 's' in rlars() to select the steps along the sequence for 
       which to compute submodels

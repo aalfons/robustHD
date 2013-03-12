@@ -89,7 +89,6 @@
 #' @export
 #' @import Rcpp 
 #' @import RcppArmadillo
-#' @useDynLib robustHD
 
 
 # robust correlation based on winsorization

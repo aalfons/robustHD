@@ -371,6 +371,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
       fit <- fastSparseLTS(x=x, y=y, lambda=lambda, h=h, nsamp=nsamp, 
                            initial=subsets, intercept=intercept, ncstep=ncstep, 
                            tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores)
+      fit$best <- sort.int(fit$best)
     } else {
       names(lambda) <- seq_along(lambda)
       fit <- lapply(lambda, fastSparseLTS, x=x, y=y, h=h, nsamp=nsamp, 
@@ -378,7 +379,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                     tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores, 
                     drop=FALSE)
       names(fit) <- names(lambda)
-      fit <- list(best=sapply(fit, function(x) sort(x$best)), 
+      fit <- list(best=sapply(fit, function(x) sort.int(x$best)), 
                   coefficients=sapply(fit, "[[", "coefficients"), 
                   residuals=sapply(fit, "[[", "residuals"), 
                   objective=sapply(fit, "[[", "objective"), 
@@ -488,7 +489,6 @@ fastSparseLTS <- function(lambda, x, y, h, nsamp = c(500, 10),
                              intercept=intercept, eps=eps, use.Gram=use.Gram)
   }
   # call C++ function
-  callBackend <- getBackend()
   fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
                      R_initial=initial, R_intercept=intercept, R_ncstep=ncstep, 
                      R_nkeep=nsamp[2], R_tol=tol, R_eps=eps, R_useGram=use.Gram, 
