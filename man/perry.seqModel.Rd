@@ -135,7 +135,7 @@ fitRlars <- rlars(x, y, sMax = 10)
 perry(fitRlars)
 
 ## fit and evaluate sparse LTS model
-frac <- seq(0.25, 0.05, by = -0.05)
+frac <- seq(0.2, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 perry(fitSparseLTS)
 }

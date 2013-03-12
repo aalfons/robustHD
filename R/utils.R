@@ -30,11 +30,14 @@ addIntercept <- function(x, check = FALSE) {
 ## call C++ back end
 #' @useDynLib robustHD
 callBackend <- function(..., PACKAGE) {
-  if(exists(".CallSparseLTSEigen")) {
+  # check the platfrom and if the RcppEigen back end is available
+  # (RcppEigen back end does not work with 32-bit Windows)
+  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") && 
+       exists(".CallSparseLTSEigen")) {
     # RcppEigen back end from package sparseLTSEigen
     callFun <- get(".CallSparseLTSEigen")
     callFun(...)
-  } else .Call(..., PACKAGE="robustHD")  # built-in RcppArmadillo back end
+  } else .Call(..., PACKAGE="robustHD")  # RcppArmadillo back end
 }
 
 ## check the number of predictors to sequence for robust and groupwise LARS

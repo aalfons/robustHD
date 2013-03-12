@@ -26,7 +26,7 @@ head(predict(fitRlars, s = 1:5))
 
 ## sparse LTS over a grid of values for lambda
 # fit model
-frac <- seq(0.25, 0.05, by = -0.05)
+frac <- seq(0.2, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # compute fitted values via predict method
 predict(fitSparseLTS)

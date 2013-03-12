@@ -25,7 +25,7 @@ critPlot(fitRlars)
 
 ## sparse LTS over a grid of values for lambda
 # fit model
-frac <- seq(0.25, 0.05, by = -0.05)
+frac <- seq(0.2, 0.05, by = -0.05)
 fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # create plot
 critPlot(fitSparseLTS)

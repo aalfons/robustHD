@@ -23,10 +23,9 @@ fitRlars <- rlars(x, y, sMax = 10)
 diagnosticPlot(fitRlars)
 
 
-## sparse LTS over a grid of values for lambda
+## sparse LTS
 # fit model
-frac <- seq(0.25, 0.05, by = -0.05)
-fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+fitSparseLTS <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
 # create plot
 diagnosticPlot(fitSparseLTS)
 diagnosticPlot(fitSparseLTS, fit = "both")

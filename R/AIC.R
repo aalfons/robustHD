@@ -63,10 +63,9 @@
 
 AIC.seqModel <- function(object, ..., k = 2) {
   # initializations
-  res <- residuals(object)
+  res <- residuals(object, s=NULL)
   n <- nrow(res)     # number of observations
   df <- object$df    # degrees of freedom
-  penalty <- log(n)  # penalty for BIC
   # define function to compute the BIC
   if(object$robust) {
     # BIC based on robust residual scale estimate
@@ -94,7 +93,7 @@ AIC.seqModel <- function(object, ..., k = 2) {
 AIC.sparseLTS <- function(object, ..., 
                           fit = c("reweighted", "raw", "both"), 
                           k = 2) {
-  res <- residuals(object)
+  res <- residuals(object, s=NULL)
   n <- if(is.null(d <- dim(res))) length(res) else d[1] # number of observations
   fit <- match.arg(fit)
   if(fit == "reweighted") {
@@ -117,8 +116,8 @@ AIC.sparseLTS <- function(object, ...,
 #' @export
 
 BIC.seqModel <- function(object, ...) {
-  n <- nrow(residuals(object))  # number of observations
-  AIC(object, ..., k=log(n))    # call AIC method with penalty for BIC
+  n <- nrow(residuals(object, s=NULL))  # number of observations
+  AIC(object, ..., k=log(n))            # call AIC method with penalty for BIC
 }
 
 
@@ -127,7 +126,7 @@ BIC.seqModel <- function(object, ...) {
 #' @export
 
 BIC.sparseLTS <- function(object, ...) {
-  res <- residuals(object)
+  res <- residuals(object, s=NULL)
   n <- if(is.null(d <- dim(res))) length(res) else d[1] # number of observations
   AIC(object, ..., k=log(n))  # call AIC method with penalty for BIC
 }

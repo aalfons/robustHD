@@ -82,13 +82,21 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## fit sparse LTS model over a grid of values for lambda
-frac <- seq(0.25, 0.05, by = -0.05)
-fit <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 
-## compute AIC and BIC
-AIC(fit)
-BIC(fit)
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# compute AIC and BIC
+AIC(fitRlars)
+BIC(fitRlars)
+
+
+## fit sparse LTS model over a grid of values for lambda
+frac <- seq(0.2, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# compute AIC and BIC
+AIC(fitSparseLTS)
+BIC(fitSparseLTS)
 }
 \author{
   Andreas Alfons
