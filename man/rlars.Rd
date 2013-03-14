@@ -12,7 +12,7 @@
   \method{rlars}{default} (x, y, sMax = NA,
     centerFun = median, scaleFun = mad, winsorize = FALSE,
     pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
-    regFun = lmrob, regArgs = list(),
+    s = c(0, sMax), regFun = lmrob, regArgs = list(),
     crit = c("BIC", "PE"), splits = foldControl(),
     cost = rtmspe, costArgs = list(),
     selectBest = c("hastie", "min"), seFactor = 1,
@@ -34,15 +34,10 @@
 
   \item{y}{a numeric vector containing the response.}
 
-  \item{sMax}{an integer vector of length two.  If a single
-  integer is supplied, it is recycled.  The first element
-  gives the number of predictors to be sequenced.  If it is
-  \code{NA} (the default), predictors are sequenced as long
-  as there are no singularity issues.  The second element
-  gives the maximum number of predictors to be included in
-  the final model.  If it is \code{NA} (the default),
-  predictors may be added to the model as long as there are
-  twice as many observations as predictors.}
+  \item{sMax}{an integer giving the number of predictors to
+  be sequenced.  If it is \code{NA} (the default),
+  predictors are sequenced as long as there are twice as
+  many observations as predictors.}
 
   \item{centerFun}{a function to compute a robust estimate
   for the center (defaults to
@@ -81,6 +76,16 @@
   \item{fit}{a logical indicating whether to fit submodels
   along the sequence (\code{TRUE}, the default) or to
   simply return the sequence (\code{FALSE}).}
+
+  \item{s}{an integer vector of length two giving the first
+  and last step along the sequence for which to compute
+  submodels.  The default is to start with a model
+  containing only an intercept (step 0) and iteratively add
+  all variables along the sequence (step \code{sMax}).  If
+  the second element is \code{NA}, predictors may be added
+  to the model as long as there are twice as many
+  observations as predictors.  If only one value is
+  supplied, it is recycled.}
 
   \item{regFun}{a function to compute robust linear
   regressions along the sequence (defaults to
@@ -158,60 +163,61 @@
   If \code{fit} is \code{FALSE}, an integer vector
   containing the indices of the sequenced predictors.
 
+  Else if \code{crit} is \code{"PE"}, an object of class
+  \code{"perryRlars"} (inheriting from classes
+  \code{"perrySeqModel"} and \code{"perryTuning"}, see
+  \code{\link[perry]{perryTuning}}).  It contains
+  information on the prediction error criterion, and
+  includes the final model as component \code{finalModel}.
+
   Otherwise an object of class \code{"rlars"} (inheriting
-  from class \code{"seqModel"} if \code{crit="BIC"} or
-  \code{"optSeqModel"} if \code{crit="PE"}) with the
-  following components:
+  from class \code{"seqModel"}) with the following
+  components:
 
   \item{active}{an integer vector containing the indices of
   the sequenced predictors.}
+
+  \item{s}{an integer vector containing the steps for which
+  submodels along the sequence have been computed.}
+
+  \item{coefficients}{a numeric matrix in which each column
+  contains the regression coefficients of the corresponding
+  submodel along the sequence.}
+
+  \item{fitted.values}{a numeric matrix in which each
+  column contains the fitted values of the corresponding
+  submodel along the sequence.}
+
+  \item{residuals}{a numeric matrix in which each column
+  contains the residuals of the corresponding submodel
+  along the sequence.}
 
   \item{df}{an integer vector containing the degrees of
   freedom of the submodels along the sequence (i.e., the
   number of estimated coefficients).}
 
-  \item{coefficients}{a numeric matrix in which each column
-  contains the regression coefficients of the corresponding
-  submodel along the sequence (\code{"seqModel"}); or a
-  numeric vector containing the coefficients of the optimal
-  submodel (\code{"optSeqModel"}).}
+  \item{robust}{a logical indicating whether a robust fit
+  was computed (\code{TRUE} for \code{"rlars"} models).}
 
-  \item{fitted.values}{a numeric matrix in which each
-  column contains the fitted values of the corresponding
-  submodel along the sequence (\code{"seqModel"}); or a
-  numeric vector containing the fitted values of the
-  optimal submodel (\code{"optSeqModel"}).}
+  \item{scale}{a numeric vector giving the robust residual
+  scale estimates for the submodels along the sequence.}
 
-  \item{residuals}{a numeric matrix in which each column
-  contains the residuals of the corresponding submodel
-  along the sequence (\code{"seqModel"}); or a numeric
-  vector containing the residuals of the optimal submodel
-  (\code{"optSeqModel"}).}
-
-  \item{crit}{a character string specifying the optimality
-  criterion used for selecting the final model.}
-
-  \item{critValues}{a numeric vector containing the values
-  of the optimality criterion from the submodels along the
-  sequence (\code{"seqModel"}); or an object of class
-  \code{"perrySeqModel"} (inheriting from
-  \code{"\link[perry]{perrySelect}"}) that contains the
-  estimated prediction errors of the submodels
-  (\code{"optSeqModel"}).}
-
-  \item{sOpt}{an integer giving the optimal submodel (only
-  \code{"seqModel"}).}
-
-  \item{muY}{numeric; the center estimate of the response.}
-
-  \item{sigmaY}{numeric; the scale estimate of the
-  response.}
+  \item{crit}{an object of class \code{"bicSelect"}
+  containing the BIC values and indicating the final model
+  (only returned if argument \code{crit} is \code{"BIC"}
+  and argument \code{s} indicates more than one step along
+  the sequence).}
 
   \item{muX}{a numeric vector containing the center
   estimates of the predictors.}
 
   \item{sigmaX}{a numeric vector containing the scale
   estimates of the predictors.}
+
+  \item{muY}{numeric; the center estimate of the response.}
+
+  \item{sigmaY}{numeric; the scale estimate of the
+  response.}
 
   \item{x}{the matrix of candidate predictors (if
   \code{model} is \code{TRUE}).}
@@ -231,13 +237,15 @@
 \examples{
 ## generate data
 # example is not high-dimensional to keep computation time low
+library("mvtnorm")
 set.seed(1234)  # for reproducibility
 n <- 100  # number of observations
 p <- 25   # number of variables
 beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
 sigma <- 0.5      # controls signal-to-noise ratio
 epsilon <- 0.1    # contamination level
-x <- replicate(p, rnorm(n))     # predictor matrix
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
 e <- rnorm(n)                   # error terms
 i <- 1:ceiling(epsilon*n)       # observations to be contaminated
 e[i] <- e[i] + 5                # vertical outliers
@@ -245,7 +253,7 @@ y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
 ## fit robust LARS model
-rlars(x, y)
+rlars(x, y, sMax = 10)
 }
 \author{
   Andreas Alfons, based on code by Jafar A. Khan, Stefan
@@ -258,11 +266,12 @@ rlars(x, y)
   \bold{102}(480), 1289--1299.
 }
 \seealso{
-  \code{\link{coef.seqModel}},
-  \code{\link{fitted.seqModel}},
-  \code{\link{residuals.seqModel}},
-  \code{\link{predict.seqModel}},
-  \code{\link{plot.seqModel}}
+  \code{\link[=coef.seqModel]{coef}},
+  \code{\link[=fitted.seqModel]{fitted}},
+  \code{\link[=plot.seqModel]{plot}},
+  \code{\link[=predict.seqModel]{predict}},
+  \code{\link[=residuals.seqModel]{residuals}},
+  \code{\link[robustbase]{lmrob}}
 }
 \keyword{regression}
 \keyword{robust}

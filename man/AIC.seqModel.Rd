@@ -1,26 +1,18 @@
-\name{AIC.sparseLTS}
-\alias{AIC.optSparseLTSGrid}
+\name{AIC.seqModel}
+\alias{AIC.seqModel}
 \alias{AIC.sparseLTS}
-\alias{AIC.sparseLTSGrid}
-\alias{BIC.optSparseLTSGrid}
+\alias{BIC.seqModel}
 \alias{BIC.sparseLTS}
-\alias{BIC.sparseLTSGrid}
-\title{Information criteria for sparse LTS regression models}
+\title{Information criteria for a sequence of regression models}
 \usage{
+  \method{AIC}{seqModel} (object, ..., k = 2)
+
   \method{AIC}{sparseLTS} (object, ...,
     fit = c("reweighted", "raw", "both"), k = 2)
 
+  \method{BIC}{seqModel} (object, ...)
+
   \method{BIC}{sparseLTS} (object, ...)
-
-  \method{AIC}{sparseLTSGrid} (object, ...,
-    fit = c("reweighted", "raw", "both"), k = 2)
-
-  \method{BIC}{sparseLTSGrid} (object, ...)
-
-  \method{AIC}{optSparseLTSGrid} (object, ...,
-    fit = c("reweighted", "raw", "both"), k = 2)
-
-  \method{BIC}{optSparseLTSGrid} (object, ...)
 }
 \arguments{
   \item{object}{the model fit for which to compute the
@@ -43,13 +35,15 @@
   classical definition of the AIC.}
 }
 \value{
-  A numeric vector giving the information criteria for the
-  requested fits.
+  A numeric vector or matrix giving the information
+  criteria for the requested model fits.
 }
 \description{
-  Compute the Akaike or Bayes information criterion for
-  sparse least trimmed squares regression models based on
-  the robust residual scale estimate.
+  Compute the Akaike or Bayes information criterion for for
+  a sequence of regression models, such as submodels along
+  a robust least angle regression sequence, or sparse least
+  trimmed squares regression models for a grid of values
+  for the penalty parameter.
 }
 \details{
   The information criteria are computed as \eqn{n (\log(2
@@ -88,13 +82,21 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## fit sparse LTS model over a grid of values for lambda
-frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
 
-## compute AIC and BIC
-AIC(fitGrid)
-BIC(fitGrid)
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# compute AIC and BIC
+AIC(fitRlars)
+BIC(fitRlars)
+
+
+## fit sparse LTS model over a grid of values for lambda
+frac <- seq(0.2, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# compute AIC and BIC
+AIC(fitSparseLTS)
+BIC(fitSparseLTS)
 }
 \author{
   Andreas Alfons
@@ -108,8 +110,8 @@ BIC(fitGrid)
   \emph{The Annals of Statistics}, \bold{6}(2), 461--464.
 }
 \seealso{
-  \code{\link[stats]{AIC}}, \code{\link{sparseLTS}},
-  \code{\link{sparseLTSGrid}}
+  \code{\link[stats]{AIC}}, \code{\link{rlars}},
+  \code{\link{sparseLTS}}
 }
 \keyword{regression}
 

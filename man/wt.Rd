@@ -1,21 +1,13 @@
 \name{wt}
 \alias{wt}
-\alias{wt.optSparseLTSGrid}
 \alias{wt.sparseLTS}
-\alias{wt.sparseLTSGrid}
 \title{Extract outlier weights from sparse LTS regression models}
 \usage{
   wt(object, ...)
 
-  \method{wt}{sparseLTS} (object,
-    fit = c("reweighted", "raw", "both"), ...)
-
-  \method{wt}{sparseLTSGrid} (object, s = NA,
+  \method{wt}{sparseLTS} (object, s = NA,
     fit = c("reweighted", "raw", "both"),
     drop = !is.null(s), ...)
-
-  \method{wt}{optSparseLTSGrid} (object,
-    fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract outlier
@@ -76,28 +68,21 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## sparse LTS
-# fit model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-# extract outlier weights
-wt(fit)
-wt(fit, fit = "both")
-
 ## sparse LTS over a grid of values for lambda
 # fit model
-frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
+frac <- seq(0.2, 0.05, by = -0.05)
+fitGrid <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 # extract outlier weights
 wt(fitGrid)
-wt(fitGrid, fit = "both")
-wt(fitGrid, s = NULL)
-wt(fitGrid, fit = "both", s = NULL)
+head(wt(fitGrid, fit = "both"))
+head(wt(fitGrid, s = NULL))
+head(wt(fitGrid, fit = "both", s = NULL))
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
+  \code{\link{sparseLTS}}
 }
 \keyword{regression}
 

@@ -1,7 +1,7 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus University Rotterdam
+# ------------------------------------
 
 #' Penalty parameter for sparse LTS regression
 #' 
@@ -52,8 +52,7 @@
 #' selection based on least angle regression. \emph{Journal of the American 
 #' Statistical Association}, \bold{102}(480), 1289--1299.
 #' 
-#' @seealso \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}, 
-#' \code{\link{winsorize}}
+#' @seealso \code{\link{sparseLTS}}, \code{\link{winsorize}}
 #' 
 #' @example inst/doc/examples/example-lambda0.R
 #' 
@@ -62,43 +61,43 @@
 #' @export
 
 lambda0 <- function(x, y, intercept = TRUE, const = 2, prob = 0.95, 
-        tol = .Machine$double.eps^0.5, eps = .Machine$double.eps, ...) {
-    # initializations
-    n <- length(y)
-    x <- as.matrix(x)
-    if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
-	intercept <- isTRUE(intercept)
-	# standardize data
-	y <- robStandardize(y, eps=eps, ...)
-	centerY <- attr(y, "center")
-    scaleY <- attr(y, "scale")
-	if(scaleY <= eps) stop("scale of response is too small")
-	x <- robStandardize(x, eps=eps, ...)
-	centerX <- attr(x, "center")
-    scaleX <- attr(x, "scale")
-	# drop variables with too small a scale
-	keep <- which(scaleX > eps)
-	if(length(keep) == 0) stop("scale of all predictors is too small")
-	x <- x[, keep, drop=FALSE]
-	centerX <- centerX[keep]
-	scaleX <- scaleX[keep]
-	# compute largest lambda
-    corY <- sapply(seq_len(ncol(x)), 
-		function(j) {
-            # winsorize bivariate data and transform back to original scale
-            tmp <- winsorize(cbind(x[, j], y), const=const, 
-                prob=prob, standardized=TRUE, tol=tol)
-            xj <- tmp[, 1] * scaleX[j] + centerX[j]
-            y <- tmp[, 2] * scaleY + centerY
-            # in case of intercept, sweep out means of winsorized data
-            if(intercept) {
-                xj <- xj - mean(xj)
-                y <- y - mean(y)
-            }
-            # normalize cleaned x variable with respect to L2 norm
-            xj <- xj / sqrt(sum(xj^2))
-            # return 
-            drop(t(y) %*% xj)
-		})
-    max(abs(corY)) * 2 / nrow(x)
+                    tol = .Machine$double.eps^0.5, 
+                    eps = .Machine$double.eps, ...) {
+  # initializations
+  n <- length(y)
+  x <- as.matrix(x)
+  if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
+  intercept <- isTRUE(intercept)
+  # standardize data
+  y <- robStandardize(y, eps=eps, ...)
+  centerY <- attr(y, "center")
+  scaleY <- attr(y, "scale")
+  if(scaleY <= eps) stop("scale of response is too small")
+  x <- robStandardize(x, eps=eps, ...)
+  centerX <- attr(x, "center")
+  scaleX <- attr(x, "scale")
+  # drop variables with too small a scale
+  keep <- which(scaleX > eps)
+  if(length(keep) == 0) stop("scale of all predictors is too small")
+  x <- x[, keep, drop=FALSE]
+  centerX <- centerX[keep]
+  scaleX <- scaleX[keep]
+  # compute largest lambda
+  corY <- sapply(seq_len(ncol(x)), function(j) {
+    # winsorize bivariate data and transform back to original scale
+    tmp <- winsorize(cbind(x[, j], y), const=const, 
+                     prob=prob, standardized=TRUE, tol=tol)
+    xj <- tmp[, 1] * scaleX[j] + centerX[j]
+    y <- tmp[, 2] * scaleY + centerY
+    # in case of intercept, sweep out means of winsorized data
+    if(intercept) {
+      xj <- xj - mean(xj)
+      y <- y - mean(y)
+    }
+    # normalize cleaned x variable with respect to L2 norm
+    xj <- xj / sqrt(sum(xj^2))
+    # return 
+    drop(t(y) %*% xj)
+  })
+  max(abs(corY)) * 2 / nrow(x)
 }

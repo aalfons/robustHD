@@ -15,19 +15,18 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x %*% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## sparse LTS
+
+## robust LARS
 # fit model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-# extract fitted values
-fitted(fit)
-fitted(fit, fit = "both")
+fitRlars <- rlars(x, y, sMax = 10)
+# create plot
+coefPlot(fitRlars)
+
 
 ## sparse LTS over a grid of values for lambda
 # fit model
-frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
-# extract fitted values
-fitted(fitGrid)
-fitted(fitGrid, fit = "both")
-fitted(fitGrid, s = NULL)
-fitted(fitGrid, fit = "both", s = NULL)
+frac <- seq(0.2, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# create plot
+coefPlot(fitSparseLTS)
+coefPlot(fitSparseLTS, fit = "both")

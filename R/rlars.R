@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
+#         Erasmus University Rotterdam
 #
 # based on code by Jafar A. Khan, Stefan Van Aelst and Ruben H. Zamar
 # -------------------------------------------------------------------
@@ -20,13 +20,9 @@
 #' \code{rlars} is called.
 #' @param x  a matrix or data frame containing the candidate predictors.
 #' @param y  a numeric vector containing the response.
-#' @param sMax  an integer vector of length two.  If a single integer is 
-#' supplied, it is recycled.  The first element gives the number of predictors 
-#' to be sequenced.  If it is \code{NA} (the default), predictors are sequenced 
-#' as long as there are no singularity issues.  The second element gives the 
-#' maximum number of predictors to be included in the final model.  If it is 
-#' \code{NA} (the default), predictors may be added to the model as long as 
-#' there are twice as many observations as predictors.
+#' @param sMax  an integer giving the number of predictors to be sequenced.  If 
+#' it is \code{NA} (the default), predictors are sequenced as long as there are 
+#' twice as many observations as predictors.
 #' @param centerFun  a function to compute a robust estimate for the center 
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
@@ -50,6 +46,13 @@
 #' multivariate winsorization (defaults to 0.95).
 #' @param fit  a logical indicating whether to fit submodels along the sequence 
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
+#' @param s  an integer vector of length two giving the first and last step 
+#' along the sequence for which to compute submodels.  The default is to start 
+#' with a model containing only an intercept (step 0) and iteratively add all 
+#' variables along the sequence (step \code{sMax}).  If the second element is 
+#' \code{NA}, predictors may be added to the model as long as there are twice 
+#' as many observations as predictors.  If only one value is supplied, it is 
+#' recycled.
 #' @param regFun  a function to compute robust linear regressions along the 
 #' sequence (defaults to \code{\link[robustbase]{lmrob}}).
 #' @param regArgs  a list of arguments to be passed to \code{regFun}.
@@ -101,40 +104,40 @@
 #' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
 #' the sequenced predictors.
 #'  
+#' Else if \code{crit} is \code{"PE"}, an object of class \code{"perryRlars"} 
+#' (inheriting from classes \code{"perrySeqModel"} and \code{"perryTuning"}, 
+#' see \code{\link[perry]{perryTuning}}).  It contains information on the 
+#' prediction error criterion, and includes the final model as component 
+#' \code{finalModel}.
+#' 
 #' Otherwise an object of class \code{"rlars"} (inheriting from class 
-#' \code{"seqModel"} if \code{crit="BIC"} or \code{"optSeqModel"} if 
-#' \code{crit="PE"}) with the following components:
+#' \code{"seqModel"}) with the following components:
 #' @returnItem active  an integer vector containing the indices of the 
 #' sequenced predictors.
+#' @returnItem s  an integer vector containing the steps for which submodels 
+#' along the sequence have been computed.
+#' @returnItem coefficients  a numeric matrix in which each column contains the 
+#' regression coefficients of the corresponding submodel along the sequence.
+#' @returnItem fitted.values  a numeric matrix in which each column contains 
+#' the fitted values of the corresponding submodel along the sequence.
+#' @returnItem residuals  a numeric matrix in which each column contains 
+#' the residuals of the corresponding submodel along the sequence.
 #' @returnItem df  an integer vector containing the degrees of freedom of the 
 #' submodels along the sequence (i.e., the number of estimated coefficients).
-#' @returnItem coefficients  a numeric matrix in which each column contains the 
-#' regression coefficients of the corresponding submodel along the sequence 
-#' (\code{"seqModel"}); or a numeric vector containing the coefficients of the 
-#' optimal submodel (\code{"optSeqModel"}).
-#' @returnItem fitted.values  a numeric matrix in which each column contains 
-#' the fitted values of the corresponding submodel along the sequence 
-#' (\code{"seqModel"}); or a numeric vector containing the fitted values 
-#' of the optimal submodel (\code{"optSeqModel"}).
-#' @returnItem residuals  a numeric matrix in which each column contains 
-#' the residuals of the corresponding submodel along the sequence 
-#' (\code{"seqModel"}); or a numeric vector containing the residuals 
-#' of the optimal submodel (\code{"optSeqModel"}).
-#' @returnItem crit  a character string specifying the optimality criterion used 
-#' for selecting the final model.
-#' @returnItem critValues  a numeric vector containing the values of 
-#' the optimality criterion from the submodels along the sequence 
-#' (\code{"seqModel"}); or an object of class \code{"perrySeqModel"} 
-#' (inheriting from \code{"\link[perry]{perrySelect}"}) that contains 
-#' the estimated prediction errors of the submodels (\code{"optSeqModel"}).
-#' @returnItem sOpt  an integer giving the optimal submodel (only 
-#' \code{"seqModel"}).
-#' @returnItem muY  numeric; the center estimate of the response.
-#' @returnItem sigmaY  numeric; the scale estimate of the response.
+#' @returnItem robust  a logical indicating whether a robust fit was computed 
+#' (\code{TRUE} for \code{"rlars"} models).
+#' @returnItem scale  a numeric vector giving the robust residual scale 
+#' estimates for the submodels along the sequence.
+#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC 
+#' values and indicating the final model (only returned if argument \code{crit} 
+#' is \code{"BIC"} and argument \code{s} indicates more than one step along the 
+#' sequence).
 #' @returnItem muX  a numeric vector containing the center estimates of the 
 #' predictors.
 #' @returnItem sigmaX  a numeric vector containing the scale estimates of the 
 #' predictors.
+#' @returnItem muY  numeric; the center estimate of the response.
+#' @returnItem sigmaY  numeric; the scale estimate of the response.
 #' @returnItem x  the matrix of candidate predictors (if \code{model} is 
 #' \code{TRUE}).
 #' @returnItem y  the response (if \code{model} is \code{TRUE}).
@@ -150,9 +153,12 @@
 #' selection based on least angle regression. \emph{Journal of the American 
 #' Statistical Association}, \bold{102}(480), 1289--1299.
 #' 
-#' @seealso \code{\link{coef.seqModel}}, \code{\link{fitted.seqModel}}, 
-#' \code{\link{residuals.seqModel}}, \code{\link{predict.seqModel}}, 
-#' \code{\link{plot.seqModel}}
+#' @seealso \code{\link[=coef.seqModel]{coef}}, 
+#' \code{\link[=fitted.seqModel]{fitted}}, 
+#' \code{\link[=plot.seqModel]{plot}}, 
+#' \code{\link[=predict.seqModel]{predict}}, 
+#' \code{\link[=residuals.seqModel]{residuals}}, 
+#' \code{\link[robustbase]{lmrob}}
 #' 
 #' @example inst/doc/examples/example-rlars.R
 #' 
@@ -163,6 +169,7 @@
 #' @import RcppArmadillo
 #' @import parallel
 #' @import pcaPP
+#' @import perry
 
 rlars <- function(x, ...) UseMethod("rlars")
 
@@ -172,30 +179,30 @@ rlars <- function(x, ...) UseMethod("rlars")
 #' @export
 
 rlars.formula <- function(formula, data, ...) {
-    ## initializations
-    call <- match.call()  # get function call
-    call[[1]] <- as.name("rlars")
-    # prepare model frame
-    mf <- match.call(expand.dots = FALSE)
-    m <- match(c("formula", "data"), names(mf), 0)
-    mf <- mf[c(1, m)]
-    mf$drop.unused.levels <- TRUE
-    mf[[1]] <- as.name("model.frame")
-    mf <- eval(mf, parent.frame())
-    mt <- attr(mf, "terms")
-    if(is.empty.model(mt)) stop("empty model")
-    # extract response and candidate predictors from model frame
-    y <- model.response(mf, "numeric")
-    x <- model.matrix(mt, mf)
-    # remove first column for intercept, if existing
-    if(attr(mt, "intercept")) x <- x[, -1, drop=FALSE]
-    ## call default method
-    out <- rlars.default(x, y, ...)
-    if(inherits(out, "rlars")) {
-        out$call <- call  # add call to return object
-        out$terms <- mt   # add model terms to return object
-    }
-    out
+  ## initializations
+  matchedCall <- match.call()  # get function call
+  matchedCall[[1]] <- as.name("rlars")
+  # prepare model frame
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0)
+  mf <- mf[c(1, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1]] <- as.name("model.frame")
+  mf <- eval(mf, parent.frame())
+  mt <- attr(mf, "terms")
+  if(is.empty.model(mt)) stop("empty model")
+  # extract response and candidate predictors from model frame
+  y <- model.response(mf, "numeric")
+  x <- model.matrix(mt, mf)
+  # remove first column for intercept, if existing
+  if(attr(mt, "intercept")) x <- x[, -1, drop=FALSE]
+  ## call default method
+  out <- rlars.default(x, y, ...)
+  if(inherits(out, "rlars")) {
+    out$call <- matchedCall  # add call to return object
+    out$terms <- mt          # add model terms to return object
+  }
+  out
 }
 
 
@@ -203,118 +210,154 @@ rlars.formula <- function(formula, data, ...) {
 #' @method rlars default
 #' @export
 
-rlars.default <- function(x, y, sMax = NA, centerFun = median, scaleFun = mad, 
-        winsorize = FALSE, pca = FALSE, const = 2, prob = 0.95, fit = TRUE, 
-        regFun = lmrob, regArgs = list(), crit = c("BIC", "PE"), 
-        splits = foldControl(), cost = rtmspe, costArgs = list(), 
-        selectBest = c("hastie", "min"), seFactor = 1, ncores = 1, cl = NULL, 
-        seed = NULL, model = TRUE, tol = .Machine$double.eps^0.5, ...) {
-    ## initializations
-    call <- match.call()  # get function call
-    call[[1]] <- as.name("rlars")
-    n <- length(y)
-    x <- addColnames(as.matrix(x))
-    p <- ncol(x)
-    sMax <- checkSMax(sMax, n, p)
-    winsorize <- isTRUE(winsorize)
-    # check regression function
-    regControl <- getRegControl(regFun)
-    regFun <- regControl$fun  # if possible, do not use formula interface
-    # check number of processor cores
-    ncores <- rep(ncores, length.out=1)
-    if(is.na(ncores)) ncores <- detectCores()  # use all available cores
-    if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
-        ncores <- 1  # use default value
-        warning("invalid value of 'ncores'; using default value")
-    } else ncores <- as.integer(ncores)
-    # set seed of random number generator if supplied
-    if(!is.null(seed)) set.seed(seed)
-    
-    ## prepare the data
-    # robustly standardize data
-    z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
-    xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
-    muY <- attr(z, "center")
-    sigmaY <- attr(z, "scale")
-    muX <- attr(xs, "center")
-    sigmaX <- attr(xs, "scale")
-    # if requested, clean the data via multivariate winsorization
-    if(winsorize) {
-        # check whether PCA step should be used to reduce dimensionality
-        if(isTRUE(pca)) {
-            kMax <- NA
-            pca <- TRUE
-        } else if(is.numeric(pca) || is.na(pca)) {
-            kMax <- pca
-            pca <- TRUE
-        } else pca <- FALSE
-        if(pca) {
-            # perform PCA for dimension reduction before obtaining weights
-            scores <- pcaScores(cbind(z, xs), kMax=kMax)
-            scores <- robStandardize(scores, centerFun, scaleFun)
-            w <- winsorize(scores, standardized=TRUE, const=const, 
-                prob=prob, return="weights")
-        } else {
-            # obtain data cleaning weights from winsorization
-            w <- winsorize(cbind(z, xs), standardized=TRUE, 
-                const=const, prob=prob, return="weights")
-        }
-        # standardize data with mean and standard deviation
-        z <- standardize(w*z)    # standardize cleaned response
-        xs <- standardize(w*xs)  # standardize cleaned predictors
-        # center and scale of response
-        muY <- muY + attr(z, "center")
-        sigmaY <- sigmaY * attr(z, "scale")
-        # center and scale of candidate predictor variables
-        muX <- muX + attr(xs, "center")
-        sigmaX <- sigmaX * attr(xs, "scale")
+rlars.default <- function(x, y, sMax = NA, centerFun = median, 
+                          scaleFun = mad, winsorize = FALSE, pca = FALSE, 
+                          const = 2, prob = 0.95, fit = TRUE, s = c(0, sMax), 
+                          regFun = lmrob, regArgs = list(), 
+                          crit = c("BIC", "PE"), splits = foldControl(), 
+                          cost = rtmspe, costArgs = list(), 
+                          selectBest = c("hastie", "min"), seFactor = 1, 
+                          ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
+                          tol = .Machine$double.eps^0.5, ...) {
+  ## initializations
+  matchedCall <- match.call()  # get function call
+  matchedCall[[1]] <- as.name("rlars")
+  n <- length(y)
+  x <- addColnames(as.matrix(x))
+  p <- ncol(x)
+  if(isTRUE(is.numeric(sMax) && length(sMax) == 2)) {
+    # ensure backwards compatibility concerning the number of steps
+    s <- c(0, sMax[2])
+    sMax <- s[1]
+  }
+  sMax <- checkSMax(sMax, n, p)  # check number of variables to sequence
+  winsorize <- isTRUE(winsorize)
+  # check regression function
+  regControl <- getRegControl(regFun)
+  regFun <- regControl$fun  # if possible, do not use formula interface
+  # check number of processor cores
+  ncores <- rep(ncores, length.out=1)
+  if(is.na(ncores)) ncores <- detectCores()  # use all available cores
+  if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
+    ncores <- 1  # use default value
+    warning("invalid value of 'ncores'; using default value")
+  } else ncores <- as.integer(ncores)
+  
+  ## check whether submodels along the sequence should be computed
+  ## if yes, check whether the final model should be found via resampling-based 
+  ## prediction error estimation
+  fit <- isTRUE(fit)
+  if(fit) {
+    s <- checkSRange(s, sMax=sMax)
+    if(s[1] > s[2]) s[1] <- s[2]
+    crit <- if(s[1] == s[2]) "none" else match.arg(crit)
+    if(crit == "PE") {
+      # set up function call to be passed to perryTuning()
+      remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
+                  "selectBest", "seFactor", "ncores", "cl", "seed")
+      remove <- match(remove, names(matchedCall), nomatch=0)
+      call <- matchedCall[-remove]
+      # call function perryTuning() to perform prediction error estimation
+      s <- seq(from=s[1], to=s[2])
+      tuning <- list(s=s)
+      selectBest <- match.arg(selectBest)
+      out <- perryTuning(call, x=x, y=y, tuning=tuning, splits=splits, 
+                         predictArgs=list(fit="both"), cost=cost, 
+                         costArgs=costArgs, selectBest=selectBest, 
+                         seFactor=seFactor, ncores=ncores, cl=cl, 
+                         seed=seed)
+      # fit final model
+      call$x <- matchedCall$x
+      call$y <- matchedCall$y
+      call$s <- s[out$best]
+      call$ncores <- matchedCall$ncores
+      out$finalModel <- eval(call)
+      out$call <- matchedCall
+      # assign class and return object
+      class(out) <- c("perryRlars", "perrySeqModel", class(out))
+      return(out)
     }
-    
-    ## call C++ function
-    active <- .Call("R_fastLars", R_x=xs, R_y=z, R_sMax=as.integer(sMax[1]), 
-        R_robust=!winsorize, R_c=as.numeric(const), R_prob=as.numeric(prob), 
-        R_tol=as.numeric(tol), scaleFun=scaleFun, R_ncores=ncores, 
-        PACKAGE="robustHD") + 1
-    
-    ## choose optimal model according to specified criterion
-    if(isTRUE(fit)) {
-        # check whether parallel computing should be used
-        haveCl <- inherits(cl, "cluster")
-        haveNcores <- !haveCl && ncores > 1
-        useParallel <- haveNcores || haveCl
-        # set up multicore or snow cluster if not supplied
-        if(haveNcores) {
-            if(.Platform$OS.type == "windows") {
-                cl <- makePSOCKcluster(rep.int("localhost", ncores))
-            } else cl <- makeForkCluster(ncores)
-            on.exit(stopCluster(cl))
-        }
-        if(useParallel) {
-            # set seed of the random number stream
-            if(!is.null(seed)) clusterSetRNGStream(cl, iseed=seed)
-            else if(haveNcores) clusterSetRNGStream(cl)
-        }
-        # add ones to matrix of predictors to account for intercept
-        x <- addIntercept(x)
-        # call function to fit models along the sequence
-        s <- if(is.na(sMax[2])) NULL else 0:sMax[2]
-        out <- seqModel(x, y, active=active, s=s, robust=TRUE, regFun=regFun, 
-            useFormula=regControl$useFormula, regArgs=regArgs, crit=crit, 
-            splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
-            seFactor=seFactor, cl=cl)
-        # add center and scale estimates
-        out$muY <- muY
-        out$sigmaY <- sigmaY
-        out$muX <- muX
-        out$sigmaX <- sigmaX
-        if(isTRUE(model)) {
-            # add model data to result
-            out$x <- x
-            out$y <- y
-        }
-        if(winsorize) out$w <- w
-        out$call <- call  # add call to return object
-        class(out) <- c("rlars", class(out))
-        out
-    } else active
+  }
+  
+  ## prepare the data
+  if(!is.null(seed)) set.seed(seed)
+  # robustly standardize data
+  z <- robStandardize(y, centerFun, scaleFun, ...)   # standardize response
+  xs <- robStandardize(x, centerFun, scaleFun, ...)  # standardize predictors
+  muY <- attr(z, "center")
+  sigmaY <- attr(z, "scale")
+  muX <- attr(xs, "center")
+  sigmaX <- attr(xs, "scale")
+  # if requested, clean the data via multivariate winsorization
+  if(winsorize) {
+    # check whether PCA step should be used to reduce dimensionality
+    if(isTRUE(pca)) {
+      kMax <- NA
+      pca <- TRUE
+    } else if(is.numeric(pca) || is.na(pca)) {
+      kMax <- pca
+      pca <- TRUE
+    } else pca <- FALSE
+    if(pca) {
+      # perform PCA for dimension reduction before obtaining weights
+      scores <- pcaScores(cbind(z, xs), kMax=kMax)
+      scores <- robStandardize(scores, centerFun, scaleFun)
+      w <- winsorize(scores, standardized=TRUE, const=const, 
+                     prob=prob, return="weights")
+    } else {
+      # obtain data cleaning weights from winsorization
+      w <- winsorize(cbind(z, xs), standardized=TRUE, 
+                     const=const, prob=prob, return="weights")
+    }
+    # standardize data with mean and standard deviation
+    z <- standardize(w*z)    # standardize cleaned response
+    xs <- standardize(w*xs)  # standardize cleaned predictors
+    # center and scale of response
+    muY <- muY + attr(z, "center")
+    sigmaY <- sigmaY * attr(z, "scale")
+    # center and scale of candidate predictor variables
+    muX <- muX + attr(xs, "center")
+    sigmaX <- sigmaX * attr(xs, "scale")
+  }
+  
+  ## call C++ function
+  active <- .Call("R_fastLars", R_x=xs, R_y=z, R_sMax=sMax, 
+                  R_robust=!winsorize, R_c=as.numeric(const), 
+                  R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
+                  scaleFun=scaleFun, R_ncores=ncores, 
+                  PACKAGE="robustHD")
+  
+  ## choose optimal model according to specified criterion
+  if(fit) {
+    # check whether parallel computing should be used
+    haveCl <- inherits(cl, "cluster")
+    haveNcores <- !haveCl && ncores > 1
+    useParallel <- haveNcores || haveCl
+    # set up multicore or snow cluster if not supplied
+    if(haveNcores) {
+      if(.Platform$OS.type == "windows") {
+        cl <- makePSOCKcluster(rep.int("localhost", ncores))
+      } else cl <- makeForkCluster(ncores)
+      on.exit(stopCluster(cl))
+    }
+    if(useParallel) {
+      # set seed of the random number stream
+      if(!is.null(seed)) clusterSetRNGStream(cl, iseed=seed)
+      else if(haveNcores) clusterSetRNGStream(cl)
+    }
+    # add ones to matrix of predictors to account for intercept
+    x <- addIntercept(x)
+    # call function to fit models along the sequence
+    out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2], robust=TRUE, 
+                    regFun=regFun, useFormula=regControl$useFormula, 
+                    regArgs=regArgs, crit=crit, cl=cl)
+    # add center and scale estimates
+    out[c("muX", "sigmaX", "muY", "sigmaY")] <- list(muX, sigmaX, muY, sigmaY)
+    # add model data to result if requested
+    if(isTRUE(model)) out[c("x", "y")] <- list(x=x, y=y)
+    if(winsorize) out$w <- w
+    out$call <- matchedCall  # add call to return object
+    class(out) <- c("rlars", class(out))
+    out
+  } else active
 }

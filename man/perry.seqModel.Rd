@@ -1,10 +1,16 @@
 \name{perry.seqModel}
 \alias{perry.rlars}
 \alias{perry.seqModel}
+\alias{perry.sparseLTS}
 \title{Resampling-based prediction error for a sequential regression model}
 \usage{
   \method{perry}{seqModel} (object, splits = foldControl(),
     cost, ncores = 1, cl = NULL, seed = NULL, ...)
+
+  \method{perry}{sparseLTS} (object,
+    splits = foldControl(),
+    fit = c("reweighted", "raw", "both"), cost = rtmspe,
+    ncores = 1, cl = NULL, seed = NULL, ...)
 }
 \arguments{
   \item{object}{the model fit for which to estimate the
@@ -24,6 +30,13 @@
   control object of class \code{"bootControl"} (see
   \code{\link[perry]{bootControl}}) defining bootstrap
   samples.}
+
+  \item{fit}{a character string specifying for which fit to
+  estimate the prediction error.  Possible values are
+  \code{"reweighted"} (the default) for the prediction
+  error of the reweighted fit, \code{"raw"} for the
+  prediction error of the raw fit, or \code{"both"} for the
+  prediction error of both fits.}
 
   \item{cost}{a cost function measuring prediction loss.
   It should expect vectors to be passed as its first two
@@ -59,17 +72,19 @@
   An object of class \code{"perry"} with the following
   components:
 
-  \item{pe}{a numeric value giving the estimated prediction
-  error.  In case of more than one replication, this gives
-  the average value over all replications.}
+  \item{pe}{a numeric vector containing the estimated
+  prediction errors for the requested model fits.  In case
+  of more than one replication, this gives the average
+  value over all replications.}
 
-  \item{se}{a numeric value giving the estimated standard
-  error of the prediction loss.}
+  \item{se}{a numeric vector containing the estimated
+  standard errors of the prediction loss for the requested
+  model fits.}
 
-  \item{reps}{a numeric matrix with one column that
+  \item{reps}{a numeric matrix in which each column
   contains the estimated prediction errors from all
-  replications.  This is only returned in case of more than
-  one replication.}
+  replications for the requested model fits.  This is only
+  returned in case of more than one replication.}
 
   \item{splits}{an object giving the data splits used to
   estimate the prediction error.}
@@ -84,43 +99,52 @@
 \description{
   Estimate the prediction error of a previously fit
   sequential regression model such as a robust least angle
-  regression model via (repeated) \eqn{K}-fold
-  cross-validation, (repeated) random splitting (also known
-  as random subsampling or Monte Carlo cross-validation),
-  or the bootstrap.  In each iteration, the optimal model
-  is thereby selected from the training data and used to
-  make predictions for the test data.
+  regression model or a sparse least trimmed squares
+  regression model.
 }
-\note{
-  Users may prefer the wrapper functions
-  \code{\link[perry]{repCV}}, \code{\link[perry]{repRS}}
-  and \code{\link[perry]{bootPE}}.
+\details{
+  The prediction error can be estimated via (repeated)
+  \eqn{K}-fold cross-validation, (repeated) random
+  splitting (also known as random subsampling or Monte
+  Carlo cross-validation), or the bootstrap.  In each
+  iteration, the optimal model is thereby selected from the
+  training data and used to make predictions for the test
+  data.
 }
 \examples{
 ## generate data
 # example is not high-dimensional to keep computation time low
+library("mvtnorm")
 set.seed(1234)  # for reproducibility
 n <- 100  # number of observations
 p <- 25   # number of variables
 beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
 sigma <- 0.5      # controls signal-to-noise ratio
 epsilon <- 0.1    # contamination level
-x <- replicate(p, rnorm(n))     # predictor matrix
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
 e <- rnorm(n)                   # error terms
 i <- 1:ceiling(epsilon*n)       # observations to be contaminated
 e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
+
 ## fit and evaluate robust LARS model
-fit <- rlars(x, y)
-repCV(fit)
+fitRlars <- rlars(x, y, sMax = 10)
+perry(fitRlars)
+
+## fit and evaluate sparse LTS model
+frac <- seq(0.2, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+perry(fitSparseLTS)
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link{rlars}}, \code{\link{predict.seqModel}},
+  \code{\link{rlars}}, \code{\link{sparseLTS}},
+  \code{\link[=predict.seqModel]{predict}},
   \code{\link[perry]{perry}}, \code{\link[perry]{cost}}
 }
 \keyword{utilities}

@@ -1,22 +1,25 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus University Rotterdam
+# ------------------------------------
 
-#' @S3method print seqModel
-print.seqModel <- function(x, zeros = FALSE, ...) {
-    # print function call
-    if(!is.null(call <- x$call)) {
-        cat("\nCall:\n")
-        dput(x$call)
-    }
-    # print coefficients of optimal submodel
-    cat("\nCoefficients of optimal submodel:\n")
-    print(coef(x, zeros=zeros), ...)
-    # print index of optimal submodel
-    cat(sprintf("\nIndex of optimal submodel: %d\n", x$sOpt))
-    # return object invisibly
-    invisible(x)
+#' @S3method print bicSelect
+print.bicSelect <- function(x, best = TRUE, ...) {
+  # print BIC values
+  cat("\nBIC:\n")
+  print(x$values, ...)
+  # print optimal model if requested
+  if(isTRUE(best)) {
+    best <- x$best
+    text <- "Index of best model:"
+    if(length(best) == 1) {
+      best <- as.matrix(best)
+      dimnames(best) <- list(text, "")
+    } else cat("\n", text, "\n", sep="")
+    print(best, ...)
+  }
+  # return object invisibly
+  invisible(x)
 }
 
 #' @S3method print grplars
@@ -31,167 +34,156 @@ print.grplars <- function(x, zeros = FALSE, ...) {
     steps <- seq_along(active)
     active <- t(active)
     dimnames(active) <- list("Group", steps)
-    cat("\nSequence of LARS moves:\n")
+    cat("\nSequence of moves:\n")
     print(active, ...)
-    # print coefficients of optimal LARS submodel
-    cat("\nCoefficients of optimal LARS submodel:\n")
-    print(coef(x, zeros=zeros), ...)
-    # return object invisibly
-    invisible(x)
-}
-
-#' @S3method print tslarsP
-print.tslarsP <- function(x, ...) {
-    # print "grplars" model
-    print.grplars(x, ...)
-    # print lag length
-#    cat("\nLag length:\n")
-#    print(x$p, ...)
-    cat(sprintf("\nLag length: %d\n", x$p))
-    # return object invisibly
-    invisible(x)
-}
-
-#' @S3method print tslars
-print.tslars <- function(x, ...) {
-    # print "grplars" model with optimal lag length
-    pOpt <- x$pOpt
-    xOpt <- x$pFit[[pOpt]]
-    xOpt$call <- x$call
-    print.grplars(xOpt, ...)
-    # print optimal lag length
-#    cat("\nOptimal lag length:\n")
-#    print(pOpt, ...)
-    cat(sprintf("\nOptimal lag length: %d\n", pOpt))
-    # return object invisibly
-    invisible(x)
-}
-
-#' @S3method print rlars
-print.rlars <- function(x, zeros = FALSE, ...) {
-    # print function call
-    if(!is.null(call <- x$call)) {
-        cat("\nCall:\n")
-        dput(x$call)
-    }
-    # print LARS sequence of groups
-    active <- x$active
-    steps <- seq_along(active)
-    active <- t(active)
-    dimnames(active) <- list("Var", steps)
-    cat("\nSequence of LARS moves:\n")
-    print(active, ...)
-    # print coefficients of optimal LARS submodel
-    cat("\nCoefficients of optimal LARS submodel:\n")
-    print(coef(x, zeros=zeros), ...)
-    # return object invisibly
-    invisible(x)
-}
-
-#' @S3method print sparseLTS
-print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
-        zeros = FALSE, ...) {
-    # initializations
-    fit <- match.arg(fit)
-    # print function call
-    if(!is.null(call <- x$call)) {
-        cat("\nCall:\n")
-        dput(x$call)
-    }
-    # print coefficients of sparse LTS model
-    cat("\nCoefficients:\n")
-    coefficients <- coef(x, fit=fit, zeros=zeros)
-    print(coefficients, ...)
-    # print penalty parameter and robust scale estimate
-    text <- c("Penalty parameter:", "Residual scale estimate:")
-    if(fit == "both") {
-        lambda <- as.matrix(x$lambda)
-        dimnames(lambda) <- list(text[1], "")
-        print(lambda, ...)
-        scale <- t(c(x$scale, x$raw.scale))
-        dimnames(scale) <- list(text[2], colnames(coefficients))
-        print(scale, ...)
-    } else {
-        scale <- if(fit == "reweighted") x$scale else x$raw.scale
-        info <- matrix(c(x$lambda, scale), 2, 1)
-        dimnames(info) <- list(text, "")
-        print(info, ...)
-    }
-    # return object invisibly
-    invisible(x)
-}
-
-#' @S3method print sparseLTSGrid
-print.sparseLTSGrid <- function(x, fit = c("reweighted", "raw", "both"), 
-        zeros = FALSE, ...) {
-    # initializations
-    fit <- match.arg(fit)
-    # print function call
-    if(!is.null(call <- x$call)) {
-        cat("\nCall:\n")
-        dput(x$call)
-    }
-    # print coefficients of sparse LTS model
+    # print coefficients of optimal submodel
     cat("\nCoefficients of optimal submodel:\n")
-    coefficients <- coef(x, fit=fit, zeros=zeros)
-    if(fit == "both") {
-        fits <- c("reweighted", "raw")
-        colnames(coefficients) <- fits
-    }
-    print(coefficients, ...)
-    # print penalty parameter and robust scale estimate
-    sOpt <- getSOpt(x, fit=fit)
-    lambda <- x$lambda[sOpt]
-    scale <- getScale(x, fit=fit)
-    info <- rbind(lambda, scale)
-    text <- c("Optimal penalty parameter:", "Residual scale estimate:")
-    if(fit == "both") {
-        dimnames(info) <- list(text, colnames(coefficients))
-        cat("\n")
-    } else dimnames(info) <- list(text, "")
-    print(info, ...)
+    print(coef(x, zeros=zeros), ...)
     # return object invisibly
     invisible(x)
 }
 
-#' @S3method print optSparseLTSGrid
-print.optSparseLTSGrid <- print.sparseLTSGrid
+#' @S3method print fitSelect
+print.fitSelect <- function(x, ...) {
+  # indices of the best reweighted and raw fit
+  cat("Index of best model:\n")
+  print(x$best, ...)
+  # return object invisibly
+  invisible(x)
+}
 
 #' @S3method print perrySeqModel
 #' @import perry
 print.perrySeqModel <- function(x, ...) {
-    # print prediction error results
-    perry:::print.perrySelect(x, best=FALSE, ...)
-    # print optimal model if requested
-    bestFit <- x$pe[x$best, "Fit"]
-    if(is.factor(bestFit)) bestFit <- as.character(bestFit)
-    bestFit <- as.numeric(bestFit)
-    if(length(bestFit) > 1) {
-        names(bestFit) <- names(x$best)
-        cat("\nOptimal step:\n")
-    } else {
-        bestFit <- matrix(bestFit, dimnames=list("Optimal step:", ""))
-    }
-    print(bestFit, ...)
-    # return object invisibly
-    invisible(x)
+  # print prediction error results
+  perry:::print.perryTuning(x, best=FALSE, final=FALSE, ...)
+  # print optimal step
+  sOpt <- as.matrix(x$tuning[x$best, "s"])
+  cat(sprintf("\nOptimal step: %d\n", sOpt))
+  # print final model
+  cat("\nFinal model:\n")
+  print(x$finalModel, ...)
+  # return object invisibly
+  invisible(x)
 }
 
-#' @S3method print perrySparseLTSGrid
+#' @S3method print perrySparseLTS
 #' @import perry
-print.perrySparseLTSGrid <- function(x, ...) {
-    # print prediction error results
-    perry:::print.perryTuning(x, best=FALSE, ...)
-    # print optimal value for penalty parameter
-    optimalLambda <- x$tuning[x$best, "lambda"]
-    if(length(optimalLambda) > 1) {
-        names(optimalLambda) <- names(x$best)
-        cat("\nOptimal lambda:\n")
+print.perrySparseLTS <- function(x, ...) {
+  # print prediction error results
+  perry:::print.perryTuning(x, best=FALSE, final=FALSE, ...)
+  # print optimal value for penalty parameter
+  optimalLambda <- x$tuning[x$best, "lambda"]
+  names(optimalLambda) <- names(x$best)
+  cat("\nOptimal lambda:\n")
+  print(optimalLambda, ...)
+  # print final model
+  cat("\nFinal model:\n")
+  print(x$finalModel, ...)
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print seqModel
+print.seqModel <- function(x, zeros = FALSE, ...) {
+  # print function call
+  if(!is.null(call <- x$call)) {
+    cat("\nCall:\n")
+    dput(x$call)
+  }
+  # print predictor sequence
+  active <- t(x$active)
+  steps <- seq_len(ncol(active))
+  dimnames(active) <- list("Var", steps)
+  cat("\nSequence of moves:\n")
+  print(active, ...)
+  # print coefficients of optimal submodel
+  sOpt <- getSOpt(x)
+  if(is.null(sOpt)) {
+    sOpt <- x$s  # only one step
+    text <- c("Coefficients:", "Step:")
+  } else text <- c("Coefficients of optimal submodel:", "Optimal step:")
+  cat("\n", text[1], "\n", sep="")
+  print(coef(x, zeros=zeros), ...)
+  # print optimal step
+  cat("\n", text[2], sprintf(" %d\n", sOpt), sep="")
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print sparseLTS
+print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
+                            zeros = FALSE, ...) {
+  # initializations
+  fit <- match.arg(fit)
+  lambda <- x$lambda
+  sOpt <- getSOpt(x, fit=fit)
+  # print function call
+  if(!is.null(call <- x$call)) {
+    cat("\nCall:\n")
+    dput(x$call)
+  }
+  # print coefficients of sparse LTS model
+  coefficients <- coef(x, fit=fit, zeros=zeros)
+  if(length(lambda) == 1) cat("\nCoefficients:\n")
+  else {
+    if(fit == "both") colnames(coefficients) <- c("reweighted", "raw")
+    cat("\nCoefficients of optimal submodel:\n")
+  }
+  print(coefficients, ...)
+  # print penalty parameter and robust scale estimate
+  scale <- getScale(x, fit=fit)
+  if(length(lambda) == 1) {
+    text <- c("Penalty parameter:", "Residual scale estimate:")
+    if(fit == "both") {
+      lambda <- as.matrix(lambda)
+      dimnames(lambda) <- list(text[1], "")
+      print(lambda, ...)
+      scale <- t(scale)
+      dimnames(scale) <- list(text[2], colnames(coefficients))
+      print(scale, ...)
     } else {
-        optimalLambda <- matrix(optimalLambda, 
-            dimnames=list("Optimal lambda:", ""))
+      info <- matrix(c(lambda, scale), 2, 1)
+      dimnames(info) <- list(text, "")
+      print(info, ...)
     }
-    print(optimalLambda, ...)
-    # return object invisibly
-    invisible(x)
+  } else {
+    lambda <- lambda[sOpt]
+    info <- rbind(lambda, scale)
+    text <- c("Optimal penalty parameter:", "Residual scale estimate:")
+    if(fit == "both") {
+      dimnames(info) <- list(text, colnames(coefficients))
+      cat("\n")
+    } else dimnames(info) <- list(text, "")
+    print(info, ...)
+  }
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print tslarsP
+print.tslarsP <- function(x, ...) {
+  # print "grplars" model
+  print.grplars(x, ...)
+  # print lag length
+  #    cat("\nLag length:\n")
+  #    print(x$p, ...)
+  cat(sprintf("\nLag length: %d\n", x$p))
+  # return object invisibly
+  invisible(x)
+}
+
+#' @S3method print tslars
+print.tslars <- function(x, ...) {
+  # print "grplars" model with optimal lag length
+  pOpt <- x$pOpt
+  xOpt <- x$pFit[[pOpt]]
+  xOpt$call <- x$call
+  print.grplars(xOpt, ...)
+  # print optimal lag length
+  #    cat("\nOptimal lag length:\n")
+  #    print(pOpt, ...)
+  cat(sprintf("\nOptimal lag length: %d\n", pOpt))
+  # return object invisibly
+  invisible(x)
 }

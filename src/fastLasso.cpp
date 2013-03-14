@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #include "fastLasso.h"
@@ -35,9 +35,9 @@ double findStep(const double& corActiveY, const vec& corInactiveY,
 			(corActiveY + corInactiveY)/(corActiveU + corInactiveU));
 	steps = steps.elem(find(steps > eps));
 	// find and return step size
-	double step = corActiveY/corActiveU;	// maximum possible step;
+	double step = corActiveY/corActiveU;      // maximum possible step;
 	if(steps.n_elem > 0) {
-		double smallestPositive = steps.min();	// smallest positive value
+		double smallestPositive = steps.min();  // smallest positive value
 		if(smallestPositive < step) {
 			step = smallestPositive;
 		}
@@ -118,24 +118,24 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 	rowvec meanX;
 	double meanY;
 	if(useIntercept) {
-		meanX = mean(xs, 0);		// columnwise means of predictors
+		meanX = mean(xs, 0);		  // columnwise means of predictors
 		for(uword j = 0; j < p; j++) {
 			xs.col(j) -= meanX(j);	// sweep out columnwise means
 		}
 		meanY = mean(ys);	// mean of response
-		ys -= meanY;		// sweep out mean
+		ys -= meanY;		  // sweep out mean
 	} else {
-		meanY = 0;		// just to avoid warning, this is never used
+		meanY = 0;		  // just to avoid warning, this is never used
 //		intercept = 0;	// zero intercept
 	}
 
 	// compute norms and find variables with too small a norm
 	uvec inactive = seqLen(p);
 	rowvec normX = sqrt(sum(xs % xs, 0));	// columnwise norms
-	double epsNorm = eps * sqrt(n);	// R package 'lars' uses n, not n-1
+	double epsNorm = eps * sqrt(n);	      // R package 'lars' uses n, not n-1
 	uvec ignores = find(normX < epsNorm);	// indicates variables to be ignored
 	uword s = ignores.n_elem;
-	for(sword j = s-1; j >= 0; j--) {	// reverse order (requires signed integer)
+	for(sword j = s-1; j >= 0; j--) { // reverse order (requires signed integer)
 		uword i = ignores(j);
 		// set norm to tolerance to avoid numerical problems
 		normX(i) = epsNorm;
@@ -161,12 +161,12 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 	// further initializations for iterative steps
 	rowvec corY = conv_to<rowvec>::from(ys) * xs;	// current correlations (might be faster than trans())
 	uvec active;	// active predictors
-	uword k = 0;			// number of active predictors
+	uword k = 0;	// number of active predictors
 	vec previousBeta = zeros(p+s), currentBeta = zeros(p+s);	// previous and current regression coefficients
 	double previousLambda = 0, currentLambda = 0;	// previous and current penalty parameter
 	uvec drops;		// indicates variables to be dropped
 	vec signs;		// keep track of sign of correlations for the active variables (double precision is necessary for solve())
-	mat L;			// Cholesky L of Gram matrix of active variables
+	mat L;			  // Cholesky L of Gram matrix of active variables
 	uword rank = 0;		// rank of Cholesky L
 	uword maxActive = findMaxActive(n, p, useIntercept);	// maximum number of variables to be sequenced
 
@@ -202,7 +202,7 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 					xNewJ = Gram.unsafe_col(newJ);	// reuses memory
 					newX = xNewJ(newJ);
 				} else {
-					xNewJ = xs.unsafe_col(newJ);	// reuses memory
+					xNewJ = xs.unsafe_col(newJ);	  // reuses memory
 					newX = accu(xNewJ % xNewJ);
 				}
 				double normNewX = sqrt(newX);
@@ -453,11 +453,11 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 		SEXP R_subset, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
     // data initializations
-	NumericMatrix Rcpp_x(R_x);						// predictor matrix
+	NumericMatrix Rcpp_x(R_x);						  // predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-	mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
-	NumericVector Rcpp_y(R_y);			// response
-	vec y(Rcpp_y.begin(), n, false);	// reuse memory
+	mat x(Rcpp_x.begin(), n, p, false);		  // reuse memory
+	NumericVector Rcpp_y(R_y);			        // response
+	vec y(Rcpp_y.begin(), n, false);	      // reuse memory
 	double lambda = as<double>(R_lambda);
 	bool useSubset = as<bool>(R_useSubset);
 	uvec subset;
@@ -466,7 +466,8 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 		const int h = Rcpp_subset.size();
 		subset = uvec(h);
 		for(int i = 0; i < h; i++) {
-			subset(i) = Rcpp_subset[i];			// can't use the same memory-saving conversion for integer vectors
+      // can't use the same memory-saving conversion for integer vectors
+			subset(i) = Rcpp_subset[i] - 1;
 		}
 	}
 	bool useIntercept = as<bool>(R_intercept);

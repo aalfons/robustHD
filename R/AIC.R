@@ -1,40 +1,14 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus University Rotterdam
+# ------------------------------------
 
-## class 'lmrob'
-
-AIC.lmrob <- AIC.lmrob.S <- function(object, ..., k = 2) {
-    n <- length(residuals(object))  # number of observations
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(object$scale^2)) + (object$rank) * k
-}
-
-BIC.lmrob <- BIC.lmrob.S <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
-}
-
-
-## class 'rlm'
-
-AIC.rlm <- function(object, ..., k = 2) {
-    n <- length(residuals(object))  # number of observations
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(object$s^2)) + (object$rank) * k
-}
-
-BIC.rlm <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
-}
-
-
-#' Information criteria for sparse LTS regression models
+#' Information criteria for a sequence of regression models
 #' 
-#' Compute the Akaike or Bayes information criterion for sparse least trimmed 
-#' squares regression models based on the robust residual scale estimate.
+#' Compute the Akaike or Bayes information criterion for for a sequence of 
+#' regression models, such as submodels along a robust least angle regression 
+#' sequence, or sparse least trimmed squares regression models for a grid of 
+#' values for the penalty parameter.
 #' 
 #' The information criteria are computed as
 #' \eqn{n (\log(2 \pi) + 1 + \log(\hat{\sigma}^2)) + df k}{n (log(2 pi) + 1 + log(sigma^2)) + df k}, 
@@ -46,7 +20,7 @@ BIC.rlm <- function(object, ...) {
 #' default penalty of the \code{AIC} method, whereas the \code{BIC} method calls 
 #' the \code{AIC} method with the latter penalty.
 #' 
-#' @method AIC sparseLTS
+#' @method AIC seqModel
 #' 
 #' @param object  the model fit for which to compute the information criterion.
 #' @param \dots  for the \code{BIC} method, additional arguments to be passed 
@@ -61,7 +35,8 @@ BIC.rlm <- function(object, ...) {
 #' default is to use \eqn{2} as in the classical definition of the AIC.
 #' 
 #' @return  
-#' A numeric vector giving the information criteria for the requested fits.
+#' A numeric vector or matrix giving the information criteria for the requested 
+#' model fits.
 #' 
 #' @note Computing information criteria for several objects supplied via the 
 #' \code{\dots} argument (as for the default methods of \code{\link[stats]{AIC}} 
@@ -76,8 +51,8 @@ BIC.rlm <- function(object, ...) {
 #' Schwarz, G. (1978) Estimating the dimension of a model. \emph{The Annals of 
 #' Statistics}, \bold{6}(2), 461--464.
 #' 
-#' @seealso \code{\link[stats]{AIC}}, \code{\link{sparseLTS}}, 
-#' \code{\link{sparseLTSGrid}}
+#' @seealso \code{\link[stats]{AIC}}, \code{\link{rlars}}, 
+#' \code{\link{sparseLTS}}
 #' 
 #' @example inst/doc/examples/example-AIC.R
 #' 
@@ -86,79 +61,102 @@ BIC.rlm <- function(object, ...) {
 #' @import stats
 #' @export
 
-AIC.sparseLTS <- function(object, ..., fit = c("reweighted", "raw", "both"), 
-        k = 2) {
-    n <- length(residuals(object))  # number of observations
-    fit <- match.arg(fit)
-    if(fit == "reweighted") {
-        sigma2 <- object$scale^2
-        df <- object$df
-    } else if(fit == "raw") {
-        sigma2 <- object$raw.scale^2
-        df <- modelDf(coef(object, fit="raw"))
-    } else {
-        sigma2 <- c(reweighted=object$scale, raw=object$raw.scale)^2
-        df <- c(reweighted=object$df, raw=modelDf(coef(object, fit="raw")))
+AIC.seqModel <- function(object, ..., k = 2) {
+  # initializations
+  res <- residuals(object, s=NULL)
+  n <- nrow(res)     # number of observations
+  df <- object$df    # degrees of freedom
+  # define function to compute the BIC
+  if(object$robust) {
+    # BIC based on robust residual scale estimate
+    scale <- object$scale
+    critFun <- function(j) {
+      n * (log(2 * pi) + 1 + log(scale[j]^2)) + df[j] * k
     }
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(sigma2)) + df * k
+  } else {
+    # BIC based on likelihood
+    # R uses (df + 1) in BIC penalty for (weighted) linear models!!!
+    critFun <- function(j) {
+      n * (log(2 * pi) + 1 - log(n) + 
+             log(sum(res[, j]^2))) + df[j] * k
+    }
+  }
+  # compute BIC values of the submodels
+  sapply(seq_along(df), critFun)
 }
 
 
-#' @rdname AIC.sparseLTS
+#' @rdname AIC.seqModel
+#' @method AIC sparseLTS
+#' @export
+
+AIC.sparseLTS <- function(object, ..., 
+                          fit = c("reweighted", "raw", "both"), 
+                          k = 2) {
+  res <- residuals(object, s=NULL)
+  n <- if(is.null(d <- dim(res))) length(res) else d[1] # number of observations
+  fit <- match.arg(fit)
+  if(fit == "reweighted") {
+    sigma2 <- object$scale^2
+    df <- object$df
+  } else if(fit == "raw") {
+    sigma2 <- object$raw.scale^2
+    df <- object$raw.df
+  } else {
+    sigma2 <- cbind(reweighted=object$scale, raw=object$raw.scale)^2
+    df <- cbind(reweighted=object$df, raw=object$raw.df)
+  }
+  # compute AIC with the same terms as R does for linear models
+  n * (log(2 * pi) + 1 + log(sigma2)) + df * k
+}
+
+
+#' @rdname AIC.seqModel
+#' @method BIC seqModel
+#' @export
+
+BIC.seqModel <- function(object, ...) {
+  n <- nrow(residuals(object, s=NULL))  # number of observations
+  AIC(object, ..., k=log(n))            # call AIC method with penalty for BIC
+}
+
+
+#' @rdname AIC.seqModel
 #' @method BIC sparseLTS
 #' @export
 
 BIC.sparseLTS <- function(object, ...) {
-    n <- length(residuals(object))  # number of observations
-    AIC(object, ..., k=log(n))      # call AIC method with penalty for BIC
+  res <- residuals(object, s=NULL)
+  n <- if(is.null(d <- dim(res))) length(res) else d[1] # number of observations
+  AIC(object, ..., k=log(n))  # call AIC method with penalty for BIC
 }
 
 
-#' @rdname AIC.sparseLTS
-#' @method AIC sparseLTSGrid
-#' @export
+## internal function returning an object of class "BIC" so that the optimal 
+## model can be retrieved for a sequence of models
 
-AIC.sparseLTSGrid <- function(object, ..., 
-        fit = c("reweighted", "raw", "both"), 
-        k = 2) {
-    n <- nrow(residuals(object, s=NULL))  # number of observations
-    fit <- match.arg(fit)
-    if(fit == "reweighted") {
-        sigma2 <- object$scale^2
-        df <- object$df
-    } else if(fit == "raw") {
-        sigma2 <- object$raw.scale^2
-        df <- apply(coef(object, s=NULL, fit="raw"), 2, modelDf)
-    } else {
-        sigma2 <- c(reweighted=object$scale, raw=object$raw.scale)^2
-        df <- c(reweighted=object$df, 
-            raw=apply(coef(object, s=NULL, fit="raw"), 2, modelDf))
-    }
-    # compute AIC with the same terms as R does for linear models
-    n * (log(2 * pi) + 1 + log(sigma2)) + df * k
+# generic function
+bicSelect <- function(object, ...) UseMethod("bicSelect")
+
+# method for a list of models
+bicSelect.seqModel <- function(object, ...) {
+  # compute BIC values of the submodels
+  values <- BIC(object, ...)
+  # select the best submodel and return BIC object
+  bic <- list(values=values, best=which.min(values))
+  class(bic) <- "bicSelect"
+  bic
 }
 
-
-#' @rdname AIC.sparseLTS
-#' @method BIC sparseLTSGrid
-#' @export
-
-BIC.sparseLTSGrid <- function(object, ...) {
-    n <- nrow(residuals(object, s=NULL))  # number of observations
-    AIC(object, ..., k=log(n))            # call AIC method with penalty for BIC
+# method for sparse LTS models
+bicSelect.sparseLTS <- function(object, ...) {
+  # compute BIC values for different tuning parameters
+  values <- BIC(object, ...)
+  # select the best model
+  if(is.null(dim(values))) best <- which.min(unname(values))
+  else best <- apply(values, 2, which.min)
+  # return BIC object
+  bic <- list(values=values, best=best)
+  class(bic) <- "bicSelect"
+  bic
 }
-
-
-#' @rdname AIC.sparseLTS
-#' @method AIC optSparseLTSGrid
-#' @export
-
-AIC.optSparseLTSGrid <- AIC.sparseLTS
-
-
-#' @rdname AIC.sparseLTS
-#' @method BIC optSparseLTSGrid
-#' @export
-
-BIC.optSparseLTSGrid <- BIC.sparseLTS

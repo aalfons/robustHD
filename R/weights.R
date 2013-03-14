@@ -1,12 +1,7 @@
-# ----------------------
+# ------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
-
-## class 'rlm'
-
-weights.rlm <- function(object, ...) object$w
-
+#         Erasmus University Rotterdam
+# ------------------------------------
 
 #' Extract outlier weights from sparse LTS regression models
 #' 
@@ -38,9 +33,9 @@ weights.rlm <- function(object, ...) object$w
 #' 
 #' @author Andreas Alfons
 #' 
-#' @seealso \code{\link{sparseLTS}}, \code{\link{sparseLTSGrid}}
+#' @seealso \code{\link{sparseLTS}}
 #' 
-#' @example inst/doc/examples/example-wt.sparseLTS.R
+#' @example inst/doc/examples/example-wt.R
 #' 
 #' @keywords regression
 #' 
@@ -53,26 +48,8 @@ wt <- function(object, ...) UseMethod("wt")
 #' @method wt sparseLTS
 #' @export
 
-wt.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"), ...) {
-    fit <- match.arg(fit)
-    switch(fit, reweighted=object$wt, raw=object$raw.wt,
-        both=cbind(reweighted=object$wt, raw=object$raw.wt))
+wt.sparseLTS <- function(object, s = NA, 
+                         fit = c("reweighted", "raw", "both"), 
+                         drop = !is.null(s), ...) {
+  getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
 }
-
-
-#' @rdname wt
-#' @method wt sparseLTSGrid
-#' @export
-
-wt.sparseLTSGrid <- function(object, s = NA, 
-        fit = c("reweighted", "raw", "both"), 
-        drop = !is.null(s), ...) {
-    getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
-}
-
-
-#' @rdname wt
-#' @method wt optSparseLTSGrid
-#' @export
-
-wt.optSparseLTSGrid <- wt.sparseLTS

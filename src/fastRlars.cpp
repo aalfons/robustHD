@@ -154,7 +154,7 @@ SEXP R_fastRlars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_c, SEXP R_prob,
 	double tol = as<double>(R_tol);
 	int ncores = as<int>(R_ncores);
 	// call native C++ function
-	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun, ncores);
+	uvec active = fastRlars(x, y, sMax, c, prob, tol, scaleFun, ncores) + 1;
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }
 */

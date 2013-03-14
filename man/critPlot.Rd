@@ -1,11 +1,11 @@
 \name{critPlot}
 \alias{critPlot}
 \alias{critPlot.grplars}
-\alias{critPlot.optSeqModel}
-\alias{critPlot.optSparseLTSGrid}
+\alias{critPlot.perrySeqModel}
+\alias{critPlot.perrySparseLTS}
 \alias{critPlot.rlars}
 \alias{critPlot.seqModel}
-\alias{critPlot.sparseLTSGrid}
+\alias{critPlot.sparseLTS}
 \alias{critPlot.tslars}
 \alias{critPlot.tslarsP}
 \title{Optimality criterion plot of a sequence of regression models}
@@ -14,15 +14,15 @@
 
   \method{critPlot}{seqModel} (x, size = c(0.5, 2), ...)
 
-  \method{critPlot}{optSeqModel} (x, ...)
+  \method{critPlot}{perrySeqModel} (x, ...)
 
   \method{critPlot}{tslars} (x, p, ...)
 
-  \method{critPlot}{sparseLTSGrid} (x,
+  \method{critPlot}{sparseLTS} (x,
     fit = c("reweighted", "raw", "both"), size = c(0.5, 2),
     ...)
 
-  \method{critPlot}{optSparseLTSGrid} (x,
+  \method{critPlot}{perrySparseLTS} (x,
     fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
@@ -44,12 +44,12 @@
   \item{\dots}{for the generic function, additional
   arguments to be passed down to methods.  For the
   \code{"tslars"} method, additional arguments to be passed
-  down to the \code{"seqModel"} or \code{"optSeqModel"}
-  method.  For the \code{"seqModel"} and
-  \code{"sparseLTSGrid"} methods, additional arguments to
-  be passed down to \code{\link[ggplot2]{geom_line}} and
+  down to the \code{"seqModel"} method.  For the
+  \code{"seqModel"} and \code{"sparseLTS"} methods,
+  additional arguments to be passed down to
+  \code{\link[ggplot2]{geom_line}} and
   \code{\link[ggplot2]{geom_point}}.  For the
-  \code{"optSeqModel"} and \code{"optSparseLTSGrid"}
+  \code{"perrySeqModel"} and \code{"perrySparseLTS"}
   methods, additional arguments to be passed down to the
   \code{\link[perry:perryPlot]{plot}} method for the
   prediction error results.}
@@ -68,34 +68,47 @@
 \examples{
 ## generate data
 # example is not high-dimensional to keep computation time low
+library("mvtnorm")
 set.seed(1234)  # for reproducibility
 n <- 100  # number of observations
 p <- 25   # number of variables
 beta <- rep.int(c(1, 0), c(5, p-5))  # coefficients
 sigma <- 0.5      # controls signal-to-noise ratio
 epsilon <- 0.1    # contamination level
-x <- replicate(p, rnorm(n))     # predictor matrix
+Sigma <- 0.5^t(sapply(1:p, function(i, j) abs(i-j), 1:p))
+x <- rmvnorm(n, sigma=Sigma)    # predictor matrix
 e <- rnorm(n)                   # error terms
 i <- 1:ceiling(epsilon*n)       # observations to be contaminated
 e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
-## fit robust LARS model
-fit <- rlars(x, y)
 
-## create plot
-critPlot(fit)
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# create plot
+critPlot(fitRlars)
+
+
+## sparse LTS over a grid of values for lambda
+# fit model
+frac <- seq(0.2, 0.05, by = -0.05)
+fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
+# create plot
+critPlot(fitSparseLTS)
+critPlot(fitSparseLTS, fit = "both")
 }
 \author{
   Andreas Alfons
 }
 \seealso{
-  \code{\link[ggplot2]{ggplot}}, \code{\link{rlars}},
+  \code{\link[ggplot2]{ggplot}},
+  \code{\link[perry]{perryPlot}}, \code{\link{rlars}},
   \code{\link{grplars}}, \code{\link{rgrplars}},
   \code{\link{tslarsP}}, \code{\link{rtslarsP}},
   \code{\link{tslars}}, \code{\link{rtslars}},
-  \code{\link{sparseLTSGrid}}
+  \code{\link{sparseLTS}}
 }
 \keyword{hplot}
 

@@ -14,10 +14,10 @@ Robust methods for high-dimensional data, in particular linear
 \tabular{ll}{
 Package: \tab robustHD\cr
 Type: \tab Package\cr
-Version: \tab 0.3.0\cr
-Date: \tab 2012-09-13\cr
+Version: \tab 0.4.0\cr
+Date: \tab 2013-03-13\cr
 Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2 (>= 0.9.2), MASS,
-parallel, perry, robustbase (>= 0.6-0)\cr
+parallel, perry (>= 0.2.0), robustbase (>= 0.6-0)\cr
 Imports: \tab RcppArmadillo (>= 0.3.0), pcaPP, stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
 Suggests: \tab mvtnorm\cr
@@ -27,47 +27,40 @@ LazyLoad: \tab yes\cr
 
 Index:
 \preformatted{
-AIC.sparseLTS           Information criteria for sparse LTS regression
-                        models
+AIC.seqModel            Information criteria for a sequence of
+                        regression models
 coef.seqModel           Extract coefficients from a sequence of
                         regression models
-coef.sparseLTS          Extract coefficients from sparse LTS regression
-                        models
 coefPlot                Coefficient plot of a sequence of regression
                         models
 corHuber                Robust correlation based on winsorization.
 critPlot                Optimality criterion plot of a sequence of
                         regression models
-diagnosticPlot          Diagnostic plots for sparse LTS regression
+diagnosticPlot          Diagnostic plots for a sequence of regression
                         models
 fitted.seqModel         Extract fitted values from a sequence of
                         regression models
-fitted.sparseLTS        Extract fitted values from sparse LTS
-                        regression models
-fortify.sparseLTS       Convert a sparse LTS regression model into a
+fortify.seqModel        Convert a sequence of regression models into a
                         data frame for plotting
 grplars                 Groupwise least angle regression
+getScale                Extract the residual scale of a robust
+                        regression model
 lambda0                 Penalty parameter for sparse LTS regression
 perry.seqModel          Resampling-based prediction error for a
                         sequential regression model
-perry.sparseLTS         Resampling-based prediction error for sparse
-                        LTS regression models
 plot.seqModel           Plot a sequence of regression models
 predict.seqModel        Predict from a sequence of regression models
-predict.sparseLTS       Predict from sparse LTS regression models
 residuals.seqModel      Extract residuals from a sequence of regression
-                        models
-residuals.sparseLTS     Extract residuals from sparse LTS regression
                         models
 rgrplars                Robust groupwise least angle regression
 rlars                   Robust least angle regression
+robustHD-deprecated     Deprecated functions in package 'robustHD'
 robustHD-package        Robust methods for high-dimensional data
 rtslars                 Robust least angle regression for time series
                         data
 rtslarsP                Robust least angle regression for time series
                         data with fixed lag length
 sparseLTS               Sparse least trimmed squares regression
-sparseLTSGrid           Sparse least trimmed squares regression
 standardize             Data standardization
 tsBlocks                Construct predictor blocks for time series
                         models
@@ -82,6 +75,6 @@ wt                      Extract outlier weights from sparse LTS
 \author{
 Andreas Alfons [aut, cre]
 
-Maintainer: Andreas Alfons <andreas.alfons@kuleuven.be>
+Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 }
 \keyword{package}

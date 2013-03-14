@@ -1,16 +1,12 @@
-\name{fortify.sparseLTS}
-\alias{fortify.optSparseLTSGrid}
+\name{fortify.seqModel}
+\alias{fortify.rlars}
+\alias{fortify.seqModel}
 \alias{fortify.sparseLTS}
-\alias{fortify.sparseLTSGrid}
-\title{Convert a sparse LTS regression model into a data frame for plotting}
+\title{Convert a sequence of regression models into a data frame for plotting}
 \usage{
-  \method{fortify}{sparseLTS} (model, data,
-    fit = c("reweighted", "raw", "both"), ...)
+  \method{fortify}{seqModel} (model, data, s = NA, ...)
 
-  \method{fortify}{sparseLTSGrid} (model, data, s,
-    fit = c("reweighted", "raw", "both"), ...)
-
-  \method{fortify}{optSparseLTSGrid} (model, data,
+  \method{fortify}{sparseLTS} (model, data, s = NA,
     fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
@@ -18,9 +14,12 @@
 
   \item{data}{currently ignored.}
 
-  \item{s}{an integer vector giving the indices of the
-  models to be converted.  The default is to use the
-  optimal model for each of the requested fits.}
+  \item{s}{for the \code{"seqModel"} method, an integer
+  vector giving the steps of the submodels to be converted
+  (the default is to use the optimal submodel).  For the
+  \code{"sparseLTS"} method, an integer vector giving the
+  indices of the models to be converted (the default is to
+  use the optimal model for each of the requested fits).}
 
   \item{fit}{a character string specifying which fit to
   convert.  Possible values are \code{"reweighted"} (the
@@ -40,11 +39,14 @@
   \code{"facets"} (default faceting formula for the
   diagnostic plots).
 
-  \item{step}{the indices of the models (only returned if
-  more than one model is requested).}
+  \item{step}{the steps (for the \code{"seqModel"} method)
+  or indices (for the \code{"sparseLTS"} method) of the
+  models (only returned if more than one model is
+  requested).}
 
   \item{fit}{the model fits (only returned if both the
-  reweighted and raw fit are requested).}
+  reweighted and raw fit are requested in the
+  \code{"sparseLTS"} method).}
 
   \item{index}{the indices of the observations.}
 
@@ -78,9 +80,11 @@
   (data points following the model).}
 }
 \description{
-  Supplement the fitted values and residuals of a sparse
-  least trimmed squared model with other useful information
-  for diagnostic plots.
+  Supplement the fitted values and residuals of a sequence
+  of regression models (such as robust least angle
+  regression models or sparse least trimmed squares
+  regression models) with other useful information for
+  diagnostic plots.
 }
 \examples{
 ## generate data
@@ -100,20 +104,20 @@ e[i] <- e[i] + 5                # vertical outliers
 y <- c(x \%*\% beta + sigma * e)  # response
 x[i,] <- x[i,] + 5              # bad leverage points
 
+
+## robust LARS
+# fit model
+fitRlars <- rlars(x, y, sMax = 10)
+# convert to data for plotting
+head(fortify(fitRlars))
+
+
 ## sparse LTS
 # fit model
-fit <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
-# create plot
-fortify(fit)
-fortify(fit, fit = "both")
-
-## sparse LTS over a grid of values for lambda
-# fit model
-frac <- seq(0.25, 0.05, by = -0.05)
-fitGrid <- sparseLTSGrid(x, y, lambda = frac, mode = "fraction")
-# create plot
-fortify(fitGrid)
-fortify(fitGrid, fit = "both")
+fitSparseLTS <- sparseLTS(x, y, lambda = 0.05, mode = "fraction")
+# convert to data for plotting
+head(fortify(fitSparseLTS))
+head(fortify(fitSparseLTS, fit = "both"))
 }
 \author{
   Andreas Alfons
@@ -121,7 +125,7 @@ fortify(fitGrid, fit = "both")
 \seealso{
   \code{\link[ggplot2]{fortify}},
   \code{\link{diagnosticPlot}}, \code{\link{sparseLTS}},
-  \code{\link{sparseLTSGrid}}
+  \code{\link{sparseLTS}}
 }
 \keyword{utilities}
 
