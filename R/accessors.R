@@ -114,11 +114,14 @@ getComponent.sparseLTS <- function(x, which, s = NA,
 #' 
 #' @param x  the model fit from which to extract the robust residual scale 
 #' estimate.
-#' @param s  an integer vector giving the indices of the models from which 
-#' to extract the robust residual scale estimate.  If \code{fit} is 
-#' \code{"both"}, this can be a list with two components, with the first 
-#' component giving the indices of the reweighted fits and the second the 
-#' indices of the raw fits.  The default is to use the optimal model for 
+#' @param s  for the \code{"seqModel"} method, an integer vector giving 
+#' the steps of the submodels for which to extract the robust residual scale 
+#' estimate (the default is to use the optimal submodel).  For the 
+#' \code{"sparseLTS"} method, an integer vector giving the indices of the 
+#' models from which to extract the robust residual scale estimate.  If 
+#' \code{fit} is \code{"both"}, this can be a list with two components, with 
+#' the first component giving the indices of the reweighted fits and the second 
+#' the indices of the raw fits.  The default is to use the optimal model for 
 #' each of the requested estimators.  Note that the optimal models may not 
 #' correspond to the same value of the penalty parameter for the reweighted 
 #' and the raw estimator.
@@ -163,8 +166,10 @@ getScale.lts <- function(x, ...) x$scale
 #' @S3method getScale rlm
 getScale.rlm <- function(x, ...) x$s
 
-#' @S3method getScale seqModel
-getScale.seqModel <- function(x, ...) x$scale
+#' @rdname getScale
+#' @method getScale seqModel
+#' @export
+getScale.seqModel <- function(x, s = NA, ...) getComponent(x, "scale", s=s, ...)
 
 #' @rdname getScale
 #' @method getScale sparseLTS

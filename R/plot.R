@@ -74,11 +74,9 @@ plot.tslars <- function(x, p, method = c("coefficients", "crit", "diagnostic"),
   ## initializations
   method <- match.arg(method)
   ## call plot function
-  if(method == "coefficients") {
-    if(missing(p)) coefPlot(x, ...) else coefPlot(x, p, ...)
-  } else {
-    if(missing(p)) critPlot(x, ...) else critPlot(x, p, ...)
-  }
+  if(method == "coefficients") coefPlot(x, p=p, ...)
+  else if(method == "crit") critPlot(x, p=p, ...)
+  else diagnosticPlot(x, p=p, ...)
 }
 
 
@@ -166,35 +164,35 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
   }
   x <- removeIntercept(x)
   if(!zeros) x <- x[, keep, drop=FALSE]
-  #   # obtain scale estimates for predictors
-  #   lambda <- model$lambda      # tuning parameters
-  #   steps <- seq_along(lambda)  # step numbers
-  #   if(fit %in% c("reweighted", "both")) {
-  #     cdelta <- model$cnp2
-  #     wt <- as.matrix(wt(model, s=NULL, fit="raw"))
-  #     sigmaX <- do.call(rbind, 
-  #                       lapply(steps, function(s) {
-  #                         xOk <- x[wt[, s] == 1, , drop=FALSE]
-  #                         apply(xOk, 2, sd) * cdelta[s]
-  #                       }))
-  #   } else sigmaX <- NULL
-  #   if(fit %in% c("raw", "both")) {
-  #     cdelta <- model$raw.cnp2
-  #     best <- as.matrix(model$best)
-  #     raw.sigmaX <- do.call(rbind, 
-  #                           lapply(steps, function(s) {
-  #                             xBest <- x[best[, s], , drop=FALSE]
-  #                             apply(xBest, 2, sd) * cdelta
-  #                           }))
-  #   } else raw.sigmaX <- NULL
-  #   sigmaX <- rbind(sigmaX, raw.sigmaX)
-  #   # standardize coeffients
-  #   coef <- coef / sigmaX
-  #   # prepare other information
-  #   m <- ncol(coef)        # number of variables
-  #   sMax <- length(steps)  # number of steps
-  #   vn <- colnames(coef)   # variable names
-  # obtain scale estimates for predictors
+#   # obtain scale estimates for predictors
+#   lambda <- model$lambda      # tuning parameters
+#   steps <- seq_along(lambda)  # step numbers
+#   if(fit %in% c("reweighted", "both")) {
+#     cdelta <- model$cnp2
+#     wt <- as.matrix(wt(model, s=NULL, fit="raw"))
+#     sigmaX <- do.call(rbind, 
+#                       lapply(steps, function(s) {
+#                         xOk <- x[wt[, s] == 1, , drop=FALSE]
+#                         apply(xOk, 2, sd) * cdelta[s]
+#                       }))
+#   } else sigmaX <- NULL
+#   if(fit %in% c("raw", "both")) {
+#     cdelta <- model$raw.cnp2
+#     best <- as.matrix(model$best)
+#     raw.sigmaX <- do.call(rbind, 
+#                           lapply(steps, function(s) {
+#                             xBest <- x[best[, s], , drop=FALSE]
+#                             apply(xBest, 2, sd) * cdelta
+#                           }))
+#   } else raw.sigmaX <- NULL
+#   sigmaX <- rbind(sigmaX, raw.sigmaX)
+#   # standardize coeffients
+#   coef <- coef / sigmaX
+#   # prepare other information
+#   m <- ncol(coef)        # number of variables
+#   sMax <- length(steps)  # number of steps
+#   vn <- colnames(coef)   # variable names
+#   obtain scale estimates for predictors
   n <- nrow(x)
   sigmaX <- apply(x, 2, function(x) {
     # standardize data
@@ -663,7 +661,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' with the largest distances from that line are identified by a label (the 
 #' observation number).  The default for \code{id.n} is the number of 
 #' regression outliers, i.e., the number of observations whose residuals are 
-#' too large (cf. \code{\link[=wt.sparseLTS]{wt}}).
+#' too large (cf. \code{\link{wt}}).
 #' 
 #' In the plots of the standardized residuals versus their index or the fitted 
 #' values, horizontal reference lines are drawn at 0 and +/-2.5.  The 
@@ -671,7 +669,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' standardized residuals are identified by a label (the observation 
 #' number).  The default for \code{id.n} is the number of regression outliers, 
 #' i.e., the number of observations whose absolute residuals are too large (cf. 
-#' \code{\link[=wt.sparseLTS]{wt}}).
+#' \code{\link{wt}}).
 #' 
 #' For the regression diagnostic plot, the robust Mahalanobis distances of the 
 #' predictor variables are computed via the MCD based on only those predictors 
@@ -684,10 +682,10 @@ labelify <- function(data, which, id.n = NULL) {
 #' of the standardized residuals and/or largest robust Mahalanobis distances 
 #' are identified by a label (the observation number).  The default for 
 #' \code{id.n} is the number of all outliers: regression outliers (i.e., 
-#' observations whose absolute residuals are too large, cf. 
-#' \code{\link[=wt.sparseLTS]{wt}}) and leverage points (i.e., observations 
-#' with robust Mahalanobis distance larger than the 97.5\% quantile of the 
-#' \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p} degrees of freedom).
+#' observations whose absolute residuals are too large, cf. \code{\link{wt}}) 
+#' and leverage points (i.e., observations with robust Mahalanobis distance 
+#' larger than the 97.5\% quantile of the \eqn{\chi^{2}}{chi-squared} 
+#' distribution with \eqn{p} degrees of freedom).
 #' 
 #' @aliases diagnosticPlot.rlars diagnosticPlot.grplars diagnosticPlot.tslarsP
 #' 

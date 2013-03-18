@@ -40,15 +40,12 @@ getRegControl <- function(fun) {
   fit
 }
 
-## wrapper function for lmrob.fit() with different default arguments and that 
-## ensures that the resulting object has the correct class
+## wrapper function for lmrob.fit() with different default arguments
 .lmrob.fit <- function(x, y, control, max.it = 500, k.max = 2500, ...) {
   if(missing(control)) {
     control <- lmrob.control(max.it=max.it, k.max=k.max, ...)
   }
-  fit <- lmrob.fit(x, y, control=control)
-  class(fit) <- "lmrob"
-  fit
+  lmrob.fit(x, y, control=control)
 }
 
 ## wrapper function for ltsReg() that handles constant column for intercept

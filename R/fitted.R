@@ -80,6 +80,7 @@ fitted.tslars <- function(object, p, ...) {
 }
 
 
+#' @rdname fitted.seqModel
 #' @method fitted sparseLTS
 #' @export
 

@@ -1,7 +1,14 @@
-# ------------------------------------
+# ----------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         KU Leuven
+# ----------------------
+
+weights.lmrob <- function(object, ...) object$rweights
+
+weights.lts <- function(object, ...) object$raw.weights
+
+weights.rlm <- function(object, ...) object$w
+
 
 #' Extract outlier weights from sparse LTS regression models
 #' 

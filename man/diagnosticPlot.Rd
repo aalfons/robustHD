@@ -118,7 +118,7 @@
   observation number).  The default for \code{id.n} is the
   number of regression outliers, i.e., the number of
   observations whose residuals are too large (cf.
-  \code{\link[=wt.sparseLTS]{wt}}).
+  \code{\link{wt}}).
 
   In the plots of the standardized residuals versus their
   index or the fitted values, horizontal reference lines
@@ -128,7 +128,7 @@
   number).  The default for \code{id.n} is the number of
   regression outliers, i.e., the number of observations
   whose absolute residuals are too large (cf.
-  \code{\link[=wt.sparseLTS]{wt}}).
+  \code{\link{wt}}).
 
   For the regression diagnostic plot, the robust
   Mahalanobis distances of the predictor variables are
@@ -146,11 +146,10 @@
   number).  The default for \code{id.n} is the number of
   all outliers: regression outliers (i.e., observations
   whose absolute residuals are too large, cf.
-  \code{\link[=wt.sparseLTS]{wt}}) and leverage points
-  (i.e., observations with robust Mahalanobis distance
-  larger than the 97.5\% quantile of the
-  \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
-  degrees of freedom).
+  \code{\link{wt}}) and leverage points (i.e., observations
+  with robust Mahalanobis distance larger than the 97.5\%
+  quantile of the \eqn{\chi^{2}}{chi-squared} distribution
+  with \eqn{p} degrees of freedom).
 }
 \examples{
 ## generate data

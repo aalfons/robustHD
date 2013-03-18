@@ -2,6 +2,7 @@
 \alias{fitted.grplars}
 \alias{fitted.rlars}
 \alias{fitted.seqModel}
+\alias{fitted.sparseLTS}
 \alias{fitted.tslars}
 \alias{fitted.tslarsP}
 \title{Extract fitted values from a sequence of regression models}
@@ -10,6 +11,10 @@
     drop = !is.null(s), ...)
 
   \method{fitted}{tslars} (object, p, ...)
+
+  \method{fitted}{sparseLTS} (object, s = NA,
+    fit = c("reweighted", "raw", "both"),
+    drop = !is.null(s), ...)
 }
 \arguments{
   \item{object}{the model fit from which to extract fitted

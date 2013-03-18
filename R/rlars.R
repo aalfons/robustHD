@@ -104,8 +104,8 @@
 #' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
 #' the sequenced predictors.
 #'  
-#' Else if \code{crit} is \code{"PE"}, an object of class \code{"perryRlars"} 
-#' (inheriting from classes \code{"perrySeqModel"} and \code{"perryTuning"}, 
+#' Else if \code{crit} is \code{"PE"}, an object of class 
+#' \code{"perrySeqModel"} (inheriting from classes \code{"perryTuning"}, 
 #' see \code{\link[perry]{perryTuning}}).  It contains information on the 
 #' prediction error criterion, and includes the final model as component 
 #' \code{finalModel}.
@@ -274,7 +274,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       out$finalModel <- eval(call)
       out$call <- matchedCall
       # assign class and return object
-      class(out) <- c("perryRlars", "perrySeqModel", class(out))
+      class(out) <- c("perrySeqModel", class(out))
       return(out)
     }
   }
@@ -355,8 +355,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     out[c("muX", "sigmaX", "muY", "sigmaY")] <- list(muX, sigmaX, muY, sigmaY)
     # add model data to result if requested
     if(isTRUE(model)) out[c("x", "y")] <- list(x=x, y=y)
-    if(winsorize) out$w <- w
-    out$call <- matchedCall  # add call to return object
+    if(winsorize) out$w <- w  # add data cleaning weights
+    out$call <- matchedCall   # add call to return object
     class(out) <- c("rlars", class(out))
     out
   } else active

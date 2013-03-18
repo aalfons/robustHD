@@ -10,7 +10,7 @@ Depends:
     MASS,
     parallel,
     perry (>= 0.2.0),
-    robustbase (>= 0.6-0)
+    robustbase (>= 0.9-5)
 Imports:
     RcppArmadillo (>= 0.3.0),
     pcaPP,

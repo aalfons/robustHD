@@ -22,27 +22,6 @@ print.bicSelect <- function(x, best = TRUE, ...) {
   invisible(x)
 }
 
-#' @S3method print grplars
-print.grplars <- function(x, zeros = FALSE, ...) {
-    # print function call
-    if(!is.null(call <- x$call)) {
-        cat("\nCall:\n")
-        dput(x$call)
-    }
-    # print LARS sequence of groups
-    active <- x$active
-    steps <- seq_along(active)
-    active <- t(active)
-    dimnames(active) <- list("Group", steps)
-    cat("\nSequence of moves:\n")
-    print(active, ...)
-    # print coefficients of optimal submodel
-    cat("\nCoefficients of optimal submodel:\n")
-    print(coef(x, zeros=zeros), ...)
-    # return object invisibly
-    invisible(x)
-}
-
 #' @S3method print fitSelect
 print.fitSelect <- function(x, ...) {
   # indices of the best reweighted and raw fit
@@ -85,7 +64,7 @@ print.perrySparseLTS <- function(x, ...) {
 }
 
 #' @S3method print seqModel
-print.seqModel <- function(x, zeros = FALSE, ...) {
+print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   # print function call
   if(!is.null(call <- x$call)) {
     cat("\nCall:\n")
@@ -94,7 +73,8 @@ print.seqModel <- function(x, zeros = FALSE, ...) {
   # print predictor sequence
   active <- t(x$active)
   steps <- seq_len(ncol(active))
-  dimnames(active) <- list("Var", steps)
+  text <- if(inherits(x, "grplars")) "Group" else "Var"
+  dimnames(active) <- list(text, steps)
   cat("\nSequence of moves:\n")
   print(active, ...)
   # print coefficients of optimal submodel
@@ -106,7 +86,7 @@ print.seqModel <- function(x, zeros = FALSE, ...) {
   cat("\n", text[1], "\n", sep="")
   print(coef(x, zeros=zeros), ...)
   # print optimal step
-  cat("\n", text[2], sprintf(" %d\n", sOpt), sep="")
+  if(isTRUE(best)) cat("\n", text[2], sprintf(" %d\n", sOpt), sep="")
   # return object invisibly
   invisible(x)
 }
@@ -164,11 +144,16 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
 #' @S3method print tslarsP
 print.tslarsP <- function(x, ...) {
   # print "grplars" model
-  print.grplars(x, ...)
-  # print lag length
-  #    cat("\nLag length:\n")
-  #    print(x$p, ...)
-  cat(sprintf("\nLag length: %d\n", x$p))
+  print.seqModel(x, best=FALSE, ...)
+  # print optimal step and lag length
+  sOpt <- getSOpt(x)
+  if(is.null(sOpt)) {
+    sOpt <- x$s  # only one step
+    text <- "Step:"
+  } else text <- "Optimal step:"
+  info <- rbind(sOpt, x$p)
+  dimnames(info) <- list(c(text, "Lag length:"), "")
+  print(info, ...)
   # return object invisibly
   invisible(x)
 }
@@ -179,11 +164,16 @@ print.tslars <- function(x, ...) {
   pOpt <- x$pOpt
   xOpt <- x$pFit[[pOpt]]
   xOpt$call <- x$call
-  print.grplars(xOpt, ...)
-  # print optimal lag length
-  #    cat("\nOptimal lag length:\n")
-  #    print(pOpt, ...)
-  cat(sprintf("\nOptimal lag length: %d\n", pOpt))
+  print.seqModel(xOpt, best = FALSE, ...)
+  # print optimal step and lag length
+  sOpt <- getSOpt(xOpt)
+  if(is.null(sOpt)) {
+    sOpt <- xOpt$s  # only one step
+    text <- "Step:"
+  } else text <- "Optimal step:"
+  info <- rbind(sOpt, pOpt)
+  dimnames(info) <- list(c(text, "Optimal lag length:"), "")
+  print(info, ...)
   # return object invisibly
   invisible(x)
 }

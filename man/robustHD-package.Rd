@@ -17,7 +17,7 @@ Type: \tab Package\cr
 Version: \tab 0.4.0\cr
 Date: \tab 2013-03-13\cr
 Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2 (>= 0.9.2), MASS,
-parallel, perry (>= 0.2.0), robustbase (>= 0.6-0)\cr
+parallel, perry (>= 0.2.0), robustbase (>= 0.9-5)\cr
 Imports: \tab RcppArmadillo (>= 0.3.0), pcaPP, stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
 Suggests: \tab mvtnorm\cr
@@ -42,9 +42,9 @@ fitted.seqModel         Extract fitted values from a sequence of
                         regression models
 fortify.seqModel        Convert a sequence of regression models into a
                         data frame for plotting
-grplars                 Groupwise least angle regression
 getScale                Extract the residual scale of a robust
                         regression model
+grplars                 (Robust) groupwise least angle regression
 lambda0                 Penalty parameter for sparse LTS regression
 perry.seqModel          Resampling-based prediction error for a
                         sequential regression model
@@ -52,7 +52,6 @@ plot.seqModel           Plot a sequence of regression models
 predict.seqModel        Predict from a sequence of regression models
 residuals.seqModel      Extract residuals from a sequence of regression
                         models
-rgrplars                Robust groupwise least angle regression
 rlars                   Robust least angle regression
 robustHD-deprecated     Deprecated functions in package 'robustHD'
 robustHD-package        Robust methods for high-dimensional data

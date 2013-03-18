@@ -50,7 +50,7 @@
   release.
 }
 \details{
-  \code{sparseLTSGrid()} is a wrapper function for
+  \code{sparseLTSGrid} is a wrapper function for
   \code{\link{sparseLTS}} that only differs in the default
   values for the penalty parameter \code{lambda}.
 }

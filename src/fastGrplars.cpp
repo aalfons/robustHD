@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus University Rotterdam
  */
 
 #include <R.h>
@@ -301,6 +301,6 @@ SEXP R_fastGrplars(SEXP R_x, SEXP R_y, SEXP R_sMax,
 	}
 	int ncores = as<int>(R_ncores);
 	// call native C++ function
-	uvec active = fastGrplars(x, y, sMax, assign, ncores);
+	uvec active = fastGrplars(x, y, sMax, assign, ncores) + 1;
 	return wrap(active.memptr(), active.memptr() + active.n_elem);
 }
