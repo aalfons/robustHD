@@ -12,7 +12,7 @@
 grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE, 
                             robust = FALSE, centerFun = mean, scaleFun = sd, 
                             regFun = lm.fit, regArgs = list(), 
-                            combine = c("min", "mahalanobis"), 
+                            combine = c("min", "euclidean", "mahalanobis"), 
                             winsorize = FALSE, pca = FALSE, const = 2, 
                             prob = 0.95, fit = TRUE, s = c(0, sMax), 
                             crit = c("BIC", "PE"), splits = foldControl(), 
@@ -178,14 +178,22 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
         if(useParallel) {
           residuals <- parSapply(cl, assignList, getResiduals, xs, z)
         } else residuals <- sapply(assignList, getResiduals, xs, z)
-        # if requested, perform PCA for dimension reduction
-        if(pca) {
-          residuals <- PCAgrid(residuals, k=k)$scores
-          residuals <- robStandardize(residuals, centerFun, scaleFun)
+        # obtain weights from scaled residuals
+        if(combine == "euclidean") {
+          # assume diagonal structure of the residual correlation matrix
+          # and compute weights based on resulting mahalanobis distances
+          d <- qchisq(prob, df=m)  # quantile of the chi-squared distribution
+          w <- pmin(sqrt(d/rowSums(residuals^2)), 1)
+        } else {
+          # if requested, perform PCA for dimension reduction
+          if(pca) {
+            residuals <- PCAgrid(residuals, k=k)$scores
+            residuals <- robStandardize(residuals, centerFun, scaleFun)
+          }
+          # obtain weights from multivariate winsorization
+          w <- winsorize(residuals, standardized=TRUE, const=const, 
+                         prob=prob, return="weights")
         }
-        # obtain weights from multivariate winsorization
-        w <- winsorize(residuals, standardized=TRUE, const=const, 
-                       prob=prob, return="weights")
       }
     }
     z <- standardize(w*z)  # standardize cleaned response

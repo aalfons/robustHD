@@ -40,9 +40,12 @@
 #' @param combine  a character string specifying how to combine the data 
 #' cleaning weights from the robust regressions with each predictor group.  
 #' Possible values are \code{"min"} for taking the minimum weight for each 
-#' observation, or \code{"mahalanobis"} for weights based on Mahalanobis 
-#' distances of the multivariate set of standardized residuals (i.e., 
-#' multivariate winsorization of the standardized residuals).
+#' observation, \code{"euclidean"} for weights based on Euclidean distances 
+#' of the multivariate set of standardized residuals (i.e., multivariate 
+#' winsorization of the standardized residuals assuming independence), or 
+#' \code{"mahalanobis"} for weights based on Mahalanobis distances of the 
+#' multivariate set of standardized residuals (i.e., multivariate winsorization 
+#' of the standardized residuals).
 #' @param winsorize  a logical indicating whether to clean the data by 
 #' multivariate winsorization.
 #' @param pca  a logical indicating whether a robust PCA step should be 
@@ -254,7 +257,7 @@ rtslarsP.formula <- function(formula, data, ...) {
 
 rtslarsP.default <- function(x, y, h = 1, p = 2, sMax = NA, centerFun = median, 
                              scaleFun = mad, regFun = lmrob, regArgs = list(), 
-                             combine = c("min", "mahalanobis"), 
+                             combine = c("min", "euclidean", "mahalanobis"), 
                              winsorize = FALSE, pca = FALSE, const = 2, 
                              prob = 0.95, fit = TRUE, s = c(0, sMax), 
                              crit = "BIC", ncores = 1, cl = NULL, seed = NULL, 
@@ -275,9 +278,10 @@ rtslarsP.default <- function(x, y, h = 1, p = 2, sMax = NA, centerFun = median,
 
 ## fit function for fixed lag length that allows to specify functions for 
 ## center, scale, correlation and regression
-tslarsPFit <- function(x, y, h = 1, p = 2, sMax = NA, robust = FALSE, 
-                       centerFun = mean, scaleFun = sd, regFun = lm.fit, 
-                       regArgs = list(), combine = c("min", "mahalanobis"), 
+tslarsPFit <- function(x, y, h = 1, p = 2, sMax = NA, 
+                       robust = FALSE, centerFun = mean, scaleFun = sd, 
+                       regFun = lm.fit, regArgs = list(), 
+                       combine = c("min", "euclidean", "mahalanobis"), 
                        winsorize = FALSE, pca = FALSE, const = 2, prob = 0.95, 
                        fit = TRUE, s = c(0, sMax), crit = "BIC", ncores = 1, 
                        cl = NULL, seed = NULL, model = TRUE) {

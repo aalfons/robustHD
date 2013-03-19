@@ -32,12 +32,13 @@
   \method{rgrplars}{default} (x, y, sMax = NA, assign,
     dummy, centerFun = median, scaleFun = mad,
     regFun = lmrob, regArgs = list(),
-    combine = c("min", "mahalanobis"), pca = FALSE,
-    const = 2, prob = 0.95, fit = TRUE, s = c(0, sMax),
-    crit = c("BIC", "PE"), splits = foldControl(),
-    cost = rtmspe, costArgs = list(),
-    selectBest = c("hastie", "min"), seFactor = 1,
-    ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
+    combine = c("min", "euclidean", "mahalanobis"),
+    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
+    s = c(0, sMax), crit = c("BIC", "PE"),
+    splits = foldControl(), cost = rtmspe,
+    costArgs = list(), selectBest = c("hastie", "min"),
+    seFactor = 1, ncores = 1, cl = NULL, seed = NULL,
+    model = TRUE, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -84,10 +85,14 @@
   combine the data cleaning weights from the robust
   regressions with each predictor group. Possible values
   are \code{"min"} for taking the minimum weight for each
-  observation, or \code{"mahalanobis"} for weights based on
-  Mahalanobis distances of the multivariate set of
+  observation, \code{"euclidean"} for weights based on
+  Euclidean distances of the multivariate set of
   standardized residuals (i.e., multivariate winsorization
-  of the standardized residuals).}
+  of the standardized residuals assuming independence), or
+  \code{"mahalanobis"} for weights based on Mahalanobis
+  distances of the multivariate set of standardized
+  residuals (i.e., multivariate winsorization of the
+  standardized residuals).}
 
   \item{pca}{a logical indicating whether a robust PCA step
   should be performed when computing the data cleaning
