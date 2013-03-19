@@ -71,8 +71,8 @@
 #' estimation (see \code{\link[perry]{perry}}).
 #' @param cost  a cost function measuring prediction loss (see 
 #' \code{\link[perry]{perry}} for some requirements).  The 
-#' default is to use the root trimmed mean squared prediction error for robust 
-#' fits and the root mean squared prediction error otherwise (see 
+#' default is to use the root trimmed mean squared prediction error for a 
+#' robust fit and the root mean squared prediction error otherwise (see 
 #' \code{\link[perry]{cost}}).
 #' @param costArgs  a list of additional arguments to be passed to the 
 #' prediction loss function \code{cost}.
@@ -127,8 +127,8 @@
 #' submodels along the sequence (i.e., the number of estimated coefficients).
 #' @returnItem robust  a logical indicating whether a robust fit was computed.
 #' @returnItem scale  a numeric vector giving the robust residual scale 
-#' estimates for the submodels along the sequence (only returned for robust 
-#' fits).
+#' estimates for the submodels along the sequence (only returned for a robust 
+#' fit).
 #' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC 
 #' values and indicating the final model (only returned if argument \code{crit} 
 #' is \code{"BIC"} and argument \code{s} indicates more than one step along the 
@@ -145,7 +145,7 @@
 #' @returnItem assign  an integer vector giving the predictor group to which 
 #' each predictor variable belongs.
 #' @returnItem w  a numeric vector giving the data cleaning weights (only 
-#' returned for robust fits).
+#' returned for a robust fit).
 #' @returnItem call  the matched function call.
 #' 
 #' @note \code{findStepSizes} is a utility function that computes the step size 

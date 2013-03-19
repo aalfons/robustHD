@@ -55,17 +55,14 @@ residuals.seqModel      Extract residuals from a sequence of regression
 rlars                   Robust least angle regression
 robustHD-deprecated     Deprecated functions in package 'robustHD'
 robustHD-package        Robust methods for high-dimensional data
-rtslars                 Robust least angle regression for time series
-                        data
-rtslarsP                Robust least angle regression for time series
-                        data with fixed lag length
 sparseLTS               Sparse least trimmed squares regression
 standardize             Data standardization
 tsBlocks                Construct predictor blocks for time series
                         models
-tslars                  Least angle regression for time series data
-tslarsP                 Least angle regression for time series data
-                        with fixed lag length
+tslars                  (Robust) least angle regression for time series
+                        data
+tslarsP                 (Robust) least angle regression for time series
+                        data with fixed lag length
 winsorize               Data cleaning by winsorization
 wt                      Extract outlier weights from sparse LTS
                         regression models

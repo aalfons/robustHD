@@ -138,7 +138,7 @@
   \item{cost}{a cost function measuring prediction loss
   (see \code{\link[perry]{perry}} for some requirements).
   The default is to use the root trimmed mean squared
-  prediction error for robust fits and the root mean
+  prediction error for a robust fit and the root mean
   squared prediction error otherwise (see
   \code{\link[perry]{cost}}).}
 
@@ -225,7 +225,7 @@
 
   \item{scale}{a numeric vector giving the robust residual
   scale estimates for the submodels along the sequence
-  (only returned for robust fits).}
+  (only returned for a robust fit).}
 
   \item{crit}{an object of class \code{"bicSelect"}
   containing the BIC values and indicating the final model
@@ -253,7 +253,7 @@
   group to which each predictor variable belongs.}
 
   \item{w}{a numeric vector giving the data cleaning
-  weights (only returned for robust fits).}
+  weights (only returned for a robust fit).}
 
   \item{call}{the matched function call.}
 }
