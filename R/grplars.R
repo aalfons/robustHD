@@ -20,7 +20,9 @@
 #' @param y  a numeric vector containing the response.
 #' @param sMax  an integer giving the number of predictor groups to be 
 #' sequenced.  If it is \code{NA} (the default), predictor groups are sequenced 
-#' as long as there are twice as many observations as predictor variables.
+#' as long as there are twice as many observations as predictor groups in case 
+#' of a robust fit, and as long as there are more observations than predictor 
+#' groups otherwise.
 #' @param assign  an integer vector giving the predictor group to which 
 #' each predictor variable belongs.
 #' @param dummy  a logical vector indicating whether the predictors are dummy 
@@ -59,13 +61,15 @@
 #' winsorization (defaults to 0.95).
 #' @param fit  a logical indicating whether to fit submodels along the sequence 
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
-#' @param s  an integer vector of length two giving the first and last step 
-#' along the sequence for which to compute submodels.  The default is to start 
-#' with a model containing only an intercept (step 0) and iteratively add all 
-#' groups along the sequence (step \code{sMax}).  If the second element is 
-#' \code{NA}, predictor groups may be added to the model as long as there are 
-#' twice as many observations as predictor variables.  If only one value is 
-#' supplied, it is recycled.
+#' @param s  an integer vector of length two giving the first and last 
+#' step along the sequence for which to compute submodels.  The default 
+#' is to start with a model containing only an intercept (step 0) and 
+#' iteratively add all groups along the sequence (step \code{sMax}).  If 
+#' the second element is \code{NA}, predictor groups may be added to the 
+#' model as long as there are twice as many observations as predictor 
+#' variables in case of a robust fit, and as long as there are more 
+#' observations than predictor variables otherwise.  If only one value 
+#' is supplied, it is recycled.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Possible values are \code{"BIC"} for 
 #' the Bayes information criterion and \code{"PE"} for resampling-based 
@@ -358,6 +362,7 @@ rgrplars.default <- function(x, y, sMax = NA, assign, dummy,
              model=model, call=call)
 }
 
+## internal wrapper for default method
 rgrplarsDefault <- function(x, y, mt, assign, dummy, ...) {
   haveIntercept <- as.logical(attr(mt, "intercept"))
   # extract group assignment of the variables

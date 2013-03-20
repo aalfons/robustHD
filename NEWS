@@ -1,6 +1,9 @@
 Changes in robustHD version 0.4.0
 
     + Added functionality for (robust) groupwise least angle regression.
+    
+    + Bugfix in rlars() allowing the number of variables to be sequenced to be 
+      larger than half the number of observations.
 
 
 

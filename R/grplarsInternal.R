@@ -31,8 +31,8 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     s <- c(0, sMax[2])
     sMax <- s[1]
   }
-  sMax <- checkSMax(sMax, n, m)  # check maximum number of steps
   robust <- isTRUE(robust)
+  sMax <- checkSMax(sMax, n, m, robust=robust)  # number of groups to sequence
   if(robust) {
     # check if there are dummy variables
     dummy <- sapply(dummy, isTRUE)
@@ -63,9 +63,8 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
-    s <- checkSRange(s, sMax=sMax)
-    if(s[1] > s[2]) s[1] <- s[2]
-    crit <- if(s[1] == s[2]) "none" else match.arg(crit)
+    s <- checkSRange(s, sMax=sMax)  # check range of steps along the sequence
+    crit <- if(!is.na(s[2]) && s[1] == s[2]) "none" else match.arg(crit)
     if(crit == "PE") {
       # set up function call to be passed to perryTuning()
       remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 

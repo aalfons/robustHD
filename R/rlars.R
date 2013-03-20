@@ -248,9 +248,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
-    s <- checkSRange(s, sMax=sMax)
-    if(s[1] > s[2]) s[1] <- s[2]
-    crit <- if(s[1] == s[2]) "none" else match.arg(crit)
+    s <- checkSRange(s, sMax=sMax)  # check range of steps along the sequence
+    crit <- if(!is.na(s[2]) && s[1] == s[2]) "none" else match.arg(crit)
     if(crit == "PE") {
       # set up function call to be passed to perryTuning()
       remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
