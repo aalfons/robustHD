@@ -257,6 +257,10 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       remove <- match(remove, names(matchedCall), nomatch=0)
       call <- matchedCall[-remove]
       # call function perryTuning() to perform prediction error estimation
+      if(is.na(s[2])) {
+        s[2] <- min(sMax, floor(n/2))
+        if(s[1] > sMax) s[1] <- sMax
+      }
       s <- seq(from=s[1], to=s[2])
       tuning <- list(s=s)
       selectBest <- match.arg(selectBest)

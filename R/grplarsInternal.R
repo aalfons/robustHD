@@ -32,7 +32,7 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     sMax <- s[1]
   }
   robust <- isTRUE(robust)
-  sMax <- checkSMax(sMax, n, m, robust=robust)  # number of groups to sequence
+  sMax <- checkSMax(sMax, n, m)  # check number of groups to sequence
   if(robust) {
     # check if there are dummy variables
     dummy <- sapply(dummy, isTRUE)
@@ -72,6 +72,10 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
       remove <- match(remove, names(call), nomatch=0)
       funCall <- call[-remove]
       # call function perryTuning() to perform prediction error estimation
+      if(is.na(s[2])) {
+        s[2] <- min(sMax, floor(n/2))
+        if(s[1] > sMax) s[1] <- sMax
+      }
       s <- seq(from=s[1], to=s[2])
       tuning <- list(s=s)
       selectBest <- match.arg(selectBest)

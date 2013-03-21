@@ -29,9 +29,7 @@
 #' (defaults to 3).
 #' @param sMax  an integer giving the number of predictor series to be 
 #' sequenced.  If it is \code{NA} (the default), predictor series are sequenced 
-#' as long as there are twice as many observations as predictor series in case 
-#' of a robust fit, and as long as there are more observations than predictor 
-#' series otherwise.
+#' as long as there are twice as many observations as predictor series.
 #' @param centerFun  a function to compute a robust estimate for the center 
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
@@ -74,9 +72,7 @@
 #' iteratively add all series along the sequence (step \code{sMax}).  If 
 #' the second element is \code{NA}, predictor groups may be added to the 
 #' model as long as there are twice as many observations as predictor 
-#' variables in case of a robust fit, and as long as there are more 
-#' observations than predictor variables otherwise.  If only one value 
-#' is supplied, it is recycled.
+#' variables.  If only one value is supplied, it is recycled.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Currently, only \code{"BIC"} for the 
 #' Bayes information criterion is implemented.

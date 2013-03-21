@@ -20,9 +20,7 @@
 #' @param y  a numeric vector containing the response.
 #' @param sMax  an integer giving the number of predictor groups to be 
 #' sequenced.  If it is \code{NA} (the default), predictor groups are sequenced 
-#' as long as there are twice as many observations as predictor groups in case 
-#' of a robust fit, and as long as there are more observations than predictor 
-#' groups otherwise.
+#' as long as there are twice as many observations as predictor groups.
 #' @param assign  an integer vector giving the predictor group to which 
 #' each predictor variable belongs.
 #' @param dummy  a logical vector indicating whether the predictors are dummy 
@@ -67,9 +65,7 @@
 #' iteratively add all groups along the sequence (step \code{sMax}).  If 
 #' the second element is \code{NA}, predictor groups may be added to the 
 #' model as long as there are twice as many observations as predictor 
-#' variables in case of a robust fit, and as long as there are more 
-#' observations than predictor variables otherwise.  If only one value 
-#' is supplied, it is recycled.
+#' variables.  If only one value is supplied, it is recycled.
 #' @param crit  a character string specifying the optimality criterion to be 
 #' used for selecting the final model.  Possible values are \code{"BIC"} for 
 #' the Bayes information criterion and \code{"PE"} for resampling-based 
