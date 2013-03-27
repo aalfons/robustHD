@@ -20,11 +20,10 @@ seqModel <- function(x, y, active, sMin = 0, sMax = NA, assign = NULL,
   if(robust) callRegFun <- getCallFun(regArgs)
   # prepare the variable sequence and the degrees of freedom of the models
   if(haveAssign) {
-    # the default is to fit robust models as long as there are twice as many 
-    # observations as predictors, and non-robust models as long as there are 
-    # more observations
+    # the default is to fit models as long as there are twice as many 
+    # observations as predictors
     if(is.na(sMax)) {
-      dfMax <- if(robust) floor(n/2) + 1 else n
+      dfMax <- floor(n/2) + 1
       sMax <- dfMax - 1
     } else dfMax <- n
     if(sMax > length(active)) sMax <- length(active)
@@ -52,10 +51,9 @@ seqModel <- function(x, y, active, sMin = 0, sMax = NA, assign = NULL,
     # groupwise sequenced variables (including intercept)
     sequenced <- c(1, unlist(assign[firstActive], use.names=FALSE) + 1)
   } else {
-    # the default is to fit robust models as long as there are twice as many 
-    # observations as predictors, and non-robust models as long as there are 
-    # more observations
-    if(is.na(sMax)) sMax <- if(robust) floor(n/2) else n-1
+    # the default is to fit models as long as there are twice as many 
+    # observations as predictors
+    if(is.na(sMax)) sMax <- floor(n/2)
     if(sMax > length(active)) sMax <- length(active)
     if(sMin > sMax) sMin <- sMax
     s <- sMin:sMax

@@ -1,5 +1,8 @@
 Changes in robustHD version 0.3.1
 
+    + Bugfix in rlars() allowing the number of variables to be sequenced to be 
+      larger than half the number of observations.
+    
     + Bugfix in sparseLTS() in case of only one predictor variable.
     
     + Added tests for C++ implementation of the lasso.

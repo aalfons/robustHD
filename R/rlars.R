@@ -104,8 +104,8 @@
 #' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
 #' the sequenced predictors.
 #'  
-#' Else if \code{crit} is \code{"PE"}, an object of class \code{"perryRlars"} 
-#' (inheriting from classes \code{"perrySeqModel"} and \code{"perryTuning"}, 
+#' Else if \code{crit} is \code{"PE"}, an object of class 
+#' \code{"perrySeqModel"} (inheriting from classes \code{"perryTuning"}, 
 #' see \code{\link[perry]{perryTuning}}).  It contains information on the 
 #' prediction error criterion, and includes the final model as component 
 #' \code{finalModel}.
@@ -169,6 +169,7 @@
 #' @import RcppArmadillo
 #' @import parallel
 #' @import pcaPP
+#' @import perry
 
 rlars <- function(x, ...) UseMethod("rlars")
 
@@ -247,9 +248,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
-    s <- checkSRange(s, sMax=sMax)
-    if(s[1] > s[2]) s[1] <- s[2]
-    crit <- if(s[1] == s[2]) "none" else match.arg(crit)
+    s <- checkSRange(s, sMax=sMax)  # check range of steps along the sequence
+    crit <- if(!is.na(s[2]) && s[1] == s[2]) "none" else match.arg(crit)
     if(crit == "PE") {
       # set up function call to be passed to perryTuning()
       remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
@@ -257,6 +257,10 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       remove <- match(remove, names(matchedCall), nomatch=0)
       call <- matchedCall[-remove]
       # call function perryTuning() to perform prediction error estimation
+      if(is.na(s[2])) {
+        s[2] <- min(sMax, floor(n/2))
+        if(s[1] > sMax) s[1] <- sMax
+      }
       s <- seq(from=s[1], to=s[2])
       tuning <- list(s=s)
       selectBest <- match.arg(selectBest)
@@ -273,7 +277,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       out$finalModel <- eval(call)
       out$call <- matchedCall
       # assign class and return object
-      class(out) <- c("perryRlars", "perrySeqModel", class(out))
+      class(out) <- c("perrySeqModel", class(out))
       return(out)
     }
   }
@@ -354,8 +358,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     out[c("muX", "sigmaX", "muY", "sigmaY")] <- list(muX, sigmaX, muY, sigmaY)
     # add model data to result if requested
     if(isTRUE(model)) out[c("x", "y")] <- list(x=x, y=y)
-    if(winsorize) out$w <- w
-    out$call <- matchedCall  # add call to return object
+    if(winsorize) out$w <- w  # add data cleaning weights
+    out$call <- matchedCall   # add call to return object
     class(out) <- c("rlars", class(out))
     out
   } else active
