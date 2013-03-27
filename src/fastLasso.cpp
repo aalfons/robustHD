@@ -142,10 +142,6 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 		// remove ignored variable from inactive set (hence reverse order)
 		inactive.shed_row(i);
 	}
-	uword m = inactive.n_elem;
-	if(m < p) {
-		p = m;	// update number of variables if necessary
-	}
 	// normalize predictors
 	for(uword j = 0; j < p; j++) {
 		xs.col(j) /= normX(j);		// sweep out norm
@@ -158,267 +154,304 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 		Gram = trans(xs) * xs;
 	}
 
-	// further initializations for iterative steps
-	rowvec corY = conv_to<rowvec>::from(ys) * xs;	// current correlations (might be faster than trans())
-	uvec active;	// active predictors
-	uword k = 0;	// number of active predictors
-	vec previousBeta = zeros(p+s), currentBeta = zeros(p+s);	// previous and current regression coefficients
-	double previousLambda = 0, currentLambda = 0;	// previous and current penalty parameter
-	uvec drops;		// indicates variables to be dropped
-	vec signs;		// keep track of sign of correlations for the active variables (double precision is necessary for solve())
-	mat L;			  // Cholesky L of Gram matrix of active variables
-	uword rank = 0;		// rank of Cholesky L
-	uword maxActive = findMaxActive(n, p, useIntercept);	// maximum number of variables to be sequenced
+	// further initializations
+	rowvec corY = conv_to<rowvec>::from(ys) * xs;	// current correlations
+  vec beta(p);                // final coefficients
+  uword m = inactive.n_elem;  // number of inactive predictors
+  if(m < p) p = m;            // update number of predictors if necessary
 
-	// modified LARS algorithm for lasso solution
-	while(k < maxActive) {
+  // compute lasso solution
+  if(p == 1) {
 
-		// extract current correlations of inactive variables
-		vec corInactiveY = corY.elem(inactive);
-		// compute absolute values of correlations and find maximum
-		vec absCorInactiveY = abs(corInactiveY);
-		double maxCor = absCorInactiveY.max();
-		// update current lambda
-		if(k == 0) {	// no active variables
-			previousLambda = maxCor;
-		} else {
-			previousLambda = currentLambda;
-		}
-		currentLambda = maxCor;
-		if(currentLambda <= rescaledLambda) break;
+    // special case of only one variable (with sufficiently large norm)
+    uword j = inactive(0);          
+    // set maximum step size in the direction of that variable
+    double maxStep = corY(j);
+    if(maxStep < 0) maxStep = -maxStep; // absolute value
+    // compute coefficients for least squares solution
+    vec betaLS = solve(xs.unsafe_col(j), ys);
+    // compute lasso coefficients
+    beta.zeros();
+    if(rescaledLambda < maxStep) {
+      // interpolate towards least squares solution
+      beta(j) = (maxStep - rescaledLambda) * betaLS(0) / maxStep;
+    }
 
-		if(drops.n_elem == 0) {
-			// new active variables
-			uvec newActive = find(absCorInactiveY >= (maxCor - eps));
-			// do calculations for new active variables
-			for(uword j = 0; j < newActive.n_elem; j++) {
-				// update Cholesky L of Gram matrix of active variables
-				// this cannot be put into its own void function since
-				// insert_rows() doesn't work with referenced matrices
-				uword newJ = inactive(newActive(j));
-				vec xNewJ;
-				double newX;
-				if(useGram) {
-					xNewJ = Gram.unsafe_col(newJ);	// reuses memory
-					newX = xNewJ(newJ);
-				} else {
-					xNewJ = xs.unsafe_col(newJ);	  // reuses memory
-					newX = accu(xNewJ % xNewJ);
-				}
-				double normNewX = sqrt(newX);
-				if(k == 0) {	// no active variables, L is empty
-					L.set_size(1,1);
-					L(0, 0) = normNewX;
-					rank = 1;
-				} else {
-					vec oldX;
-					if(useGram) {
-						oldX = xNewJ.elem(active);
-					} else {
-						oldX.set_size(k);
-						for(uword j = 0; j < k; j++) {
-							oldX(j) = dot(xNewJ, xs.unsafe_col(active(j)));
-						}
-					}
-					vec l = solve(trimatl(L), oldX);
-					double lkk = newX - accu(l % l);
-					// check if L is machine singular
-					if(lkk > eps) {
-						// no singularity: update Cholesky L
-						lkk = sqrt(lkk);
-						rank++;
-						// add new row and column to Cholesky L
-						// this is a little trick: sometimes we need
-						// lower triangular matrix, sometimes upper
-						// hence we define quadratic matrix and use
-						// triangularView() to interpret matrix the
-						// correct way
-						// insert row and column without initializing memory
-						// (set_size() and reshape() have strange behavior)
-						L.insert_rows(k, 1, false);
-						L.insert_cols(k, 1, false);
-						// fill new parts of the matrix
-						for(uword j = 0; j < k; j++) {
-							L(k, j) = l(j);
-							L(j, k) = l(j);
-						}
-						L(k, k) = lkk;
-					}
-				}
-				// add new variable to active set or drop it for good
-				// in case of singularity
-				if(rank == k) {
-					// singularity: drop variable for good
-					ignores.insert_rows(s, 1, false);	// do not initialize new memory
-					ignores(s) = newJ;
-					s++;	// increase number of ignored variables
-					p--;	// decrease number of variables
-					if(p < maxActive) {
-						// adjust maximum number of active variables
-						maxActive = p;
-					}
-				} else {
-					// no singularity: add variable to active set
-					active.insert_rows(k, 1, false);	// do not initialize new memory
-					active(k) = newJ;
-					// keep track of sign of correlation for new active variable
-					signs.insert_rows(k, 1, false);		// do not initialize new memory
-					signs(k) = sign(corY(newJ));
-					k++;	// increase number of active variables
-				}
-			}
-			// remove new active or ignored variables from inactive variables
-			// and corresponding vector of current correlations
-			for(sword j = newActive.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
-				uword i = newActive(j);
-				inactive.shed_row(i);
-				corInactiveY.shed_row(i);
-			}
-			m = inactive.n_elem;	// update number of inactive variables
-		}
-		// prepare for computation of step size
-		// here double precision of signs is necessary
-		vec b = solve(trimatl(L), signs);
-		vec G = solve(trimatu(L), b);
-		// correlations of active variables with equiangular vector
-		double corActiveU = 1/sqrt(dot(G, signs));
-		// coefficients of active variables in linear combination forming the
-		// equiangular vector
-		vec w = G * corActiveU;	// note that this has the right signs
-		// equiangular vector
-		vec u;
-		if(!useGram) {
-			// we only need equiangular vector if we don't use the precomputed
-			// Gram matrix, otherwise we can compute the correlations directly
-			// from the Gram matrix
-			u = zeros<vec>(n);
-			for(uword i = 0; i < n; i++) {
-				for(uword j = 0; j < k; j++) {
-					u(i) += xs(i, active(j)) * w(j);
-				}
-			}
-		}
-		// compute step size in equiangular direction
-		double step;
-		if(k < maxActive) {
-			// correlations of inactive variables with equiangular vector
-			vec corInactiveU(m);
-			if(useGram) {
-				for(uword j = 0; j < m; j++) {
-					vec gram = Gram.unsafe_col(inactive(j));
-					corInactiveU(j) = dot(w, gram.elem(active));
-				}
-			} else {
-				for(uword j = 0; j < m; j++) {
-					corInactiveU(j) = dot(u, xs.unsafe_col(inactive(j)));
-				}
-			}
-			// compute step size in the direction of the equiangular vector
-			step = findStep(maxCor, corInactiveY, corActiveU, corInactiveU, eps);
-		} else {
-			// last step: take maximum possible step
-			step = maxCor/corActiveU;
-		}
-		// adjust step size if any sign changes and drop corresponding variables
-		drops = findDrops(currentBeta, active, w, eps, step);
-		// update current regression coefficients
-		previousBeta = currentBeta;
-		currentBeta.elem(active) += step * w;
-		// update current correlations
-		if(useGram) {
-			// we also need to do this for active variables, since they may be
-			// dropped at a later stage
-			for(uword j = 0; j < Gram.n_cols; j++) {
-				vec gram = Gram.unsafe_col(j);
-				corY(j) -= step * dot(w, gram.elem(active));
-			}
-		} else {
-			ys -= step * u;	// take step in equiangular direction
-			corY = conv_to<rowvec>::from(ys) * xs;	// might be faster than trans()
-		}
-		// drop variables if necessary
-		if(drops.n_elem > 0) {
-			// downdate Cholesky L
-			// this cannot be put into its own void function since
-			// shed_col() and shed_row() don't work with referenced matrices
-			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
-				// variables need to be dropped in descending order
-				uword drop = drops(j);	// index with respect to active set
-				// modify upper triangular part as in R package 'lars'
-				// simply deleting columns is not enough, other computations
-				// necessary but complicated due to Fortran code
-				L.shed_col(drop);
-				vec z = ones<vec>(k);
-				k--;	// decrease number of active variables
-				for(uword i = drop; i < k; i++) {
-					double a = L(i,i), b = L(i+1,i);
-					if(b != 0.0) {
-						// compute the rotation
-						double tau, s, c;
-						if(abs(b) > abs(a)) {
-							tau = -a/b;
-							s = 1.0/sqrt(1.0+tau*tau);
-							c = s * tau;
-						} else {
-							tau = -b/a;
-							c = 1.0/sqrt(1.0+tau*tau);
-							s = c * tau;
-						}
-						// update 'L' and 'z';
-						L(i,i) = c*a - s*b;
-						for(uword j = i+1; j < k; j++) {
-							a = L(i,j);
-							b = L(i+1,j);
-							L(i,j) = c*a - s*b;
-							L(i+1,j) = s*a + c*b;
-						}
-						a = z(i);
-						b = z(i+1);
-						z(i) = c*a - s*b;
-						z(i+1) = s*a + c*b;
-					}
-				}
-				L.shed_row(k);
-				rank--;
-			}
-			// mirror lower triangular part
-			L = symmatu(L);
-			// add dropped variables to inactive set and make sure
-			// coefficients are 0
-			inactive.insert_rows(m, drops.n_elem, false);
-			for(uword j = 0; j < drops.n_elem; j++) {
-				uword newInactive = active(drops(j));
-				inactive(m + j) = newInactive;
-				currentBeta(newInactive) = 0;	// make sure coefficient is 0
-			}
-			m = inactive.n_elem;	// update number of inactive variables
-			// drop variables from active set and sign vector
-			// number of active variables is already updated above
-			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order (requires signed integer)
-				// variables need to be dropped in descending order
-				uword drop = drops(j);	// index with respect to active set
-				// drop variables from active set and sign vector
-				// number of active variables is already updated above
-				active.shed_row(drop);
-				signs.shed_row(drop);
-			}
-		}
-	}
+  } else {
 
-	// interpolate coefficients for given lambda
-	p = currentBeta.n_elem;	// reset number of variables to include ignored ones
-	vec beta(p);		// final coefficient vector
-	if(rescaledLambda <= currentLambda) {
-		beta = currentBeta;
-	} else if(rescaledLambda >= previousLambda) {
-		// strict inequality only possible if lambda larger than largest lambda
-		beta = previousBeta;	// includes case of equality
-	} else {
-		// penalty parameter strictly within two steps: interpolate coefficients
-		beta = ((rescaledLambda - currentLambda) * previousBeta +
-				(previousLambda - rescaledLambda) * currentBeta) /
-				(previousLambda - currentLambda);
-	}
+    // further initializations for iterative steps
+    uvec active;  // active predictors
+    uword k = 0;	// number of active predictors
+    // previous and current regression coefficients
+  	vec previousBeta = zeros(p+s), currentBeta = zeros(p+s);
+  	// previous and current penalty parameter
+    double previousLambda = R_PosInf, currentLambda = R_PosInf;
+  	// indicates variables to be dropped
+    uvec drops;
+  	// keep track of sign of correlations for the active variables 
+    // (double precision is necessary for solve())
+    vec signs;
+  	// Cholesky L of Gram matrix of active variables
+    mat L;
+  	uword rank = 0;		// rank of Cholesky L
+    // maximum number of variables to be sequenced
+  	uword maxActive = findMaxActive(n, p, useIntercept);
+
+    // modified LARS algorithm for lasso solution
+    while((k < maxActive)) {
+
+  		// extract current correlations of inactive variables
+  		vec corInactiveY = corY.elem(inactive);
+  		// compute absolute values of correlations and find maximum
+  		vec absCorInactiveY = abs(corInactiveY);
+  		double maxCor = absCorInactiveY.max();
+  		// update current lambda
+  		if(k == 0) {	// no active variables
+  			previousLambda = maxCor;
+  		} else {
+  			previousLambda = currentLambda;
+  		}
+  		currentLambda = maxCor;
+  		if(currentLambda <= rescaledLambda) break;
+
+  		if(drops.n_elem == 0) {
+  			// new active variables
+  			uvec newActive = find(absCorInactiveY >= (maxCor - eps));
+  			// do calculations for new active variables
+  			for(uword j = 0; j < newActive.n_elem; j++) {
+  				// update Cholesky L of Gram matrix of active variables
+  				// this cannot be put into its own void function since
+  				// insert_rows() doesn't work with referenced matrices
+  				uword newJ = inactive(newActive(j));
+  				vec xNewJ;
+  				double newX;
+  				if(useGram) {
+  					xNewJ = Gram.unsafe_col(newJ);	// reuses memory
+  					newX = xNewJ(newJ);
+  				} else {
+  					xNewJ = xs.unsafe_col(newJ);	  // reuses memory
+  					newX = accu(xNewJ % xNewJ);
+  				}
+  				double normNewX = sqrt(newX);
+  				if(k == 0) {	// no active variables, L is empty
+  					L.set_size(1,1);
+  					L(0, 0) = normNewX;
+  					rank = 1;
+  				} else {
+  					vec oldX;
+  					if(useGram) {
+  						oldX = xNewJ.elem(active);
+  					} else {
+  						oldX.set_size(k);
+  						for(uword j = 0; j < k; j++) {
+  							oldX(j) = dot(xNewJ, xs.unsafe_col(active(j)));
+  						}
+  					}
+  					vec l = solve(trimatl(L), oldX);
+  					double lkk = newX - accu(l % l);
+  					// check if L is machine singular
+  					if(lkk > eps) {
+  						// no singularity: update Cholesky L
+  						lkk = sqrt(lkk);
+  						rank++;
+  						// add new row and column to Cholesky L
+  						// this is a little trick: sometimes we need
+  						// lower triangular matrix, sometimes upper
+  						// hence we define quadratic matrix and use
+  						// triangularView() to interpret matrix the
+  						// correct way
+  						// insert row and column without initializing memory
+  						// (set_size() and reshape() have strange behavior)
+  						L.insert_rows(k, 1, false);
+  						L.insert_cols(k, 1, false);
+  						// fill new parts of the matrix
+  						for(uword j = 0; j < k; j++) {
+  							L(k, j) = l(j);
+  							L(j, k) = l(j);
+  						}
+  						L(k, k) = lkk;
+  					}
+  				}
+  				// add new variable to active set or drop it for good
+  				// in case of singularity
+  				if(rank == k) {
+  					// singularity: drop variable for good
+  					ignores.insert_rows(s, 1, false);	// do not initialize new memory
+  					ignores(s) = newJ;
+  					s++;	// increase number of ignored variables
+  					p--;	// decrease number of variables
+  					if(p < maxActive) {
+  						// adjust maximum number of active variables
+  						maxActive = p;
+  					}
+  				} else {
+  					// no singularity: add variable to active set
+  					active.insert_rows(k, 1, false);	// do not initialize new memory
+  					active(k) = newJ;
+  					// keep track of sign of correlation for new active variable
+  					signs.insert_rows(k, 1, false);		// do not initialize new memory
+  					signs(k) = sign(corY(newJ));
+  					k++;	// increase number of active variables
+  				}
+  			}
+  			// remove new active or ignored variables from inactive variables
+  			// and corresponding vector of current correlations
+  			for(sword j = newActive.n_elem-1; j >= 0; j--) {	// reverse order
+  				uword i = newActive(j);
+  				inactive.shed_row(i);
+  				corInactiveY.shed_row(i);
+  			}
+  			m = inactive.n_elem;	// update number of inactive variables
+  		}
+  		// prepare for computation of step size
+  		// here double precision of signs is necessary
+  		vec b = solve(trimatl(L), signs);
+  		vec G = solve(trimatu(L), b);
+  		// correlations of active variables with equiangular vector
+  		double corActiveU = 1/sqrt(dot(G, signs));
+  		// coefficients of active variables in linear combination forming the
+  		// equiangular vector
+  		vec w = G * corActiveU;	// note that this has the right signs
+  		// equiangular vector
+  		vec u;
+  		if(!useGram) {
+  			// we only need equiangular vector if we don't use the precomputed
+  			// Gram matrix, otherwise we can compute the correlations directly
+  			// from the Gram matrix
+  			u = zeros<vec>(n);
+  			for(uword i = 0; i < n; i++) {
+  				for(uword j = 0; j < k; j++) {
+  					u(i) += xs(i, active(j)) * w(j);
+  				}
+  			}
+  		}
+  		// compute step size in equiangular direction
+  		double step;
+  		if(k < maxActive) {
+  			// correlations of inactive variables with equiangular vector
+  			vec corInactiveU(m);
+  			if(useGram) {
+  				for(uword j = 0; j < m; j++) {
+  					vec gram = Gram.unsafe_col(inactive(j));
+  					corInactiveU(j) = dot(w, gram.elem(active));
+  				}
+  			} else {
+  				for(uword j = 0; j < m; j++) {
+  					corInactiveU(j) = dot(u, xs.unsafe_col(inactive(j)));
+  				}
+  			}
+  			// compute step size in the direction of the equiangular vector
+  			step = findStep(maxCor, corInactiveY, corActiveU, corInactiveU, eps);
+  		} else {
+  			// last step: take maximum possible step
+  			step = maxCor/corActiveU;
+  		}
+  		// adjust step size if any sign changes and drop corresponding variables
+  		drops = findDrops(currentBeta, active, w, eps, step);
+  		// update current regression coefficients
+  		previousBeta = currentBeta;
+  		currentBeta.elem(active) += step * w;
+  		// update current correlations
+  		if(useGram) {
+  			// we also need to do this for active variables, since they may be
+  			// dropped at a later stage
+  			for(uword j = 0; j < Gram.n_cols; j++) {
+  				vec gram = Gram.unsafe_col(j);
+  				corY(j) -= step * dot(w, gram.elem(active));
+  			}
+  		} else {
+  			ys -= step * u;	// take step in equiangular direction
+  			corY = conv_to<rowvec>::from(ys) * xs;	// might be faster than trans()
+  		}
+  		// drop variables if necessary
+  		if(drops.n_elem > 0) {
+  			// downdate Cholesky L
+  			// this cannot be put into its own void function since
+  			// shed_col() and shed_row() don't work with referenced matrices
+  			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order
+  				// variables need to be dropped in descending order
+  				uword drop = drops(j);	// index with respect to active set
+  				// modify upper triangular part as in R package 'lars'
+  				// simply deleting columns is not enough, other computations
+  				// necessary but complicated due to Fortran code
+  				L.shed_col(drop);
+  				vec z = ones<vec>(k);
+  				k--;	// decrease number of active variables
+  				for(uword i = drop; i < k; i++) {
+  					double a = L(i,i), b = L(i+1,i);
+  					if(b != 0.0) {
+  						// compute the rotation
+  						double tau, s, c;
+  						if(abs(b) > abs(a)) {
+  							tau = -a/b;
+  							s = 1.0/sqrt(1.0+tau*tau);
+  							c = s * tau;
+  						} else {
+  							tau = -b/a;
+  							c = 1.0/sqrt(1.0+tau*tau);
+  							s = c * tau;
+  						}
+  						// update 'L' and 'z';
+  						L(i,i) = c*a - s*b;
+  						for(uword j = i+1; j < k; j++) {
+  							a = L(i,j);
+  							b = L(i+1,j);
+  							L(i,j) = c*a - s*b;
+  							L(i+1,j) = s*a + c*b;
+  						}
+  						a = z(i);
+  						b = z(i+1);
+  						z(i) = c*a - s*b;
+  						z(i+1) = s*a + c*b;
+  					}
+  				}
+  				L.shed_row(k);
+  				rank--;
+  			}
+  			// mirror lower triangular part
+  			L = symmatu(L);
+  			// add dropped variables to inactive set and make sure
+  			// coefficients are 0
+  			inactive.insert_rows(m, drops.n_elem, false);
+  			for(uword j = 0; j < drops.n_elem; j++) {
+  				uword newInactive = active(drops(j));
+  				inactive(m + j) = newInactive;
+  				currentBeta(newInactive) = 0;	// make sure coefficient is 0
+  			}
+  			m = inactive.n_elem;	// update number of inactive variables
+  			// drop variables from active set and sign vector
+  			// number of active variables is already updated above
+  			for(sword j = drops.n_elem-1; j >= 0; j--) {	// reverse order
+  				// variables need to be dropped in descending order
+  				uword drop = drops(j);	// index with respect to active set
+  				// drop variables from active set and sign vector
+  				// number of active variables is already updated above
+  				active.shed_row(drop);
+  				signs.shed_row(drop);
+  			}
+  		}
+  	}
+
+  	// interpolate coefficients for given lambda
+    if(k == 0) {
+    	// lambda larger than largest lambda from steps of LARS algorithm
+  		beta.zeros();
+    } else {
+    	// penalty parameter within two steps
+      if(k == maxActive) {
+          // current coefficients are the least squares solution (in the 
+          // high-dimensional case, as far along the solution path as possible)
+          // current and previous values of the penalty parameter need to be 
+          // reset for interpolation
+          previousLambda = currentLambda;
+          currentLambda = 0;
+      }
+      // interpolate coefficients
+    	beta = ((rescaledLambda - currentLambda) * previousBeta +
+  				(previousLambda - rescaledLambda) * currentBeta) /
+  				(previousLambda - currentLambda);
+    }
+  }
 
 	// transform coefficients back
 	beta = beta / conv_to<colvec>::from(normX);
