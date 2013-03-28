@@ -63,11 +63,15 @@ checkSRange <- function(s, sMax = NA) {
 }
 
 ## check steps for coef(), fitted(), residuals(), predict(), ... methods
-checkSteps <- function(s, sMin, sMax) {
-  if(!is.numeric(s) || length(s) == 0 || any(!is.finite(s)) || 
-       any(s < sMin) || any(s > sMax)) {
-    stop(sprintf("invalid step, must be between %d and %d", sMin, sMax))
+checkSteps <- function(s, sMin, sMax, recycle = FALSE, ...) {
+  ok <- is.numeric(s) && length(s) > 0 && all(is.finite(s))
+  if(ok) {
+    if(isTRUE(recycle)) {
+      s[s < sMin] <- sMin
+      s[s > sMax] <- sMax
+    } else ok <- all(s >= sMin) && all(s <= sMax)
   }
+  if(!ok) stop(sprintf("invalid step, must be between %d and %d", sMin, sMax))
   s
 }
 

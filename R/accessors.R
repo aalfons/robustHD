@@ -34,7 +34,7 @@ getComponent.seqModel <- function(x, component, s = NA,
     if(!is.null(s)) {
       # check selected steps
       if(isTRUE(is.na(s))) s <- getSOpt(x)  # defaults to optimal step
-      else s <- checkSteps(s, sMin=steps[1], sMax=steps[length(steps)])
+      else s <- checkSteps(s, sMin=steps[1], sMax=steps[length(steps)], ...)
       # extract corresponding parts of the component
       if(is.null(dim(comp))) comp <- comp[s - steps[1] + 1]
       else comp <- comp[, s - steps[1] + 1, drop=FALSE]

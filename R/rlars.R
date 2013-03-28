@@ -105,8 +105,8 @@
 #' the sequenced predictors.
 #'  
 #' Else if \code{crit} is \code{"PE"}, an object of class 
-#' \code{"perrySeqModel"} (inheriting from classes \code{"perryTuning"}, 
-#' see \code{\link[perry]{perryTuning}}).  It contains information on the 
+#' \code{"perrySeqModel"} (inheriting from class \code{"perrySelect"}, 
+#' see \code{\link[perry]{perrySelect}}).  It contains information on the 
 #' prediction error criterion, and includes the final model as component 
 #' \code{finalModel}.
 #' 
@@ -251,24 +251,27 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     s <- checkSRange(s, sMax=sMax)  # check range of steps along the sequence
     crit <- if(!is.na(s[2]) && s[1] == s[2]) "none" else match.arg(crit)
     if(crit == "PE") {
-      # set up function call to be passed to perryTuning()
-      remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
-                  "selectBest", "seFactor", "ncores", "cl", "seed")
-      remove <- match(remove, names(matchedCall), nomatch=0)
-      call <- matchedCall[-remove]
-      # call function perryTuning() to perform prediction error estimation
+      # further checks for steps along the sequence
       if(is.na(s[2])) {
         s[2] <- min(sMax, floor(n/2))
         if(s[1] > sMax) s[1] <- sMax
       }
+      # set up function call to be passed to perryTuning()
+      remove <- c("x", "y", "crit", "splits", "cost", "costArgs", 
+                  "selectBest", "seFactor", "ncores", "cl", "seed")
+      remove <- match(remove, names(matchedCall), nomatch=0)
+      call <- matchedCall[-remove]
+      call$sMax <- sMax
+      call$s <- s
+      # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
-      tuning <- list(s=s)
       selectBest <- match.arg(selectBest)
-      out <- perryTuning(call, x=x, y=y, tuning=tuning, splits=splits, 
-                         predictArgs=list(fit="both"), cost=cost, 
-                         costArgs=costArgs, selectBest=selectBest, 
-                         seFactor=seFactor, ncores=ncores, cl=cl, 
-                         seed=seed)
+      out <- perryFit(call, x=x, y=y, splits=splits, 
+                      predictArgs=list(s=s, recycle=TRUE), 
+                      cost=cost, costArgs=costArgs, 
+                      ncores=ncores, cl=cl, seed=seed)
+      out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
+      fits(out) <- s
       # fit final model
       call$x <- matchedCall$x
       call$y <- matchedCall$y
