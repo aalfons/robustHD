@@ -35,9 +35,9 @@ print.fitSelect <- function(x, ...) {
 #' @import perry
 print.perrySeqModel <- function(x, ...) {
   # print prediction error results
-  perry:::print.perryTuning(x, best=FALSE, final=FALSE, ...)
+  perry:::print.perrySelect(x, best=FALSE, ...)
   # print optimal step
-  sOpt <- as.matrix(x$tuning[x$best, "s"])
+  sOpt <- as.matrix(fits(x)[x$best])
   cat(sprintf("\nOptimal step: %d\n", sOpt))
   # print final model
   cat("\nFinal model:\n")

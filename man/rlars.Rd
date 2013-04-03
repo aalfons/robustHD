@@ -164,9 +164,9 @@
   containing the indices of the sequenced predictors.
 
   Else if \code{crit} is \code{"PE"}, an object of class
-  \code{"perrySeqModel"} (inheriting from classes
-  \code{"perryTuning"}, see
-  \code{\link[perry]{perryTuning}}).  It contains
+  \code{"perrySeqModel"} (inheriting from class
+  \code{"perrySelect"}, see
+  \code{\link[perry]{perrySelect}}).  It contains
   information on the prediction error criterion, and
   includes the final model as component \code{finalModel}.
 
