@@ -44,7 +44,9 @@ callBackend <- function(..., PACKAGE) {
 ## sequence predictors as long as there are twice as many observations
 checkSMax <- function(sMax, n, p) {
   sMax <- rep(as.integer(sMax), length.out=1)
-  bound <- min(p, if(is.na(sMax)) floor(n/2) else n-1)
+  m <- length(p)
+  if(m > 1) bound <- min(m, floor((if(is.na(sMax)) n/2 else n-1) / mean(p)))
+  else bound <- min(p, if(is.na(sMax)) floor(n/2) else n-1)
   if(!isTRUE(is.finite(sMax)) || sMax > bound) sMax <- bound
   sMax
 }

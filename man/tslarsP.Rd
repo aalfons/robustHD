@@ -53,8 +53,8 @@
 
   \item{sMax}{an integer giving the number of predictor
   series to be sequenced.  If it is \code{NA} (the
-  default), predictor series are sequenced as long as there
-  are twice as many observations as predictor series.}
+  default), predictor groups are sequenced as long as there
+  are twice as many observations as predictor variables.}
 
   \item{centerFun}{a function to compute a robust estimate
   for the center (defaults to
@@ -116,8 +116,8 @@
   submodels.  The default is to start with a model
   containing only an intercept (step 0) and iteratively add
   all series along the sequence (step \code{sMax}).  If the
-  second element is \code{NA}, predictor groups may be
-  added to the model as long as there are twice as many
+  second element is \code{NA}, predictor groups are added
+  to the model as long as there are twice as many
   observations as predictor variables.  If only one value
   is supplied, it is recycled.}
 

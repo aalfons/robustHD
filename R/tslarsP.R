@@ -27,8 +27,8 @@
 #' @param h  an integer giving the forecast horizon (defaults to 1).
 #' @param p  an integer giving the number of lags in the model (defaults to 2).
 #' @param sMax  an integer giving the number of predictor series to be 
-#' sequenced.  If it is \code{NA} (the default), predictor series are sequenced 
-#' as long as there are twice as many observations as predictor series.
+#' sequenced.  If it is \code{NA} (the default), predictor groups are sequenced 
+#' as long as there are twice as many observations as predictor variables.
 #' @param centerFun  a function to compute a robust estimate for the center 
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
@@ -69,7 +69,7 @@
 #' step along the sequence for which to compute submodels.  The default 
 #' is to start with a model containing only an intercept (step 0) and 
 #' iteratively add all series along the sequence (step \code{sMax}).  If 
-#' the second element is \code{NA}, predictor groups may be added to the 
+#' the second element is \code{NA}, predictor groups are added to the 
 #' model as long as there are twice as many observations as predictor 
 #' variables.  If only one value is supplied, it is recycled.
 #' @param crit  a character string specifying the optimality criterion to be 

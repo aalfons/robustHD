@@ -20,7 +20,9 @@
 #' @param y  a numeric vector containing the response.
 #' @param sMax  an integer giving the number of predictor groups to be 
 #' sequenced.  If it is \code{NA} (the default), predictor groups are sequenced 
-#' as long as there are twice as many observations as predictor groups.
+#' as long as there are twice as many observations as expected predictor 
+#' variables (number of predictor groups times the average number of predictor 
+#' variables per group).
 #' @param assign  an integer vector giving the predictor group to which 
 #' each predictor variable belongs.
 #' @param dummy  a logical vector indicating whether the predictors are dummy 
@@ -63,7 +65,7 @@
 #' step along the sequence for which to compute submodels.  The default 
 #' is to start with a model containing only an intercept (step 0) and 
 #' iteratively add all groups along the sequence (step \code{sMax}).  If 
-#' the second element is \code{NA}, predictor groups may be added to the 
+#' the second element is \code{NA}, predictor groups are added to the 
 #' model as long as there are twice as many observations as predictor 
 #' variables.  If only one value is supplied, it is recycled.
 #' @param crit  a character string specifying the optimality criterion to be 
@@ -150,11 +152,6 @@
 #' @returnItem w  a numeric vector giving the data cleaning weights (only 
 #' returned for a robust fit).
 #' @returnItem call  the matched function call.
-#' 
-#' @note \code{findStepSizes} is a utility function that computes the step size 
-#' for each inactive predictor group.  It is only exported so it can be called 
-#' by the underlying C++ code for sequencing the predictor groups.  Hence it is 
-#' not expected to be called by the user and not documented.
 #' 
 #' @author Andreas Alfons
 #' 

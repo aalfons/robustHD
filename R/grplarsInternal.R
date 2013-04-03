@@ -32,7 +32,7 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     sMax <- s[1]
   }
   robust <- isTRUE(robust)
-  sMax <- checkSMax(sMax, n, m)  # check number of groups to sequence
+  sMax <- checkSMax(sMax, n, p)  # check number of groups to sequence
   if(robust) {
     # check if there are dummy variables
     dummy <- sapply(dummy, isTRUE)
@@ -66,31 +66,34 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     s <- checkSRange(s, sMax=sMax)  # check range of steps along the sequence
     crit <- if(!is.na(s[2]) && s[1] == s[2]) "none" else match.arg(crit)
     if(crit == "PE") {
-      # set up function call to be passed to perryTuning()
-      remove <- c("x", "y", "s", "crit", "splits", "cost", "costArgs", 
-                  "selectBest", "seFactor", "ncores", "cl", "seed")
-      remove <- match(remove, names(call), nomatch=0)
-      funCall <- call[-remove]
-      # call function perryTuning() to perform prediction error estimation
+      # further checks for steps along the sequence
       if(is.na(s[2])) {
         s[2] <- min(sMax, floor(n/2))
         if(s[1] > sMax) s[1] <- sMax
       }
+      # set up function call to be passed to perryFit()
+      remove <- c("x", "y", "crit", "splits", "cost", "costArgs", 
+                  "selectBest", "seFactor", "ncores", "cl", "seed")
+      remove <- match(remove, names(call), nomatch=0)
+      funCall <- call[-remove]
+      funCall$sMax <- sMax
+      funCall$s <- s
+      # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
-      tuning <- list(s=s)
       selectBest <- match.arg(selectBest)
-      out <- perryTuning(funCall, x=x, y=y, tuning=tuning, splits=splits, 
-                         predictArgs=list(fit="both"), cost=cost, 
-                         costArgs=costArgs, selectBest=selectBest, 
-                         seFactor=seFactor, ncores=ncores, cl=cl, 
-                         seed=seed)
+      out <- perryFit(funCall, x=x, y=y, splits=splits, 
+                      predictArgs=list(s=s, recycle=TRUE), cost=cost, 
+                      costArgs=costArgs, envir=parent.frame(2), 
+                      ncores=ncores, cl=cl, seed=seed)
+      out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
+      fits(out) <- s
       # fit final model
       funCall$x <- call$x
       funCall$y <- call$y
       funCall$s <- s[out$best]
       funCall$ncores <- call$ncores
       funCall$cl <- cl
-      out$finalModel <- eval(funCall)
+      out$finalModel <- eval(funCall, envir=parent.frame(2))
       out$call <- call
       # assign class and return object
       class(out) <- c("perrySeqModel", class(out))

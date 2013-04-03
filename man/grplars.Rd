@@ -59,7 +59,9 @@
   \item{sMax}{an integer giving the number of predictor
   groups to be sequenced.  If it is \code{NA} (the
   default), predictor groups are sequenced as long as there
-  are twice as many observations as predictor groups.}
+  are twice as many observations as expected predictor
+  variables (number of predictor groups times the average
+  number of predictor variables per group).}
 
   \item{assign}{an integer vector giving the predictor
   group to which each predictor variable belongs.}
@@ -125,8 +127,8 @@
   submodels.  The default is to start with a model
   containing only an intercept (step 0) and iteratively add
   all groups along the sequence (step \code{sMax}).  If the
-  second element is \code{NA}, predictor groups may be
-  added to the model as long as there are twice as many
+  second element is \code{NA}, predictor groups are added
+  to the model as long as there are twice as many
   observations as predictor variables.  If only one value
   is supplied, it is recycled.}
 
@@ -266,13 +268,6 @@
   (Robustly) sequence groups of candidate predictors
   according to their predictive content and find the
   optimal model along the sequence.
-}
-\note{
-  \code{findStepSizes} is a utility function that computes
-  the step size for each inactive predictor group.  It is
-  only exported so it can be called by the underlying C++
-  code for sequencing the predictor groups.  Hence it is
-  not expected to be called by the user and not documented.
 }
 \author{
   Andreas Alfons
