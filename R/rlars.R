@@ -50,7 +50,7 @@
 #' along the sequence for which to compute submodels.  The default is to start 
 #' with a model containing only an intercept (step 0) and iteratively add all 
 #' variables along the sequence (step \code{sMax}).  If the second element is 
-#' \code{NA}, predictors may be added to the model as long as there are twice 
+#' \code{NA}, predictors are added to the model as long as there are twice 
 #' as many observations as predictors.  If only one value is supplied, it is 
 #' recycled.
 #' @param regFun  a function to compute robust linear regressions along the 
@@ -256,7 +256,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
         s[2] <- min(sMax, floor(n/2))
         if(s[1] > sMax) s[1] <- sMax
       }
-      # set up function call to be passed to perryTuning()
+      # set up function call to be passed to perryFit()
       remove <- c("x", "y", "crit", "splits", "cost", "costArgs", 
                   "selectBest", "seFactor", "ncores", "cl", "seed")
       remove <- match(remove, names(matchedCall), nomatch=0)
@@ -267,8 +267,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       s <- seq(from=s[1], to=s[2])
       selectBest <- match.arg(selectBest)
       out <- perryFit(call, x=x, y=y, splits=splits, 
-                      predictArgs=list(s=s, recycle=TRUE), 
-                      cost=cost, costArgs=costArgs, 
+                      predictArgs=list(s=s, recycle=TRUE), cost=cost, 
+                      costArgs=costArgs, envir=parent.frame(), 
                       ncores=ncores, cl=cl, seed=seed)
       out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
       fits(out) <- s
@@ -277,7 +277,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       call$y <- matchedCall$y
       call$s <- s[out$best]
       call$ncores <- matchedCall$ncores
-      out$finalModel <- eval(call)
+      out$finalModel <- eval(call, envir=parent.frame())
       out$call <- matchedCall
       # assign class and return object
       class(out) <- c("perrySeqModel", class(out))

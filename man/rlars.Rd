@@ -82,10 +82,10 @@
   submodels.  The default is to start with a model
   containing only an intercept (step 0) and iteratively add
   all variables along the sequence (step \code{sMax}).  If
-  the second element is \code{NA}, predictors may be added
-  to the model as long as there are twice as many
-  observations as predictors.  If only one value is
-  supplied, it is recycled.}
+  the second element is \code{NA}, predictors are added to
+  the model as long as there are twice as many observations
+  as predictors.  If only one value is supplied, it is
+  recycled.}
 
   \item{regFun}{a function to compute robust linear
   regressions along the sequence (defaults to
