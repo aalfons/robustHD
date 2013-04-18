@@ -45,7 +45,7 @@ callBackend <- function(..., PACKAGE) {
 checkSMax <- function(sMax, n, p) {
   sMax <- rep(as.integer(sMax), length.out=1)
   m <- length(p)
-  if(m > 1) bound <- min(m, floor((if(is.na(sMax)) n/2 else n-1) / mean(p)))
+  if(m > 1) bound <- min(m, if(is.na(sMax)) floor(n/(2*mean(p))) else n-1)
   else bound <- min(p, if(is.na(sMax)) floor(n/2) else n-1)
   if(!isTRUE(is.finite(sMax)) || sMax > bound) sMax <- bound
   sMax
