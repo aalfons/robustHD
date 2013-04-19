@@ -32,7 +32,7 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     sMax <- s[1]
   }
   robust <- isTRUE(robust)
-  sMax <- checkSMax(sMax, n, p)  # check number of groups to sequence
+  sMax <- checkSMax(sMax, n, p, groupwise=TRUE)  # number of groups to sequence
   if(robust) {
     # check if there are dummy variables
     dummy <- sapply(dummy, isTRUE)
@@ -146,8 +146,8 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
                        prob=prob, return="weights")
       } else {
         # obtain data cleaning weights from winsorization
-        w <- winsorize(cbind(z, xs), standardized=TRUE, 
-                       const=const, prob=prob, return="weights")
+        w <- winsorize(cbind(z, xs), standardized=TRUE, const=const, 
+                       prob=prob, return="weights")
       }
     } else {
       # clean data in a limited sense: there may still be correlation 
@@ -166,7 +166,7 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
         if(useParallel) {
           w <- parSapply(cl, assignList, getWeights, xs, z)
         } else w <- sapply(assignList, getWeights, xs, z)
-        w <- apply(w, 1, min)  # smallest weight for each observation
+        w <- sqrt(apply(w, 1, min))  # square root of smallest weights
         # observations can have zero weight, in which case the number 
         # of observations needs to be adjusted
         n <- length(which(w > 0))
