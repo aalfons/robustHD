@@ -4,6 +4,11 @@ Changes in robustHD version 0.4.0
 
 
 
+Changes in robustHD version 0.3.2
+
+    + Bugfixes in sparseLTS() preventing errors for high-dimensional data.
+
+
 Changes in robustHD version 0.3.1
 
     + rlars now uses perryFit() instead of perryTuning() for prediction error 

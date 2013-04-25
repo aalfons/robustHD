@@ -312,10 +312,9 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     eps <- formals()$eps
     warning("missing or infinite value of 'eps'; using default value")
   }
-  if(missing(use.Gram)) {
-    h <- ceiling(alpha*n)  # subset sizes are different from 'ltsReg'
-    use.Gram <- d[2] >= min(h, 100)
-  } else use.Gram <- isTRUE(use.Gram)
+  h <- ceiling(alpha*n)  # subset sizes are different from 'ltsReg'
+  if(missing(use.Gram)) use.Gram <- d[2] >= min(h, 100)
+  else use.Gram <- isTRUE(use.Gram)
   ncores <- rep(ncores, length.out=1)
   if(is.na(ncores)) ncores <- detectCores()  # use all available cores
   if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
@@ -359,7 +358,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     class(fit) <- c("perrySparseLTS", class(fit))
   } else {
     initial <- match.arg(initial)
-    if(h < d[2] && type == "hyperplane") type <- "sparse"
+    if(h < d[2] && initial == "hyperplane") initial <- "sparse"
     if(!is.null(seed)) set.seed(seed)  # set seed of random number generator
     
     ## the same initial subsets are used for all values of lambda, except when 
