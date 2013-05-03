@@ -4,6 +4,12 @@ Changes in robustHD version 0.4.0
 
 
 
+Changes in robustHD version 0.3.3
+
+    + sparseLTS() no longer uses subsampling algorithm in the special case of 
+      alpha = 1.
+
+
 Changes in robustHD version 0.3.2
 
     + Bugfixes in sparseLTS() preventing errors for high-dimensional data.

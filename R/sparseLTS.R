@@ -357,42 +357,65 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     fit$finalModel <- finalModel
     class(fit) <- c("perrySparseLTS", class(fit))
   } else {
-    initial <- match.arg(initial)
-    if(h < d[2] && initial == "hyperplane") initial <- "sparse"
-    if(!is.null(seed)) set.seed(seed)  # set seed of random number generator
-    
-    ## the same initial subsets are used for all values of lambda, except when 
-    ## the initial subsets are based on lasso solutions with 3 observations 
-    ## (since in the latter case the initial subsets depend on lambda)
-    subsets <- switch(initial, random=randomSubsets(n, h, nsamp[1]), 
-                      hyperplane=hyperplaneSubsets(x, y, h, nsamp[1]))
-    
-    ## call internal function to obtain raw fits
-    if(length(lambda) == 1) {
-      fit <- fastSparseLTS(x=x, y=y, lambda=lambda, h=h, nsamp=nsamp, 
-                           initial=subsets, intercept=intercept, ncstep=ncstep, 
-                           tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores)
-      fit$best <- sort.int(fit$best)
+    if(h < n) {
+      initial <- match.arg(initial)
+      if(h < d[2] && initial == "hyperplane") initial <- "sparse"
+      if(!is.null(seed)) set.seed(seed)  # set seed of random number generator
+      
+      ## the same initial subsets are used for all values of lambda, except when 
+      ## the initial subsets are based on lasso solutions with 3 observations 
+      ## (since in the latter case the initial subsets depend on lambda)
+      subsets <- switch(initial, random=randomSubsets(n, h, nsamp[1]), 
+                        hyperplane=hyperplaneSubsets(x, y, h, nsamp[1]))
+      
+      ## call internal function to obtain raw fits
+      if(length(lambda) == 1) {
+        fit <- fastSparseLTS(x=x, y=y, lambda=lambda, h=h, nsamp=nsamp, 
+                             initial=subsets, intercept=intercept, 
+                             ncstep=ncstep, tol=tol, eps=eps, 
+                             use.Gram=use.Gram, ncores=ncores)
+        fit$best <- sort.int(fit$best)
+      } else {
+        names(lambda) <- seq_along(lambda)
+        fit <- lapply(lambda, fastSparseLTS, x=x, y=y, h=h, nsamp=nsamp, 
+                      initial=subsets, intercept=intercept, ncstep=ncstep, 
+                      tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores, 
+                      drop=FALSE)
+        names(fit) <- names(lambda)
+        fit <- list(best=sapply(fit, function(x) sort.int(x$best)), 
+                    coefficients=sapply(fit, "[[", "coefficients"), 
+                    residuals=sapply(fit, "[[", "residuals"), 
+                    objective=sapply(fit, "[[", "objective"), 
+                    center=sapply(fit, "[[", "center"), 
+                    scale=sapply(fit, "[[", "scale"))
+      }
+      ## compute consistency factor to correct scale estimate
+      qn <- qnorm((h+n)/ (2*n))                         # required quantile
+      cdelta <- 1 / sqrt(1 - (2*n)/(h/qn) * dnorm(qn))  # consistency factor
     } else {
-      names(lambda) <- seq_along(lambda)
-      fit <- lapply(lambda, fastSparseLTS, x=x, y=y, h=h, nsamp=nsamp, 
-                    initial=subsets, intercept=intercept, ncstep=ncstep, 
-                    tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores, 
-                    drop=FALSE)
-      names(fit) <- names(lambda)
-      fit <- list(best=sapply(fit, function(x) sort.int(x$best)), 
-                  coefficients=sapply(fit, "[[", "coefficients"), 
-                  residuals=sapply(fit, "[[", "residuals"), 
-                  objective=sapply(fit, "[[", "objective"), 
-                  center=sapply(fit, "[[", "center"), 
-                  scale=sapply(fit, "[[", "scale"))
+      ## no trimming, compute lasso for raw fits
+      if(length(lambda) == 1) {
+        fit <- fastLasso(x, y, lambda=lambda, intercept=intercept, eps=eps, 
+                         use.Gram=use.Gram, raw=TRUE)
+      } else {
+        names(lambda) <- seq_along(lambda)
+        fit <- lapply(lambda, fastLasso, x=x, y=y, intercept=intercept, 
+                      eps=eps, use.Gram=use.Gram, drop=FALSE, raw=TRUE)
+        names(fit) <- names(lambda)
+        fit <- list(best=sapply(fit, "[[", "best"), 
+                    coefficients=sapply(fit, "[[", "coefficients"), 
+                    residuals=sapply(fit, "[[", "residuals"), 
+                    objective=sapply(fit, "[[", "objective"), 
+                    center=sapply(fit, "[[", "center"), 
+                    scale=sapply(fit, "[[", "scale"))
+      }
+      ## consistency factor is not necessary
+      cdelta <- 1
     }
-    ## correct scale estimate
-    q <- qnorm(0.9875)  # quantile of the normal distribution
-    qn <- qnorm((h+n)/ (2*n))  # quantile for consistency factor
-    cdelta <- 1 / sqrt(1 - (2*n)/(h/qn) * dnorm(qn))  # consistency factor
-    s <- fit$scale * cdelta
+    
     ## find good observations
+    q <- qnorm(0.9875)       # quantile of the normal distribution
+    s <- fit$scale * cdelta  # corrected scale estimate
     if(length(lambda) == 1) ok <- abs((fit$residuals - fit$center)/s) <= q
     else ok <- abs(scale(fit$residuals, fit$center, s)) <= q
     ## convert to 0/1 weights identifying outliers
