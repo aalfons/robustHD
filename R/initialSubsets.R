@@ -35,14 +35,15 @@ hyperplaneSubsets <- function(x, y, h, nsamp = 500) {
 }
 
 ## generate subsets based on lasso solutions with 3 observations
-sparseSubsets <- function(x, y, lambda, h, nsamp = 500, intercept = TRUE, 
-                          eps = .Machine$double.eps, use.Gram = TRUE) {
+sparseSubsets <- function(x, y, lambda, h, nsamp = 500, normalize = TRUE, 
+                          intercept = TRUE, eps = .Machine$double.eps, 
+                          use.Gram = TRUE) {
   # obtain random subsets with only 3 observations
   n <- length(y)
   subsets <- randomSubsets(n, 3, nsamp)
   # call C++ function to compute lasso fits and find observations with 
   # smallest absolute residuals
   subsets <- callBackend("R_sparseSubsets", R_x=x, R_y=y, R_lambda=lambda, 
-                         R_h=h, R_subsets=subsets, R_intercept=intercept, 
-                         R_eps=eps, R_useGram=use.Gram)
+                         R_h=h, R_subsets=subsets, R_normalize=normalize, 
+                         R_intercept=intercept, R_eps=eps, R_useGram=use.Gram)
 }

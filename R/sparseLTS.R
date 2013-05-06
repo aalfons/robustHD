@@ -240,7 +240,7 @@ sparseLTS.formula <- function(formula, data, ...) {
 #' @export
 
 sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
-                              alpha = 0.75, intercept = TRUE, 
+                              alpha = 0.75, normalize = TRUE, intercept = TRUE, 
                               nsamp = c(500, 10), 
                               initial = c("sparse", "hyperplane", "random"), 
                               ncstep = 2, use.correction = TRUE, 
@@ -278,13 +278,15 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
   }
   if(length(lambda) == 1) crit <- "none" 
   else crit <- match.arg(crit)
+  normalize <- isTRUE(normalize)
   intercept <- isTRUE(intercept)
   if(mode == "fraction" && any(lambda > 0)) { 
     # fraction of a robust estimate of the smallest value for the penalty 
     # parameter that sets all coefficients to zero (based on bivariate 
     # winsorization)
     if(crit == "PE") frac <- lambda
-    lambda <- lambda * lambda0(x, y, intercept=intercept, tol=tol, eps=eps, ...)
+    lambda <- lambda * lambda0(x, y, normalize=normalize, intercept=intercept, 
+                               tol=tol, eps=eps, ...)
   }
   alpha <- rep(alpha, length.out=1)
   if(!isTRUE(is.numeric(alpha) && 0.5 <= alpha && alpha <= 1)) {
@@ -369,16 +371,16 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
       ## call internal function to obtain raw fits
       if(length(lambda) == 1) {
         fit <- fastSparseLTS(x=x, y=y, lambda=lambda, h=h, nsamp=nsamp, 
-                             initial=subsets, intercept=intercept, 
-                             ncstep=ncstep, tol=tol, eps=eps, 
-                             use.Gram=use.Gram, ncores=ncores)
+                             initial=subsets, normalize=normalize, 
+                             intercept=intercept, ncstep=ncstep, tol=tol, 
+                             eps=eps, use.Gram=use.Gram, ncores=ncores)
         fit$best <- sort.int(fit$best)
       } else {
         names(lambda) <- seq_along(lambda)
         fit <- lapply(lambda, fastSparseLTS, x=x, y=y, h=h, nsamp=nsamp, 
-                      initial=subsets, intercept=intercept, ncstep=ncstep, 
-                      tol=tol, eps=eps, use.Gram=use.Gram, ncores=ncores, 
-                      drop=FALSE)
+                      initial=subsets, normalize=normalize, intercept=intercept, 
+                      ncstep=ncstep, tol=tol, eps=eps, use.Gram=use.Gram, 
+                      ncores=ncores, drop=FALSE)
         names(fit) <- names(lambda)
         fit <- list(best=sapply(fit, function(x) sort.int(x$best)), 
                     coefficients=sapply(fit, "[[", "coefficients"), 
@@ -393,12 +395,14 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     } else {
       ## no trimming, compute lasso for raw fits
       if(length(lambda) == 1) {
-        fit <- fastLasso(x, y, lambda=lambda, intercept=intercept, eps=eps, 
-                         use.Gram=use.Gram, raw=TRUE)
+        fit <- fastLasso(x, y, lambda=lambda, normalize=normalize, 
+                         intercept=intercept, eps=eps, use.Gram=use.Gram, 
+                         raw=TRUE)
       } else {
         names(lambda) <- seq_along(lambda)
-        fit <- lapply(lambda, fastLasso, x=x, y=y, intercept=intercept, 
-                      eps=eps, use.Gram=use.Gram, drop=FALSE, raw=TRUE)
+        fit <- lapply(lambda, fastLasso, x=x, y=y, normalize=normalize, 
+                      intercept=intercept, eps=eps, use.Gram=use.Gram, 
+                      drop=FALSE, raw=TRUE)
         names(fit) <- names(lambda)
         fit <- list(best=sapply(fit, "[[", "best"), 
                     coefficients=sapply(fit, "[[", "coefficients"), 
@@ -430,13 +434,13 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     # compute lasso fits with good observations
     if(length(lambda) == 1) {
       fit <- fastLasso(x, y, lambda=lambda, subset=which(ok), 
-                       intercept=intercept, eps=eps, 
-                       use.Gram=use.Gram)
+                       normalize=normalize, intercept=intercept, 
+                       eps=eps, use.Gram=use.Gram)
     } else {
       fit <- lapply(seq_along(lambda), function(i) {
         fastLasso(x, y, lambda=lambda[i], subset=which(ok[, i]), 
-                  intercept=intercept, eps=eps, 
-                  use.Gram=use.Gram, drop=FALSE)
+                  normalize=normalize, intercept=intercept, 
+                  eps=eps, use.Gram=use.Gram, drop=FALSE)
       })
       names(fit) <- names(lambda)
       fit <- list(coefficients=sapply(fit, "[[", "coefficients"), 
@@ -479,7 +483,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                 fitted.values=copyNames(from=y, to=fit$fitted.values), 
                 residuals=copyNames(from=y, to=fit$residuals), center=center, 
                 scale=s, cnp2=cdelta, wt=copyNames(from=y, to=wt), df=df, 
-                intercept=intercept, alpha=alpha, quan=h, 
+                normalize=normalize, intercept=intercept, alpha=alpha, quan=h, 
                 raw.coefficients=copyNames(from=x, to=raw.fit$coefficients), 
                 raw.fitted.values=copyNames(from=y, to=y-raw.fit$residuals),
                 raw.residuals=copyNames(from=y, to=raw.fit$residuals), 
@@ -501,20 +505,21 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
 
 ## internal function to compute raw sparse LTS
 fastSparseLTS <- function(lambda, x, y, h, nsamp = c(500, 10), 
-                          initial = NULL, intercept = TRUE, 
+                          initial = NULL, normalize = TRUE, intercept = TRUE, 
                           ncstep = 2, tol = .Machine$double.eps^0.5, 
                           eps = .Machine$double.eps, use.Gram = TRUE, 
                           ncores = 1, drop = TRUE) {
   # check whether initial subsets based on lasso solutions need to be computed
   if(is.null(initial)) {
     initial <- sparseSubsets(x, y, lambda=lambda, h=h, nsamp=nsamp[1], 
-                             intercept=intercept, eps=eps, use.Gram=use.Gram)
+                             normalize=normalize, intercept=intercept, 
+                             eps=eps, use.Gram=use.Gram)
   }
   # call C++ function
   fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda, 
-                     R_initial=initial, R_intercept=intercept, R_ncstep=ncstep, 
-                     R_nkeep=nsamp[2], R_tol=tol, R_eps=eps, R_useGram=use.Gram, 
-                     R_ncores=ncores)
+                     R_initial=initial, R_normalize=normalize, 
+                     R_intercept=intercept, R_ncstep=ncstep, R_nkeep=nsamp[2], 
+                     R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores)
   if(drop) {
     # drop the dimension of selected components
     which <- c("best", "coefficients", "residuals")

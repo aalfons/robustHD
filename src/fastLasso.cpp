@@ -90,8 +90,9 @@ uvec findDrops(const vec& beta, const uvec& active, const vec& w,
 //                  in advance
 // intercept ...... intercept is returned through this parameter
 vec fastLasso(const mat& x, const vec& y, const double& lambda,
-		const bool& useSubset, const uvec& subset, const bool& useIntercept,
-		const double& eps, const bool& useGram, double& intercept) {
+		const bool& useSubset, const uvec& subset, const bool& normalize, 
+    const bool& useIntercept, const double& eps, const bool& useGram, 
+    double& intercept) {
 
 	// data initializations
 	uword n, p = x.n_cols;
@@ -129,23 +130,27 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 //		intercept = 0;	// zero intercept
 	}
 
-	// compute norms and find variables with too small a norm
-	uvec inactive = seqLen(p);
-	rowvec normX = sqrt(sum(xs % xs, 0));	// columnwise norms
-	double epsNorm = eps * sqrt(n);	      // R package 'lars' uses n, not n-1
-	uvec ignores = find(normX < epsNorm);	// indicates variables to be ignored
-	uword s = ignores.n_elem;
-	for(sword j = s-1; j >= 0; j--) { // reverse order (requires signed integer)
-		uword i = ignores(j);
-		// set norm to tolerance to avoid numerical problems
-		normX(i) = epsNorm;
-		// remove ignored variable from inactive set (hence reverse order)
-		inactive.shed_row(i);
-	}
-	// normalize predictors
-	for(uword j = 0; j < p; j++) {
-		xs.col(j) /= normX(j);		// sweep out norm
-	}
+  // compute norms and find variables with too small a norm
+	uword s = 0;
+  uvec inactive = seqLen(p), ignores(s);
+	rowvec normX;
+  if(normalize) {
+    normX = sqrt(sum(xs % xs, 0));  // columnwise norms
+    double epsNorm = eps * sqrt(n);	      // R package 'lars' uses n, not n-1
+	  ignores = find(normX < epsNorm);	// indicates variables to be ignored
+	  s = ignores.n_elem;
+	  for(sword j = s-1; j >= 0; j--) { // reverse order (requires signed integer)
+		  uword i = ignores(j);
+		  // set norm to tolerance to avoid numerical problems
+		  normX(i) = epsNorm;
+		  // remove ignored variable from inactive set (hence reverse order)
+		  inactive.shed_row(i);
+	  }
+	  // normalize predictors
+	  for(uword j = 0; j < p; j++) {
+		  xs.col(j) /= normX(j);		// sweep out norm
+	  }
+  }
 
 	// compute Gram matrix if requested (saves time if number of variables is
 	// not too large)
@@ -454,10 +459,8 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
   }
 
 	// transform coefficients back
-	beta = beta / conv_to<colvec>::from(normX);
-	if(useIntercept) {
-		intercept = meanY - dot(beta, meanX);
-	}
+  if(normalize) beta = beta / conv_to<colvec>::from(normX);
+	if(useIntercept) intercept = meanY - dot(beta, meanX);
 
 	return beta;
 }
@@ -465,17 +468,15 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 // wrapper function used for R interface, which returns fitted values and
 // residuals through corresponding parameters
 vec fastLasso(const mat& x, const vec& y, const double& lambda,
-		const bool& useSubset, const uvec& subset, const bool& useIntercept,
-		const double& eps, const bool& useGram, double& intercept, vec& fitted,
-		vec& residuals) {
+		const bool& useSubset, const uvec& subset, const bool& normalize, 
+    const bool& useIntercept, const double& eps, const bool& useGram, 
+    double& intercept, vec& fitted, vec& residuals) {
 	// compute coefficients
-	vec coefficients = fastLasso(x, y, lambda, useSubset, subset,
+	vec coefficients = fastLasso(x, y, lambda, useSubset, subset, normalize,
 			useIntercept, eps, useGram, intercept);
 	// compute fitted values
 	fitted = x * coefficients;
-	if(useIntercept) {
-		fitted += intercept;
-	}
+	if(useIntercept) fitted += intercept;
 	// compute residuals
 	residuals = y - fitted;
 	// return coefficients
@@ -484,7 +485,8 @@ vec fastLasso(const mat& x, const vec& y, const double& lambda,
 
 // R interface to fastLasso()
 SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
-		SEXP R_subset, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
+		SEXP R_subset, SEXP R_normalize, SEXP R_intercept, SEXP R_eps, 
+    SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						  // predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -503,14 +505,15 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 			subset(i) = Rcpp_subset[i] - 1;
 		}
 	}
+  bool normalize = as<bool>(R_normalize);
 	bool useIntercept = as<bool>(R_intercept);
 	double intercept;
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// call native C++ function and return results as list
 	vec fitted, residuals;
-	vec coefficients = fastLasso(x, y, lambda, useSubset, subset, useIntercept,
-			eps, useGram, intercept, fitted, residuals);
+	vec coefficients = fastLasso(x, y, lambda, useSubset, subset, normalize,
+			useIntercept, eps, useGram, intercept, fitted, residuals);
 	if(useIntercept) {
 		// prepend intercept
 		coefficients.insert_rows(0, 1, false);

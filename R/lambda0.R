@@ -60,13 +60,14 @@
 #' 
 #' @export
 
-lambda0 <- function(x, y, intercept = TRUE, const = 2, prob = 0.95, 
-                    tol = .Machine$double.eps^0.5, 
+lambda0 <- function(x, y, normalize = TRUE, intercept = TRUE, const = 2, 
+                    prob = 0.95, tol = .Machine$double.eps^0.5, 
                     eps = .Machine$double.eps, ...) {
   # initializations
   n <- length(y)
   x <- as.matrix(x)
   if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
+  normalize <- isTRUE(normalize)
   intercept <- isTRUE(intercept)
   # standardize data
   y <- robStandardize(y, eps=eps, ...)
@@ -95,7 +96,7 @@ lambda0 <- function(x, y, intercept = TRUE, const = 2, prob = 0.95,
       y <- y - mean(y)
     }
     # normalize cleaned x variable with respect to L2 norm
-    xj <- xj / sqrt(sum(xj^2))
+    if(normalize) xj <- xj / sqrt(sum(xj^2))
     # return 
     drop(t(y) %*% xj)
   })

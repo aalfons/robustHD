@@ -30,12 +30,12 @@ public:
 	Subset(const uvec&);
 	// compute lasso solution and residuals
 	void lasso(const mat&, const vec&, const double&, const bool&,
-			const double&, const bool&);
+			const bool&, const double&, const bool&);
 	// compute objective function
 	void objective(const double&);
 	// perform C-Step
 	void cStep(const mat&, const vec&, const double&, const bool&,
-			const double&, const double&, const bool&);
+			const bool&, const double&, const double&, const bool&);
 //	// overloaded < (is less) operator for sorting and ordering
 //	bool operator< (const Subset&);
 };
@@ -77,9 +77,10 @@ void Subset::objective(const double& lambda) {
 
 // compute lasso solution, residuals and value of objective function
 void Subset::lasso(const mat& x, const vec& y, const double& lambda,
-		const bool& useIntercept, const double& eps, const bool& useGram) {
+		const bool& normalize, const bool& useIntercept, const double& eps, 
+    const bool& useGram) {
 	// compute coefficients
-	coefficients = fastLasso(x, y, lambda, true, indices,
+	coefficients = fastLasso(x, y, lambda, true, indices, normalize,
 			useIntercept, eps, useGram, intercept);
 	// compute residuals
 	residuals = y - x * coefficients;
@@ -92,15 +93,15 @@ void Subset::lasso(const mat& x, const vec& y, const double& lambda,
 
 // perform C-Step
 void Subset::cStep(const mat& x, const vec& y, const double& lambda,
-		const bool& useIntercept, const double& tol, const double& eps,
-		const bool& useGram) {
+		const bool& normalize, const bool& useIntercept, const double& tol, 
+    const double& eps, const bool& useGram) {
 	// update subset
 	const uword h = indices.size();
 	indices = findSmallest(abs(residuals), h);
 	// compute lasso solution for new subset
 	// (also updated residuals and value of objective function)
 	double previousCrit = crit;
-	lasso(x, y, lambda, useIntercept, eps, useGram);
+	lasso(x, y, lambda, normalize, useIntercept, eps, useGram);
 	// check for convergence
 	continueCSteps = ((previousCrit - crit) > tol);
 }
@@ -136,7 +137,7 @@ bool subsetIsEqual(const Subset& left, const Subset& right) {
 
 // R interface for object-based lasso (for testing purposes)
 SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
-		SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
+		SEXP R_normalize, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -150,12 +151,13 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	for(int i = 0; i < h; i++) {
 		initial(i) = Rcpp_initial[i] - 1;	// copy data
 	}
+  bool normalize = as<bool>(R_normalize);
 	bool useIntercept = as<bool>(R_intercept);
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// initialize object for subset and call native C++ function
 	Subset subset(initial);
-	subset.lasso(x, y, lambda, useIntercept, eps, useGram);
+	subset.lasso(x, y, lambda, normalize, useIntercept, eps, useGram);
 	// return results as list
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
@@ -174,7 +176,8 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 
 // R interface for object-based C-Step (for testing purposes)
 SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
-		SEXP R_intercept, SEXP R_tol, SEXP R_eps, SEXP R_useGram) {
+		SEXP R_normalize, SEXP R_intercept, SEXP R_tol, SEXP R_eps, 
+    SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -183,6 +186,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	vec y(Rcpp_y.begin(), n, false);	// reuse memory
 	double lambda = as<double>(R_lambda);
 	List Rcpp_subset(R_subset);
+  bool normalize = as<bool>(R_normalize);
 	bool useIntercept = as<bool>(R_intercept);
 	double tol = as<double>(R_tol);
 	double eps = as<double>(R_eps);
@@ -209,7 +213,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	}
 	subset.crit = Rcpp_crit[0];
 	// call native C++ function
-	subset.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+	subset.cStep(x, y, lambda, normalize, useIntercept, tol, eps, useGram);
 	// return results as list
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
@@ -343,9 +347,9 @@ double partialScale(const vec& x, const double& center, const int& h) {
 // center ......... residual center estimate is returned through this parameter
 // scale .......... residual scale estimate is returned through this parameter
 Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
-		const umat& initial, const bool& useIntercept, const int& ncstep,
-		int& nkeep, const double& tol, const double& eps, const bool& useGram,
-		int& ncores, double& center, double& scale) {
+		const umat& initial, const bool& normalize, const bool& useIntercept, 
+    const int& ncstep, int& nkeep, const double& tol, const double& eps, 
+    const bool& useGram, int& ncores, double& center, double& scale) {
 	// initializations
 	const int h = initial.n_rows, nsamp = initial.n_cols;
 
@@ -359,11 +363,11 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 		for(int k = 0; k < nsamp; k++) {
 			Subset subsetK(initial.unsafe_col(k));
 			// compute lasso fit on initial subset
-			subsetK.lasso(x, y, lambda, useIntercept, eps, useGram);
+			subsetK.lasso(x, y, lambda, normalize, useIntercept, eps, useGram);
 			// perform initial c-steps
 			int i = 0;
 			while(subsetK.continueCSteps && (i < ncstep)) {
-				subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+				subsetK.cStep(x, y, lambda, normalize, useIntercept, tol, eps, useGram);
 				i++;
 			}
 			subsets[k] = subsetK;
@@ -381,7 +385,7 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 			Subset subsetK = subsets[k];
 			int i = 0;
 			while(subsetK.continueCSteps) {
-				subsetK.cStep(x, y, lambda, useIntercept, tol, eps, useGram);
+				subsetK.cStep(x, y, lambda, normalize, useIntercept, tol, eps, useGram);
 				i++;
 			}
 			subsets[k] = subsetK;
@@ -409,8 +413,8 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 // R interface to fastSparseLTS()
 // initial subsets are constructed in R and passed down to C++
 SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
-		SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep, SEXP R_tol, SEXP R_eps,
-		SEXP R_useGram, SEXP R_ncores) {
+		SEXP R_normalize, SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep, 
+    SEXP R_tol, SEXP R_eps, SEXP R_useGram, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -427,7 +431,8 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 			initial(i,j) = Rcpp_initial(i,j) - 1;
 		}
 	}
-	bool useIntercept = as<bool>(R_intercept);
+  bool normalize = as<bool>(R_normalize);
+  bool useIntercept = as<bool>(R_intercept);
 	int ncstep = as<int>(R_ncstep);
 	int nkeep = as<int>(R_nkeep);
 	double tol = as<double>(R_tol);
@@ -436,8 +441,8 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	int ncores = as<int>(R_ncores);
 	// call native C++ function
 	double center, scale;
-	Subset best = fastSparseLTS(x, y, lambda, initial, useIntercept, ncstep,
-			nkeep, tol, eps, useGram, ncores, center, scale);
+	Subset best = fastSparseLTS(x, y, lambda, initial, normalize, useIntercept,
+			ncstep, nkeep, tol, eps, useGram, ncores, center, scale);
 	// return results as list
 	vec coefficients = best.coefficients;
 	if(useIntercept) {

@@ -11,7 +11,7 @@
 
   \method{sparseLTS}{default} (x, y, lambda,
     mode = c("lambda", "fraction"), alpha = 0.75,
-    intercept = TRUE, nsamp = c(500, 10),
+    normalize = TRUE, intercept = TRUE, nsamp = c(500, 10),
     initial = c("sparse", "hyperplane", "random"),
     ncstep = 2, use.correction = TRUE,
     tol = .Machine$double.eps^0.5,
