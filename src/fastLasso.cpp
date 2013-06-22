@@ -84,6 +84,7 @@ uvec findDrops(const vec& beta, const uvec& active, const vec& w,
 // useSubset ...... logical indicating whether lasso should be computed on a
 //                  subset
 // subset ......... indices of subset on which lasso should be computed
+// normalize ...... logical indicating whether predictors should be normalized
 // useIntercept ... logical indicating whether intercept should be included
 // eps ............ small numerical value (effective zero)
 // useGram ........ logical indicating whether Gram matrix should be computed

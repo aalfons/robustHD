@@ -24,6 +24,9 @@
 #' 
 #' @param x  a numeric matrix containing the predictor variables.
 #' @param y  a numeric vector containing the response variable.
+#' @param normalize  a logical indicating whether the winsorized predictor 
+#' variables should be normalized to have unit \eqn{L_{2}}{L2} norm (the 
+#' default is \code{TRUE}).
 #' @param intercept  a logical indicating whether a constant term should be 
 #' included in the model (the default is \code{TRUE}).
 #' @param const  numeric; tuning constant to be used in univariate 
@@ -45,6 +48,10 @@
 #' @author Andreas Alfons
 #' 
 #' @references
+#' Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares 
+#' regression for analyzing high-dimensional large data sets. \emph{The Annals 
+#' of Applied Statistics}, \bold{7}(1), 226--248.
+#' 
 #' Efron, B., Hastie, T., Johnstone, I. and Tibshirani, R. (2004) Least angle 
 #' regression. \emph{The Annals of Statistics}, \bold{32}(2), 407--499.
 #' 

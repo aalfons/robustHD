@@ -30,6 +30,10 @@
 #' @param alpha  a numeric value giving the percentage of the residuals for 
 #' which the \eqn{L_{1}}{L1} penalized sum of squares should be minimized (the 
 #' default is 0.75).
+#' @param normalize  a logical indicating whether the predictor variables 
+#' should be normalized to have unit \eqn{L_{2}}{L2} norm (the default is 
+#' \code{TRUE}).  Note that normalization is performed on the subsamples 
+#' rather than the full data set.
 #' @param intercept  a logical indicating whether a constant term should be 
 #' included in the model (the default is \code{TRUE}).
 #' @param nsamp  a numeric vector giving the number of subsamples to be used in 
@@ -179,6 +183,11 @@
 #' (\url{http://openmp.org/}).
 #' 
 #' @author Andreas Alfons
+#' 
+#' @references
+#' Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares 
+#' regression for analyzing high-dimensional large data sets. \emph{The Annals 
+#' of Applied Statistics}, \bold{7}(1), 226--248.
 #' 
 #' @seealso \code{\link[=coef.sparseLTS]{coef}}, 
 #' \code{\link[=fitted.sparseLTS]{fitted}}, 
