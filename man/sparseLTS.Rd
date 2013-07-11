@@ -278,8 +278,14 @@
   \item{y}{the response variable (if \code{model} is
   \code{TRUE}).}
 
-  \item{call}{the matched function call.
-
+  \item{call}{the matched function call.}
+}
+\description{
+  Compute least trimmed squares regression with an
+  \eqn{L_{1}}{L1} penalty on the regression coefficients,
+  which allows for sparse model estimates.
+}
+\note{
   Package \pkg{robustHD} has a built-in back end for sparse
   least trimmed squares using the C++ library Armadillo.
   Another back end is available through package
@@ -288,12 +294,7 @@
   \R for Windows.
 
   For both C++ back ends, parallel computing is implemented
-  via OpenMP (\url{http://openmp.org/}).}
-}
-\description{
-  Compute least trimmed squares regression with an
-  \eqn{L_{1}}{L1} penalty on the regression coefficients,
-  which allows for sparse model estimates.
+  via OpenMP (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data
