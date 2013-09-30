@@ -477,23 +477,6 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
     }
   }
 
-  // compute residuals for all observations
-  if(useSubset) {
-    xs = x;
-    ys = y;
-    if(useIntercept) {
-  	  for(uword j = 0; j < p; j++) {
-			  xs.col(j) -= meanX(j);	// sweep out columnwise means
-		  }
-		  ys -= meanY;		  // sweep out mean
-    }
-    if(normalize) {
-      for(uword j = 0; j < p; j++) {
-		    xs.col(j) /= normX(j);		// sweep out norm
-	    }
-    }
-  }
-
 	// transform coefficients back
   vec normedBeta;
   if(normalize) {
@@ -505,7 +488,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   // compute residuals for all observations
   residuals = y - x * beta;
   if(useIntercept) residuals -= intercept;
-  
+
   // compute value of objective function on the subset
   if(useCrit && useSubset) {
     if(normalize) crit = objective(normedBeta, residuals, subset, lambda);
