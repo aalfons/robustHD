@@ -19,9 +19,12 @@ RcppExport SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
     SEXP R_useGram);
 
 // functions to be used within C++
-vec fastLasso(const mat& x, const vec& y, const double& lambda,
+void fastLasso(const mat& x, const vec& y, const double& lambda,
   	const bool& useSubset, const uvec& subset, const bool& normalize, 
     const bool& useIntercept, const double& eps, const bool& useGram, 
-    double& intercept);
+    const bool& useCrit,
+    // intercept, coefficients, residuals and objective function are returned 
+    // through the following parameters
+    double& intercept, vec& beta, vec& residuals, double& crit);
 
 #endif

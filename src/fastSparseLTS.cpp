@@ -31,8 +31,6 @@ public:
 	// compute lasso solution and residuals
 	void lasso(const mat&, const vec&, const double&, const bool&,
 			const bool&, const double&, const bool&);
-	// compute objective function
-	void objective(const double&);
 	// perform C-Step
 	void cStep(const mat&, const vec&, const double&, const bool&,
 			const bool&, const double&, const double&, const bool&);
@@ -62,33 +60,13 @@ inline Subset::Subset(const uvec& initial) {
 	continueCSteps = true;
 }
 
-// compute sparse LTS objective function
-// (L1 penalized trimmed sum of squared residuals)
-void Subset::objective(const double& lambda) {
-	// compute sum of squared residuals for subset
-	const uword h = indices.size();
-	crit = 0;
-	for(uword i = 0; i < h; i++) {
-		crit += pow(residuals(indices(i)), 2);
-	}
-	// add L1 penalty on coefficients
-	crit += h * lambda * norm(coefficients, 1);
-}
-
 // compute lasso solution, residuals and value of objective function
 void Subset::lasso(const mat& x, const vec& y, const double& lambda,
 		const bool& normalize, const bool& useIntercept, const double& eps, 
     const bool& useGram) {
-	// compute coefficients
-	coefficients = fastLasso(x, y, lambda, true, indices, normalize,
-			useIntercept, eps, useGram, intercept);
-	// compute residuals
-	residuals = y - x * coefficients;
-	if(useIntercept) {
-		residuals -= intercept;
-	}
-	// compute value of objective function
-	objective(lambda);
+	// call standalone function
+	fastLasso(x, y, lambda, true, indices, normalize, useIntercept, eps, 
+      useGram, true, intercept, coefficients, residuals, crit);
 }
 
 // perform C-Step
@@ -329,9 +307,6 @@ double partialScale(const vec& x, const double& center, const int& h) {
 
 // sparse least trimmed squares
 // Armadillo library is used for linear algebra
-// ATTENTION: intercept, coefficients, residuals, value of objective function,
-//            residual center estimate and residual scale estimate are returned
-//            through corresponding parameters
 // x .............. predictor matrix
 // y .............. response
 // lambda ......... penalty parameter

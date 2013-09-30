@@ -18,14 +18,11 @@ umat sparseSubsets(const mat& x, const vec& y, const double& lambda,
 	umat indices(h, nsamp);
 	for(uword k = 0; k < nsamp; k++) {
 		// compute lasso fit
-		double intercept;
-		vec coefficients = fastLasso(x, y, lambda, true, subsets.unsafe_col(k),
-				normalize, useIntercept, eps, useGram, intercept);
-		// compute residuals
-		vec residuals = y - x * coefficients;
-		if(useIntercept) {
-			residuals -= intercept;
-		}
+		double intercept, crit;
+		vec coefficients, residuals;
+    fastLasso(x, y, lambda, true, subsets.unsafe_col(k), normalize, 
+        useIntercept, eps, useGram, false, intercept, coefficients, 
+        residuals, crit);
 		// find h observations with smallest absolute residuals
 		indices.col(k) = findSmallest(abs(residuals), h);
 	}

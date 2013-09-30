@@ -1,10 +1,14 @@
-Changes in robustHD version 0.3.3
+Changes in robustHD version 0.4.0
 
     + sparseLTS() no longer uses subsampling algorithm in the special case of 
       alpha = 1.
     
     + sparseLTS() now has argument 'normalize' to specify whether the predictor
       variables should be normalized.
+    
+    + sparseLTS() now computes objective function with coefficients for 
+      normalized data (if applicable).
+
 
 
 Changes in robustHD version 0.3.2
