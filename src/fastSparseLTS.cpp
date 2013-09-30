@@ -51,7 +51,7 @@ inline Subset::Subset(const uword&n, const uword&p, const uword& h) {
 	continueCSteps = true;
 }
 inline Subset::Subset(const uvec& initial) {
-	const uword h = initial.size();
+	const uword h = initial.n_elem;
 	indices = uvec(h);
 	for(uword i = 0; i < h; i++) {
 		indices(i) = initial(i);	// data are copied
@@ -74,7 +74,7 @@ void Subset::cStep(const mat& x, const vec& y, const double& lambda,
 		const bool& normalize, const bool& useIntercept, const double& tol, 
     const double& eps, const bool& useGram) {
 	// update subset
-	const uword h = indices.size();
+	const uword h = indices.n_elem;
 	indices = findSmallest(abs(residuals), h);
 	// compute lasso solution for new subset
 	// (also updated residuals and value of objective function)
@@ -103,7 +103,7 @@ bool subsetIsEqual(const Subset& left, const Subset& right) {
 		uvec leftIndices = sort(left.indices);
 		uvec rightIndices = sort(right.indices);
 		// loop over sorted indices to see if they are all equal
-		uword i = 0, h = leftIndices.size();
+		uword i = 0, h = leftIndices.n_elem;
 		while(equal && (i < h)) {
 			equal = (leftIndices(i) == rightIndices(i));
 			i++;
@@ -276,7 +276,7 @@ SEXP R_testKeepBest(SEXP R_subsetMat, SEXP R_crits, SEXP R_nkeep) {
 // compute the mean of a subset of the data
 double subsetMean(const vec& x, const uvec& indices) {
 //	return mean(x.elem(subset));
-	const uword h = indices.size();
+	const uword h = indices.n_elem;
 	double mean = 0;
 	for(uword i = 0; i < h; i++) {
 		mean += x(indices(i));

@@ -79,7 +79,7 @@ uvec findDrops(const vec& beta, const uvec& active, const vec& w,
 double objective(const vec& beta, const vec& residuals, 
     const uvec& subset, const double& lambda) {
   // compute sum of squared residuals for subset
-	const uword h = subset.size();
+	const uword h = subset.n_elem;
 	double crit = 0;
 	for(uword i = 0; i < h; i++) {
 		crit += pow(residuals(subset(i)), 2);
