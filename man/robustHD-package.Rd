@@ -16,9 +16,9 @@ Package: \tab robustHD\cr
 Type: \tab Package\cr
 Version: \tab 0.4.0\cr
 Date: \tab 2013-11-13\cr
-Depends: \tab R (>= 2.14.1), Rcpp (>= 0.9.10), ggplot2 (>= 0.9.2), MASS,
-parallel, perry (>= 0.2.0), robustbase (>= 0.6-0)\cr
-Imports: \tab RcppArmadillo (>= 0.3.0), pcaPP, stats\cr
+Depends: \tab R (>= 2.14.1), ggplot2 (>= 0.9.2), perry (>= 0.2.0)\cr
+Imports: \tab Rcpp (>= 0.9.10), RcppArmadillo (>= 0.3.0), MASS, parallel,
+pcaPP, robustbase (>= 0.6-0), stats\cr
 LinkingTo: \tab Rcpp, RcppArmadillo\cr
 Suggests: \tab mvtnorm\cr
 License: \tab GPL (>= 2)\cr

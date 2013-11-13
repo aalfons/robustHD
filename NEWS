@@ -8,6 +8,8 @@ Changes in robustHD version 0.4.0
     
     + sparseLTS() now computes objective function with coefficients for 
       normalized data (if applicable).
+    
+    + Most required packages are now imports rather than depends.
 
 
 
