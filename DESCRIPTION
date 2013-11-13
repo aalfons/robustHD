@@ -5,15 +5,15 @@ Version: 0.4.0
 Date: 2013-11-13
 Depends:
     R (>= 2.14.1),
-    Rcpp (>= 0.9.10),
     ggplot2 (>= 0.9.2),
+    perry (>= 0.2.0)
+Imports:
+    Rcpp (>= 0.9.10),
+    RcppArmadillo (>= 0.3.0),
     MASS,
     parallel,
-    perry (>= 0.2.0),
-    robustbase (>= 0.6-0)
-Imports:
-    RcppArmadillo (>= 0.3.0),
     pcaPP,
+    robustbase (>= 0.6-0),
     stats
 LinkingTo: Rcpp, RcppArmadillo
 Suggests:
