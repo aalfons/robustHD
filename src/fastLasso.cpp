@@ -155,7 +155,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
 	rowvec normX;
   if(normalize) {
     normX = sqrt(sum(xs % xs, 0));  // columnwise norms
-    double epsNorm = eps * sqrt(n);	      // R package 'lars' uses n, not n-1
+    double epsNorm = eps * sqrt((double)n);	      // R package 'lars' uses n, not n-1
 	  ignores = find(normX < epsNorm);	// indicates variables to be ignored
 	  s = ignores.n_elem;
 	  for(sword j = s-1; j >= 0; j--) { // reverse order (requires signed integer)
