@@ -132,7 +132,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
 		xs = x;	// does this copy memory?
 		ys = y;	// does this copy memory?
 	}
-	double rescaledLambda = n * lambda / 2;
+	double rescaledLambda = n * lambda / 2.0;
 
 	// center data and store means
 	rowvec meanX;
