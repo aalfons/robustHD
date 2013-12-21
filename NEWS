@@ -1,13 +1,22 @@
-Changes in robustHD version 0.4.0
+Changes in robustHD version 0.5.0
 
     + Added functionality for (robust) groupwise least angle regression.
 
 
 
-Changes in robustHD version 0.3.3
+Changes in robustHD version 0.4.0
 
     + sparseLTS() no longer uses subsampling algorithm in the special case of 
       alpha = 1.
+    
+    + sparseLTS() now has argument 'normalize' to specify whether the predictor
+      variables should be normalized.
+    
+    + sparseLTS() now computes objective function with coefficients for 
+      normalized data (if applicable).
+    
+    + Most required packages are now imports rather than depends.
+
 
 
 Changes in robustHD version 0.3.2

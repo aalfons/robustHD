@@ -11,7 +11,7 @@
 
   \method{sparseLTS}{default} (x, y, lambda,
     mode = c("lambda", "fraction"), alpha = 0.75,
-    intercept = TRUE, nsamp = c(500, 10),
+    normalize = TRUE, intercept = TRUE, nsamp = c(500, 10),
     initial = c("sparse", "hyperplane", "random"),
     ncstep = 2, use.correction = TRUE,
     tol = .Machine$double.eps^0.5,
@@ -53,6 +53,12 @@
   \item{alpha}{a numeric value giving the percentage of the
   residuals for which the \eqn{L_{1}}{L1} penalized sum of
   squares should be minimized (the default is 0.75).}
+
+  \item{normalize}{a logical indicating whether the
+  predictor variables should be normalized to have unit
+  \eqn{L_{2}}{L2} norm (the default is \code{TRUE}).  Note
+  that normalization is performed on the subsamples rather
+  than the full data set.}
 
   \item{intercept}{a logical indicating whether a constant
   term should be included in the model (the default is
@@ -272,8 +278,14 @@
   \item{y}{the response variable (if \code{model} is
   \code{TRUE}).}
 
-  \item{call}{the matched function call.
-
+  \item{call}{the matched function call.}
+}
+\description{
+  Compute least trimmed squares regression with an
+  \eqn{L_{1}}{L1} penalty on the regression coefficients,
+  which allows for sparse model estimates.
+}
+\note{
   Package \pkg{robustHD} has a built-in back end for sparse
   least trimmed squares using the C++ library Armadillo.
   Another back end is available through package
@@ -282,12 +294,7 @@
   \R for Windows.
 
   For both C++ back ends, parallel computing is implemented
-  via OpenMP (\url{http://openmp.org/}).}
-}
-\description{
-  Compute least trimmed squares regression with an
-  \eqn{L_{1}}{L1} penalty on the regression coefficients,
-  which allows for sparse model estimates.
+  via OpenMP (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data
@@ -316,6 +323,12 @@ sparseLTS(x, y, lambda = frac, mode = "fraction")
 }
 \author{
   Andreas Alfons
+}
+\references{
+  Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least
+  trimmed squares regression for analyzing high-dimensional
+  large data sets. \emph{The Annals of Applied Statistics},
+  \bold{7}(1), 226--248.
 }
 \seealso{
   \code{\link[=coef.sparseLTS]{coef}},

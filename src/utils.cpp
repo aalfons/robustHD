@@ -64,7 +64,7 @@ vec applyScaleFun(const mat& x, SEXP scaleFun) {
 // those are not ordered, but they are the h smallest
 uvec findSmallest(const vec& x, const uword& h) {
 	// initialize data structure for sorting
-	const uword n = x.size();
+	const uword n = x.n_elem;
 	vector<SortData> sortVector(n);
 	for(uword i = 0; i < n; i++) {
 		sortVector[i] = SortData(i, x(i));
@@ -93,7 +93,7 @@ SEXP R_findSmallest(SEXP R_x, SEXP R_h) {
 // find indices of h smallest observations
 uvec partialOrder(const vec& x, const uword& h) {
 	// initialize data structure for sorting
-	const uword n = x.size();
+	const uword n = x.n_elem;
 	vector<SortData> sortVector(n);
 	for(uword i = 0; i < n; i++) {
 		sortVector[i] = SortData(i, x(i));

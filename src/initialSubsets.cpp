@@ -12,20 +12,17 @@ using namespace arma;
 // small number of observations (typically only 3) and returns the indices of 
 // the respective h observations with the smallest absolute residuals
 umat sparseSubsets(const mat& x, const vec& y, const double& lambda, 
-    const uword& h, const umat& subsets, const bool& useIntercept,
-		const double& eps, const bool& useGram) {
+    const uword& h, const umat& subsets, const bool& normalize, 
+    const bool& useIntercept, const double& eps, const bool& useGram) {
 	const uword nsamp = subsets.n_cols;
 	umat indices(h, nsamp);
 	for(uword k = 0; k < nsamp; k++) {
 		// compute lasso fit
-		double intercept;
-		vec coefficients = fastLasso(x, y, lambda, true, subsets.unsafe_col(k),
-				useIntercept, eps, useGram, intercept);
-		// compute residuals
-		vec residuals = y - x * coefficients;
-		if(useIntercept) {
-			residuals -= intercept;
-		}
+		double intercept, crit;
+		vec coefficients, residuals;
+    fastLasso(x, y, lambda, true, subsets.unsafe_col(k), normalize, 
+        useIntercept, eps, useGram, false, intercept, coefficients, 
+        residuals, crit);
 		// find h observations with smallest absolute residuals
 		indices.col(k) = findSmallest(abs(residuals), h);
 	}
@@ -34,7 +31,8 @@ umat sparseSubsets(const mat& x, const vec& y, const double& lambda,
 
 // R interface to sparseSubsets()
 SEXP R_sparseSubsets(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_h, 
-    SEXP R_subsets, SEXP R_intercept, SEXP R_eps, SEXP R_useGram) {
+    SEXP R_subsets, SEXP R_normalize, SEXP R_intercept, SEXP R_eps, 
+    SEXP R_useGram) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						  // predictor matrix
 	const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -52,11 +50,12 @@ SEXP R_sparseSubsets(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_h,
 			subsets(i,j) = Rcpp_subsets(i,j) - 1;
 		}
 	}
-	bool useIntercept = as<bool>(R_intercept);
+  bool normalize = as<bool>(R_normalize);
+  bool useIntercept = as<bool>(R_intercept);
 	double eps = as<double>(R_eps);
 	bool useGram = as<bool>(R_useGram);
 	// call native C++ function and return results
 	umat indices = sparseSubsets(x, y, lambda, h, subsets, 
-      useIntercept, eps, useGram) + 1;
+      normalize, useIntercept, eps, useGram) + 1;
 	return wrap(indices);
 }

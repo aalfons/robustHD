@@ -24,6 +24,9 @@
 #' 
 #' @param x  a numeric matrix containing the predictor variables.
 #' @param y  a numeric vector containing the response variable.
+#' @param normalize  a logical indicating whether the winsorized predictor 
+#' variables should be normalized to have unit \eqn{L_{2}}{L2} norm (the 
+#' default is \code{TRUE}).
 #' @param intercept  a logical indicating whether a constant term should be 
 #' included in the model (the default is \code{TRUE}).
 #' @param const  numeric; tuning constant to be used in univariate 
@@ -45,6 +48,10 @@
 #' @author Andreas Alfons
 #' 
 #' @references
+#' Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares 
+#' regression for analyzing high-dimensional large data sets. \emph{The Annals 
+#' of Applied Statistics}, \bold{7}(1), 226--248.
+#' 
 #' Efron, B., Hastie, T., Johnstone, I. and Tibshirani, R. (2004) Least angle 
 #' regression. \emph{The Annals of Statistics}, \bold{32}(2), 407--499.
 #' 
@@ -60,13 +67,14 @@
 #' 
 #' @export
 
-lambda0 <- function(x, y, intercept = TRUE, const = 2, prob = 0.95, 
-                    tol = .Machine$double.eps^0.5, 
+lambda0 <- function(x, y, normalize = TRUE, intercept = TRUE, const = 2, 
+                    prob = 0.95, tol = .Machine$double.eps^0.5, 
                     eps = .Machine$double.eps, ...) {
   # initializations
   n <- length(y)
   x <- as.matrix(x)
   if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
+  normalize <- isTRUE(normalize)
   intercept <- isTRUE(intercept)
   # standardize data
   y <- robStandardize(y, eps=eps, ...)
@@ -95,7 +103,7 @@ lambda0 <- function(x, y, intercept = TRUE, const = 2, prob = 0.95,
       y <- y - mean(y)
     }
     # normalize cleaned x variable with respect to L2 norm
-    xj <- xj / sqrt(sum(xj^2))
+    if(normalize) xj <- xj / sqrt(sum(xj^2))
     # return 
     drop(t(y) %*% xj)
   })
