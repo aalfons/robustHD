@@ -9,17 +9,17 @@
 #' @import parallel
 #' @import pcaPP
 
-grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE, 
-                            robust = FALSE, centerFun = mean, scaleFun = sd, 
-                            regFun = lm.fit, regArgs = list(), 
-                            combine = c("min", "euclidean", "mahalanobis"), 
-                            winsorize = FALSE, pca = FALSE, const = 2, 
-                            prob = 0.95, fit = TRUE, s = c(0, sMax), 
-                            crit = c("BIC", "PE"), splits = foldControl(), 
-                            cost = rmspe, costArgs = list(), 
-                            selectBest = c("hastie", "min"), seFactor = 1, 
-                            ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
-                            call = NULL) {
+grouplars <- function(x, y, sMax = NA, assign, robust = FALSE, 
+                      centerFun = mean, scaleFun = sd, 
+                      regFun = lm.fit, regArgs = list(), 
+                      combine = c("min", "euclidean", "mahalanobis"), 
+                      winsorize = FALSE, pca = FALSE, const = 2, 
+                      prob = 0.95, fit = TRUE, s = c(0, sMax), 
+                      crit = c("BIC", "PE"), splits = foldControl(), 
+                      cost = rmspe, costArgs = list(), 
+                      selectBest = c("hastie", "min"), seFactor = 1, 
+                      ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
+                      call = NULL) {
   ## initializations
   n <- length(y)
   assignList <- split(seq_len(length(assign)), assign)  # indices per group
@@ -34,17 +34,14 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
   robust <- isTRUE(robust)
   sMax <- checkSMax(sMax, n, p, groupwise=TRUE)  # number of groups to sequence
   if(robust) {
-    # check if there are dummy variables
-    dummy <- sapply(dummy, isTRUE)
-    haveDummies <- any(dummy)
     # if possible, do not use formula interface
     regControl <- getRegControl(regFun)
     regFun <- regControl$fun
     callRegFun <- getCallFun(regArgs)
     # check how data cleaning weights should be combined
     combine <- match.arg(combine)
-    # alternatively use winsorization, but not if there are dummies
-    winsorize <- isTRUE(winsorize) && !haveDummies
+    # alternatively use winsorization
+    winsorize <- isTRUE(winsorize)
     # check whether PCA step should be used to reduce dimensionality
     if(is.numeric(pca)) {
       pca <- rep(pca, length.out=1)
@@ -122,16 +119,9 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
     }
   }
   if(robust) {
-    if(haveDummies) {
-      # use standardization with mean/SD for dummies 
-      # and with centerFun/scaleFun otherwise
-      z <- robStandardize(y, centerFun, scaleFun)
-      dummy <- rep(dummy, length.out=sum(p))
-      xs <- robStandardizeDummy(x, dummy, centerFun, scaleFun)
-    } else {
-      z <- robStandardize(y, centerFun, scaleFun)
-      xs <- robStandardize(x, centerFun, scaleFun)
-    }
+    # use fallback mode (standardization with mean/SD) for dummies 
+    z <- robStandardize(y, centerFun, scaleFun)
+    xs <- robStandardize(x, centerFun, scaleFun, fallback=TRUE)
     muY <- attr(z, "center")
     sigmaY <- attr(z, "scale")
     muX <- attr(xs, "center")
@@ -153,13 +143,17 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
       # clean data in a limited sense: there may still be correlation 
       # outliers between the groups, but these should not be a problem
       # compute weights from robust regression for each group
+      # intercept column needs to be used in robust short regressions
       if(combine == "min") {
         # define function to compute weights for each predictor group
         getWeights <- function(i, x, y) {
           x <- x[, i, drop=FALSE]
           if(regControl$useFormula) {
-            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
-          } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+            fit <- callRegFun(y ~ x, fun=regFun, args=regArgs)
+          } else {
+            x <- cbind(rep.int(1, n), x)
+            fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+          }
           weights(fit)
         }
         # compute weights for each predictor group
@@ -176,8 +170,11 @@ grplarsInternal <- function(x, y, sMax = NA, assign, dummy = TRUE,
         getResiduals <- function(i, x, y) {
           x <- x[, i, drop=FALSE]
           if(regControl$useFormula) {
-            fit <- callRegFun(y ~ x - 1, fun=regFun, args=regArgs)
-          } else fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+            fit <- callRegFun(y ~ x, fun=regFun, args=regArgs)
+          } else {
+            x <- cbind(rep.int(1, n), x)
+            fit <- callRegFun(x, y, fun=regFun, args=regArgs)
+          }
           residuals(fit) / getScale(fit)
         }
         # compute scaled residuals for each predictor group

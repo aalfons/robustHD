@@ -30,8 +30,8 @@
   \method{rgrplars}{data.frame} (x, y, ...)
 
   \method{rgrplars}{default} (x, y, sMax = NA, assign,
-    dummy, centerFun = median, scaleFun = mad,
-    regFun = lmrob, regArgs = list(),
+    centerFun = median, scaleFun = mad, regFun = lmrob,
+    regArgs = list(),
     combine = c("min", "euclidean", "mahalanobis"),
     pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
     s = c(0, sMax), crit = c("BIC", "PE"),
@@ -65,9 +65,6 @@
 
   \item{assign}{an integer vector giving the predictor
   group to which each predictor variable belongs.}
-
-  \item{dummy}{a logical vector indicating whether the
-  predictors are dummy variables.}
 
   \item{centerFun}{a function to compute a robust estimate
   for the center (defaults to

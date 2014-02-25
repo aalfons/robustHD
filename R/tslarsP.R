@@ -293,13 +293,12 @@ tslarsPFit <- function(x, y, h = 1, p = 2, sMax = NA,
   crit <- match.arg(crit)
   model <- isTRUE(model)
   ## call workhorse function and modify return object
-  out <- grplarsInternal(fitBlocks(x, y, h, p), y[(p+h):n], sMax=sMax, 
-                         assign=assign, dummy=FALSE, robust=robust, 
-                         centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, 
-                         regArgs=regArgs, combine=combine, winsorize=winsorize, 
-                         pca=pca, const=const, prob=prob, fit=fit, s=s, 
-                         crit=crit, ncores=ncores, cl=cl, seed=seed, 
-                         model=model)
+  out <- grouplars(fitBlocks(x, y, h, p), y[(p+h):n], sMax=sMax, assign=assign, 
+                   robust=robust, centerFun=centerFun, scaleFun=scaleFun, 
+                   regFun=regFun, regArgs=regArgs, combine=combine, 
+                   winsorize=winsorize, pca=pca, const=const, prob=prob, 
+                   fit=fit, s=s, crit=crit, ncores=ncores, cl=cl, seed=seed, 
+                   model=model)
   # modify return object (lagged response should have index 0)
   if(inherits(out, "grplars")) {
     out[c("active", "assign", "h", "p")] <- 

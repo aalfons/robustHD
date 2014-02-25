@@ -128,26 +128,3 @@ robStandardize <- function(x, centerFun = median, scaleFun = mad,
   # return standardized data
   xs
 }
-
-
-# internal wrapper function to standardize indicated dummy variables with mean 
-# and standard deviation and robustly standardize other variables
-# x ....... matrix
-# dummy ... logical vector indicating dummy variables
-robStandardizeDummy <- function(x, dummy, centerFun = median, scaleFun = mad) {
-  center <- scale <- rep.int(NA, ncol(x))
-  # standardize dummy variables with mean and standard deviation
-  tmp <- standardize(x[, dummy])
-  x[, dummy] <- tmp
-  center[dummy] <- attr(tmp, "center")
-  scale[dummy] <- attr(tmp, "scale")
-  # robustly standardize dummy variables
-  tmp <- robStandardize(x[, !dummy], centerFun, scaleFun)
-  x[, !dummy] <- tmp
-  center[!dummy] <- attr(tmp, "center")
-  scale[!dummy] <- attr(tmp, "scale")
-  # add attributes and return standardized data
-  attr(x, "center") <- center
-  attr(x, "scale") <- scale
-  x
-}

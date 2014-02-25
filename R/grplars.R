@@ -25,8 +25,6 @@
 #' variables per group).
 #' @param assign  an integer vector giving the predictor group to which 
 #' each predictor variable belongs.
-#' @param dummy  a logical vector indicating whether the predictors are dummy 
-#' variables.
 #' @param centerFun  a function to compute a robust estimate for the center 
 #' (defaults to \code{\link[stats]{median}}).
 #' @param scaleFun  a function to compute a robust estimate for the scale 
@@ -280,8 +278,8 @@ rgrplars.formula <- function(formula, data, ...) {
   # extract response and candidate predictors from model frame
   y <- model.response(mf, "numeric")
   x <- model.matrix(mt, mf)
-  ## call wrapper around default method
-  out <- rgrplarsDefault(x, y, mt, ...)
+  ## call default method
+  out <- rgrplars.default(x, y, ...)
   if(inherits(out, "grplars")) {
     out$call <- call  # add call to return object
     out$terms <- mt   # add model terms to return object
@@ -298,12 +296,9 @@ rgrplars.data.frame <- function(x, y, ...) {
   ## initializations
   call <- match.call()  # get function call
   call[[1]] <- as.name("rgrplars")
-  # convert data.frame to design matrix
-  mf <- model.frame(~ ., data=x)
-  mt <- attr(mf, "terms")
-  x <- model.matrix(mt, mf)
+  x <- model.matrix(~ ., data=x)   # convert data.frame to design matrix
   ## call default method
-  out <- rgrplarsDefault(x, y, mt, ...)
+  out <- rgrplars.default(x, y, ...)
   if(inherits(out, "grplars")) out$call <- call  # add call to return object
   out
 }
@@ -313,9 +308,8 @@ rgrplars.data.frame <- function(x, y, ...) {
 #' @method rgrplars default
 #' @export
 
-rgrplars.default <- function(x, y, sMax = NA, assign, dummy, 
-                             centerFun = median, scaleFun = mad, 
-                             regFun = lmrob, regArgs = list(), 
+rgrplars.default <- function(x, y, sMax = NA, assign, centerFun = median, 
+                             scaleFun = mad, regFun = lmrob, regArgs = list(), 
                              combine = c("min", "euclidean", "mahalanobis"), 
                              pca = FALSE, const = 2, prob = 0.95, 
                              fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"), 
@@ -341,43 +335,21 @@ rgrplars.default <- function(x, y, sMax = NA, assign, dummy,
     x <- removeIntercept(x)
     assign <- assign[-1]
   }
-  # if argument 'dummy' is not supplied, check which columns in the predictor 
-  # matrix are are dummies
-  if(missing(dummy)) dummy <- apply(x, 2, function(x) all(x %in% c(0, 1)))
   ## call fit function with supplied functions for center, scale, 
   ## correlation and regression
-  grplarsFit(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=TRUE, 
-             centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, 
-             regArgs=regArgs, combine=combine, pca=pca, const=const, 
-             prob=prob, fit=fit, s=s, crit=crit, splits=splits, 
-             cost=cost, costArgs=costArgs, selectBest=selectBest, 
-             seFactor=seFactor, ncores=ncores, cl=cl, seed=seed, 
-             model=model, call=call)
-}
-
-## internal wrapper for default method
-rgrplarsDefault <- function(x, y, mt, assign, dummy, ...) {
-  haveIntercept <- as.logical(attr(mt, "intercept"))
-  # extract group assignment of the variables
-  if(missing(assign)) {
-    assign <- attr(x, "assign")
-    if(haveIntercept) assign <- assign[-1]
-  }
-  # check which columns in the predictor matrix are are dummies
-  if(missing(dummy)) {
-    dummy <- attr(mt, "term.labels") %in% names(attr(x, "contrasts"))
-    dummy <- dummy[assign]
-  }
-  ## call default method
-  if(haveIntercept) x <- removeIntercept(x) # remove column for intercept
-  rgrplars.default(x, y, assign=assign, dummy=dummy, ...)
+  grplarsFit(x, y, sMax=sMax, assign=assign, robust=TRUE, centerFun=centerFun, 
+             scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
+             combine=combine, pca=pca, const=const, prob=prob, fit=fit, s=s, 
+             crit=crit, splits=splits, cost=cost, costArgs=costArgs, 
+             selectBest=selectBest, seFactor=seFactor, ncores=ncores, cl=cl, 
+             seed=seed, model=model, call=call)
 }
 
 
 ## fit function that allows to specify functions for center, scale, correlation 
 ## and regression
-grplarsFit <- function(x, y, sMax = NA, assign, dummy = TRUE, 
-                       robust = FALSE, centerFun = mean, scaleFun = sd, 
+grplarsFit <- function(x, y, sMax = NA, assign, robust = FALSE, 
+                       centerFun = mean, scaleFun = sd, 
                        regFun = lm.fit, regArgs = list(), 
                        combine = c("min", "euclidean", "mahalanobis"), 
                        pca = FALSE, const = 2, prob = 0.95, fit = TRUE, 
@@ -391,10 +363,10 @@ grplarsFit <- function(x, y, sMax = NA, assign, dummy = TRUE,
   x <- addColnames(as.matrix(x))
   if(nrow(x) != n) stop(sprintf("'x' must have %d rows", n))
   ## call workhorse function
-  grplarsInternal(x, y, sMax=sMax, assign=assign, dummy=dummy, robust=robust, 
-                  centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, 
-                  regArgs=regArgs, combine=combine, pca=pca, const=const, 
-                  prob=prob, fit=fit, s=s, crit=crit, splits=splits, cost=cost, 
-                  costArgs=costArgs, selectBest=selectBest, seFactor=seFactor, 
-                  ncores=ncores, cl=cl, seed=seed, model=model, call=call)
+  grouplars(x, y, sMax=sMax, assign=assign, robust=robust, centerFun=centerFun, 
+            scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, combine=combine, 
+            pca=pca, const=const, prob=prob, fit=fit, s=s, crit=crit, 
+            splits=splits, cost=cost, costArgs=costArgs, selectBest=selectBest, 
+            seFactor=seFactor, ncores=ncores, cl=cl, seed=seed, model=model, 
+            call=call)
 }
