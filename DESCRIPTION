@@ -13,7 +13,6 @@ Imports:
     RcppArmadillo,
     MASS,
     parallel,
-    pcaPP,
     stats
 LinkingTo: Rcpp (>= 0.9.10), RcppArmadillo (>= 0.3.0)
 Suggests:

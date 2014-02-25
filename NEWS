@@ -1,5 +1,7 @@
 Changes in sparseLTSEigen version 0.4.1
 
+    + Removed PCA step from data cleaning RLARS to consolidate code.
+    
     + Updated package dependencies.
 
 
