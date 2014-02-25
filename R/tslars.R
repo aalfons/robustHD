@@ -48,15 +48,6 @@
 #' of the standardized residuals).
 #' @param winsorize  a logical indicating whether to clean the data by 
 #' multivariate winsorization.
-#' @param pca  a logical indicating whether a robust PCA step should be 
-#' performed when computing the data cleaning weights in multivariate 
-#' winsorization (defaults to \code{FALSE}).  The distances of the observations 
-#' are then computed on the PCA scores, which makes the approach applicable in 
-#' the high-dimensional case.  If \code{TRUE} or \code{NA}, components are 
-#' computed as long as the robust correlation matrix of the scores can be 
-#' inverted, and all components with an eigenvalue larger than or equal to 1 
-#' are retained.  Alternatively, an integer giving the maximum number of 
-#' components can be supplied.
 #' @param const  numeric; tuning constant for multivariate winsorization to be 
 #' used in the initial corralation estimates based on adjusted univariate 
 #' winsorization (defaults to 2).
@@ -228,9 +219,9 @@ rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA,
                             centerFun = median, scaleFun = mad, 
                             regFun = lmrob, regArgs = list(), 
                             combine = c("min", "euclidean", "mahalanobis"),
-                            winsorize = FALSE, pca = FALSE, const = 2, 
-                            prob = 0.95, fit = TRUE, s = c(0, sMax), 
-                            crit = "BIC", ncores = 1, cl = NULL, seed = NULL, 
+                            winsorize = FALSE, const = 2, prob = 0.95, 
+                            fit = TRUE, s = c(0, sMax), crit = "BIC", 
+                            ncores = 1, cl = NULL, seed = NULL, 
                             model = TRUE, ...) {
   ## call fit function with classical functions for center, scale, 
   ## correlation and regression
@@ -239,7 +230,7 @@ rtslars.default <- function(x, y, h = 1, pMax = 3, sMax = NA,
   out <- tslarsFit(x, y, h=h, pMax=pMax, sMax=sMax, robust=TRUE, 
                    centerFun=centerFun, scaleFun=scaleFun, regFun=regFun, 
                    regArgs=regArgs, combine=combine, winsorize=winsorize, 
-                   pca=pca, const=const, prob=prob, fit=fit, s=s, crit=crit, 
+                   const=const, prob=prob, fit=fit, s=s, crit=crit, 
                    ncores=ncores, cl=cl, seed=seed, model=model)
   if(inherits(out, "tslars")) out$call <- call  # add call to return object
   out
@@ -252,9 +243,9 @@ tslarsFit <- function(x, y, h = 1, pMax = 3, sMax = NA,
                       robust = FALSE, centerFun = mean, scaleFun = sd, 
                       regFun = lm.fit, regArgs = list(), 
                       combine = c("min", "euclidean", "mahalanobis"), 
-                      winsorize = FALSE, pca = FALSE, const = 2, prob = 0.95, 
-                      fit = TRUE, s = c(0, sMax), crit = "BIC", ncores = 1, 
-                      cl = NULL, seed = NULL, model = TRUE) {
+                      winsorize = FALSE, const = 2, prob = 0.95, fit = TRUE, 
+                      s = c(0, sMax), crit = "BIC", ncores = 1, cl = NULL, 
+                      seed = NULL, model = TRUE) {
   ## initializations
   n <- length(y)
   x <- as.matrix(x)
@@ -296,9 +287,9 @@ tslarsFit <- function(x, y, h = 1, pMax = 3, sMax = NA,
                   tslarsPFit(x[select, , drop=FALSE], y[select], h=h, p=i, 
                              sMax=sMax, robust=robust, centerFun=centerFun, 
                              scaleFun=scaleFun, regFun=regFun, regArgs=regArgs, 
-                             combine=combine, winsorize=winsorize, pca=pca, 
-                             const=const, prob=prob, fit=fit, s=s, crit=crit, 
-                             cl=cl, model=FALSE)
+                             combine=combine, winsorize=winsorize, const=const, 
+                             prob=prob, fit=fit, s=s, crit=crit, cl=cl, 
+                             model=FALSE)
                 })
   names(out) <- p
   ## find optimal lag length

@@ -7,16 +7,14 @@
 #' @import Rcpp 
 #' @import RcppArmadillo
 #' @import parallel
-#' @import pcaPP
 
 grouplars <- function(x, y, sMax = NA, assign, robust = FALSE, 
                       centerFun = mean, scaleFun = sd, 
                       regFun = lm.fit, regArgs = list(), 
                       combine = c("min", "euclidean", "mahalanobis"), 
-                      winsorize = FALSE, pca = FALSE, const = 2, 
-                      prob = 0.95, fit = TRUE, s = c(0, sMax), 
-                      crit = c("BIC", "PE"), splits = foldControl(), 
-                      cost = rmspe, costArgs = list(), 
+                      winsorize = FALSE, const = 2, prob = 0.95, 
+                      fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"), 
+                      splits = foldControl(), cost = rmspe, costArgs = list(), 
                       selectBest = c("hastie", "min"), seFactor = 1, 
                       ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
                       call = NULL) {
@@ -42,12 +40,6 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     combine <- match.arg(combine)
     # alternatively use winsorization
     winsorize <- isTRUE(winsorize)
-    # check whether PCA step should be used to reduce dimensionality
-    if(is.numeric(pca)) {
-      pca <- rep(pca, length.out=1)
-      if(is.na(pca)) pca <- FALSE
-      else k <- pca
-    } else pca <- FALSE
   }
   if(is.na(ncores)) ncores <- detectCores()  # use all available cores
   if(!is.numeric(ncores) || is.infinite(ncores) || ncores < 1) {
@@ -128,17 +120,9 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     sigmaX <- attr(xs, "scale")
     if(winsorize) {
       if(is.null(const)) const <- 2
-      if(pca) {
-        # perform PCA for dimension reduction before obtaining weights
-        scores <- PCAgrid(cbind(z, xs), k=k)$scores
-        scores <- robStandardize(scores, centerFun, scaleFun)
-        w <- winsorize(scores, standardized=TRUE, const=const, 
-                       prob=prob, return="weights")
-      } else {
-        # obtain data cleaning weights from winsorization
-        w <- winsorize(cbind(z, xs), standardized=TRUE, const=const, 
-                       prob=prob, return="weights")
-      }
+      # obtain data cleaning weights from winsorization
+      w <- winsorize(cbind(z, xs), standardized=TRUE, const=const, 
+                     prob=prob, return="weights")
     } else {
       # clean data in a limited sense: there may still be correlation 
       # outliers between the groups, but these should not be a problem
@@ -188,11 +172,6 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
           d <- qchisq(prob, df=m)  # quantile of the chi-squared distribution
           w <- pmin(sqrt(d/rowSums(residuals^2)), 1)
         } else {
-          # if requested, perform PCA for dimension reduction
-          if(pca) {
-            residuals <- PCAgrid(residuals, k=k)$scores
-            residuals <- robStandardize(residuals, centerFun, scaleFun)
-          }
           # obtain weights from multivariate winsorization
           w <- winsorize(residuals, standardized=TRUE, const=const, 
                          prob=prob, return="weights")

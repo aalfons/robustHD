@@ -33,12 +33,11 @@
     centerFun = median, scaleFun = mad, regFun = lmrob,
     regArgs = list(),
     combine = c("min", "euclidean", "mahalanobis"),
-    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
-    s = c(0, sMax), crit = c("BIC", "PE"),
-    splits = foldControl(), cost = rtmspe,
-    costArgs = list(), selectBest = c("hastie", "min"),
-    seFactor = 1, ncores = 1, cl = NULL, seed = NULL,
-    model = TRUE, ...)
+    const = 2, prob = 0.95, fit = TRUE, s = c(0, sMax),
+    crit = c("BIC", "PE"), splits = foldControl(),
+    cost = rtmspe, costArgs = list(),
+    selectBest = c("hastie", "min"), seFactor = 1,
+    ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
 }
 \arguments{
   \item{formula}{a formula describing the full model.}
@@ -92,19 +91,6 @@
   distances of the multivariate set of standardized
   residuals (i.e., multivariate winsorization of the
   standardized residuals).}
-
-  \item{pca}{a logical indicating whether a robust PCA step
-  should be performed when computing the data cleaning
-  weights based on Mahalanobis distances of the
-  standardized residuals (defaults to \code{FALSE}).  The
-  distances of the observations are then computed on the
-  PCA scores, which makes the approach applicable in the
-  high-dimensional case.  If \code{TRUE} or \code{NA},
-  components are computed as long as the robust correlation
-  matrix of the scores can be inverted, and all components
-  with an eigenvalue larger than or equal to 1 are
-  retained.  Alternatively, an integer giving the maximum
-  number of components can be supplied.}
 
   \item{const}{numeric; tuning constant for multivariate
   winsorization to be used in the initial corralation
