@@ -30,15 +30,6 @@
 #' @param winsorize  a logical indicating whether to clean the full data set by 
 #' multivariate winsorization, i.e., to perform data cleaning RLARS instead of 
 #' plug-in RLARS (defaults to \code{FALSE}).
-#' @param pca  a logical indicating whether a robust PCA step should be 
-#' performed when computing the data cleaning weights for multivariate 
-#' winsorization (defaults to \code{FALSE}).  The distances of the observations 
-#' are then computed on the PCA scores rather than the original observations, 
-#' which makes data cleaning RLARS applicable for high-dimensional data.  If 
-#' \code{TRUE} or \code{NA}, components are computed as long as the robust 
-#' correlation matrix of the scores can be inverted, and all components with an 
-#' eigenvalue larger than or equal to 1 are retained.  Alternatively, an 
-#' integer giving the maximum number of components can be supplied.
 #' @param const numeric; tuning constant to be used in the initial corralation 
 #' estimates based on adjusted univariate winsorization (defaults to 2).
 #' @param prob  numeric; probability for the quantile of the 
@@ -168,7 +159,6 @@
 #' @import Rcpp 
 #' @import RcppArmadillo
 #' @import parallel
-#' @import pcaPP
 #' @import perry
 
 rlars <- function(x, ...) UseMethod("rlars")
@@ -211,8 +201,8 @@ rlars.formula <- function(formula, data, ...) {
 #' @export
 
 rlars.default <- function(x, y, sMax = NA, centerFun = median, 
-                          scaleFun = mad, winsorize = FALSE, pca = FALSE, 
-                          const = 2, prob = 0.95, fit = TRUE, s = c(0, sMax), 
+                          scaleFun = mad, winsorize = FALSE, const = 2, 
+                          prob = 0.95, fit = TRUE, s = c(0, sMax), 
                           regFun = lmrob, regArgs = list(), 
                           crit = c("BIC", "PE"), splits = foldControl(), 
                           cost = rtmspe, costArgs = list(), 
@@ -296,25 +286,9 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
   sigmaX <- attr(xs, "scale")
   # if requested, clean the data via multivariate winsorization
   if(winsorize) {
-    # check whether PCA step should be used to reduce dimensionality
-    if(isTRUE(pca)) {
-      kMax <- NA
-      pca <- TRUE
-    } else if(is.numeric(pca) || is.na(pca)) {
-      kMax <- pca
-      pca <- TRUE
-    } else pca <- FALSE
-    if(pca) {
-      # perform PCA for dimension reduction before obtaining weights
-      scores <- pcaScores(cbind(z, xs), kMax=kMax)
-      scores <- robStandardize(scores, centerFun, scaleFun)
-      w <- winsorize(scores, standardized=TRUE, const=const, 
-                     prob=prob, return="weights")
-    } else {
-      # obtain data cleaning weights from winsorization
-      w <- winsorize(cbind(z, xs), standardized=TRUE, 
-                     const=const, prob=prob, return="weights")
-    }
+    # obtain data cleaning weights from winsorization
+    w <- winsorize(cbind(z, xs), standardized=TRUE, 
+                   const=const, prob=prob, return="weights")
     # standardize data with mean and standard deviation
     z <- standardize(w*z)    # standardize cleaned response
     xs <- standardize(w*xs)  # standardize cleaned predictors

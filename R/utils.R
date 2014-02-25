@@ -180,21 +180,6 @@ partialOrder <- function(x, h) {
 #   callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
 # }
 
-## get pca scores corresponding to eigenvalues larger than 1
-pcaScores <- function(x, kMax) {
-  # check maximum number of principal components
-  d <- dim(x)
-  kMax <- rep(kMax, length.out=1)
-  if(!isTRUE(is.finite(kMax)) || !isTRUE(kMax <= min(d[2], d[1]-1))) {
-    kMax <- min(d[2], d[1]-1)
-  }
-  # fit PCA and extract scores
-  pca <- PCAgrid(x, k=kMax, scores=TRUE)
-  sdev <- pca$sdev
-  k <- which.min(sdev[sdev >= 1])
-  pca$scores[, seq_len(k), drop=FALSE]
-}
-
 ## remove intercept column from design matrix
 removeIntercept <- function(x, pos) {
   haveVector <- is.null(dim(x))

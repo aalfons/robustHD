@@ -11,8 +11,8 @@
 
   \method{rlars}{default} (x, y, sMax = NA,
     centerFun = median, scaleFun = mad, winsorize = FALSE,
-    pca = FALSE, const = 2, prob = 0.95, fit = TRUE,
-    s = c(0, sMax), regFun = lmrob, regArgs = list(),
+    const = 2, prob = 0.95, fit = TRUE, s = c(0, sMax),
+    regFun = lmrob, regArgs = list(),
     crit = c("BIC", "PE"), splits = foldControl(),
     cost = rtmspe, costArgs = list(),
     selectBest = c("hastie", "min"), seFactor = 1,
@@ -50,19 +50,6 @@
   the full data set by multivariate winsorization, i.e., to
   perform data cleaning RLARS instead of plug-in RLARS
   (defaults to \code{FALSE}).}
-
-  \item{pca}{a logical indicating whether a robust PCA step
-  should be performed when computing the data cleaning
-  weights for multivariate winsorization (defaults to
-  \code{FALSE}).  The distances of the observations are
-  then computed on the PCA scores rather than the original
-  observations, which makes data cleaning RLARS applicable
-  for high-dimensional data.  If \code{TRUE} or \code{NA},
-  components are computed as long as the robust correlation
-  matrix of the scores can be inverted, and all components
-  with an eigenvalue larger than or equal to 1 are
-  retained.  Alternatively, an integer giving the maximum
-  number of components can be supplied.}
 
   \item{const}{numeric; tuning constant to be used in the
   initial corralation estimates based on adjusted
