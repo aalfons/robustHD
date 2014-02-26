@@ -13,14 +13,16 @@
 \usage{
   diagnosticPlot(x, ...)
 
-  \method{diagnosticPlot}{seqModel} (x, s = NA, ...)
+  \method{diagnosticPlot}{seqModel} (x, s = NA,
+    covArgs = list(), ...)
 
   \method{diagnosticPlot}{perrySeqModel} (x, ...)
 
   \method{diagnosticPlot}{tslars} (x, p, ...)
 
   \method{diagnosticPlot}{sparseLTS} (x, s = NA,
-    fit = c("reweighted", "raw", "both"), ...)
+    fit = c("reweighted", "raw", "both"), covArgs = list(),
+    ...)
 
   \method{diagnosticPlot}{perrySparseLTS} (x, ...)
 
@@ -54,6 +56,10 @@
   for the reweighted fit, \code{"raw"} for diagnostic plots
   for the raw fit, or \code{"both"} for diagnostic plots
   for both fits.}
+
+  \item{covArgs}{a list of arguments to be passed to
+  \code{\link[robustbase]{covMcd}} for the regression
+  diagnostic plot (see \dQuote{Details}).}
 
   \item{which}{a character string indicating which plot to
   show.  Possible values are \code{"all"} (the default) for
