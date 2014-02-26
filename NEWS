@@ -2,6 +2,8 @@ Changes in robustHD version 0.5.0
 
     + Added functionality for (robust) groupwise least angle regression.
     
+    + Added TopGear car data.
+    
     + Removed PCA step from data cleaning RLARS to consolidate code.
     
     + Updated package dependencies.
