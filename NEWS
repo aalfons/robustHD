@@ -1,5 +1,7 @@
 Changes in sparseLTSEigen version 0.4.1
 
+    + Diagnostic plots now allow to pass arguments to covMcd().
+    
     + Removed PCA step from data cleaning RLARS to consolidate code.
     
     + Updated package dependencies.
