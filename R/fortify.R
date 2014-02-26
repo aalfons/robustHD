@@ -60,7 +60,11 @@ fortify.bicSelect <- function(model, data = NULL, select = NULL, ...) {
 #' @param fit  a character string specifying which fit to convert.  Possible 
 #' values are \code{"reweighted"} (the default) to convert the reweighted fit, 
 #' \code{"raw"} to convert the raw fit, or \code{"both"} to convert both fits.
-#' @param \dots  currently ignored.
+#' @param covArgs  a list of arguments to be passed to 
+#' \code{\link[robustbase]{covMcd}} for computing robust Mahalanobis distances.
+#' @param \dots  additional arguments to be passed to 
+#' \code{\link[robustbase]{covMcd}} can be specified directly instead of via 
+#' \code{covArgs}.
 #' 
 #' @return  A data frame containing the columns listed below, as well as 
 #' additional information stored in the attributes \code{"qqLine"} (intercepts 
@@ -103,7 +107,7 @@ fortify.bicSelect <- function(model, data = NULL, select = NULL, ...) {
 #' @import ggplot2
 #' @export
 
-fortify.seqModel <- function(model, data, s = NA, ...) {
+fortify.seqModel <- function(model, data, s = NA, covArgs = list(...), ...) {
   ## initializations
   if(!model$robust) stop("not implemented yet")
   # check the scale estimate
@@ -130,7 +134,7 @@ fortify.seqModel <- function(model, data, s = NA, ...) {
   ## extract data for the requested steps
   if(length(s) > 1) {
     # extract the data from each requested step
-    data <- lapply(s, fortifySeqModelStep, model=model, x=x)
+    data <- lapply(s, fortifySeqModelStep, model=model, x=x, covArgs=covArgs)
     qql <- lapply(data, attr, which="qqLine")
     q <- lapply(data, attr, which="q")
     # combine data from the steps
@@ -142,7 +146,7 @@ fortify.seqModel <- function(model, data, s = NA, ...) {
     attr(data, "q") <- q
   } else {
     # extract the data from the selected step
-    data <- fortifySeqModelStep(s, model=model, x=x)
+    data <- fortifySeqModelStep(s, model=model, x=x, covArgs=covArgs)
   }
   ## return data frame
   data
@@ -150,7 +154,7 @@ fortify.seqModel <- function(model, data, s = NA, ...) {
 
 
 ## workhorse function for a single step from a sequence of regression models
-fortifySeqModelStep <- function(s, model, x = NULL) {
+fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
   ## extract fitted values
   fitted <- fitted(model, s=s)
   ## extract standardized residuals
@@ -179,7 +183,8 @@ fortifySeqModelStep <- function(s, model, x = NULL) {
     # compute distances
     rd <- try({
       xs <- x[, significant, drop=FALSE]
-      mcd <- covMcd(xs)
+      callCovFun <- getCallFun(covArgs)
+      mcd <- callCovFun(xs, fun=covMcd, args=covArgs)
       sqrt(mahalanobis(xs, mcd$center, mcd$cov))
     })
     if(inherits(rd, "try-eror")) {
@@ -214,7 +219,7 @@ fortifySeqModelStep <- function(s, model, x = NULL) {
 
 fortify.sparseLTS <- function(model, data, s = NA, 
                               fit = c("reweighted", "raw", "both"), 
-                              ...) {
+                              covArgs = list(...), ...) {
   ## initializations
   fit <- match.arg(fit)
   # check the scale estimate
@@ -269,7 +274,8 @@ fortify.sparseLTS <- function(model, data, s = NA,
     attr(data, "q") <- q
   } else if(length(s) > 1) {
     # extract the data from each requested step
-    data <- lapply(s, fortifySparseLTSStep, model=model, fit=fit, x=x)
+    data <- lapply(s, fortifySparseLTSStep, model=model, fit=fit, 
+                   x=x, covArgs=covArgs)
     qql <- lapply(data, attr, which="qqLine")
     q <- lapply(data, attr, which="q")
     # combine data from the steps
@@ -281,7 +287,7 @@ fortify.sparseLTS <- function(model, data, s = NA,
     attr(data, "q") <- q
   } else {
     # extract the data from the selected step
-    data <- fortifySparseLTSStep(s, model=model, fit=fit, x=x)
+    data <- fortifySparseLTSStep(s, model=model, fit=fit, x=x, covArgs=covArgs)
   }
   ## return data frame
   data
@@ -291,13 +297,15 @@ fortify.sparseLTS <- function(model, data, s = NA,
 ## workhorse functions
 
 # fortify a single sparse LTS step
-fortifySparseLTSStep <- function(s, model, fit = "reweighted", x = NULL) {
+fortifySparseLTSStep <- function(s, model, fit = "reweighted", 
+                                 x = NULL, covArgs = list()) {
   ## construct data frame with all information for plotting
   if(fit == "both") {
     fits <- c("reweighted", "raw")
     ## call workhorse function for each fit
-    reweighted <- fortifySparseLTSFit(model, s=s, fit="reweighted", x=x)
-    raw <- fortifySparseLTSFit(model, s=s, fit="raw", x=x)
+    reweighted <- fortifySparseLTSFit(model, s=s, fit="reweighted", 
+                                      x=x, covArgs=covArgs)
+    raw <- fortifySparseLTSFit(model, s=s, fit="raw", x=x, covArgs=covArgs)
     ## combine data for Q-Q reference line
     qql <- data.frame(fit=factor(fits, levels=fits), 
                       rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
@@ -313,13 +321,14 @@ fortifySparseLTSStep <- function(s, model, fit = "reweighted", x = NULL) {
     attr(data, "facets") <- . ~ fit
     attr(data, "qqLine") <- qql
     attr(data, "q") <- q
-  } else data <- fortifySparseLTSFit(model, s=s, fit=fit, x=x)
+  } else data <- fortifySparseLTSFit(model, s=s, fit=fit, x=x, covArgs=covArgs)
   ## return data
   data
 }
 
 # fortify a single sparse LTS fit
-fortifySparseLTSFit <- function(model, s, fit = "reweighted", x = NULL) {
+fortifySparseLTSFit <- function(model, s, fit = "reweighted", 
+                                x = NULL, covArgs = list()) {
   ## extract fitted values
   fitted <- fitted(model, s=s, fit=fit)
   ## extract standardized residuals
@@ -359,7 +368,9 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted", x = NULL) {
     # compute distances
     rd <- try({
       xs <- x[, significant, drop=FALSE]
-      mcd <- covMcd(xs, alpha=alpha)
+      covArgs$alpha <- alpha
+      callCovFun <- getCallFun(covArgs)
+      mcd <- callCovFun(xs, fun=covMcd, args=covArgs)
       if(fit == "reweighted") {
         center <- mcd$center
         cov <- mcd$cov

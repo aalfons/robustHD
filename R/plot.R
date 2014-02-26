@@ -622,6 +622,9 @@ labelify <- function(data, which, id.n = NULL) {
 #' diagnostic plots.  Possible values are \code{"reweighted"} (the default) for 
 #' diagnostic plots for the reweighted fit, \code{"raw"} for diagnostic plots 
 #' for the raw fit, or \code{"both"} for diagnostic plots for both fits.
+#' @param covArgs  a list of arguments to be passed to 
+#' \code{\link[robustbase]{covMcd}} for the regression diagnostic plot (see 
+#' \dQuote{Details}).
 #' @param which  a character string indicating which plot to show.  Possible 
 #' values are \code{"all"} (the default) for all of the following, \code{"rqq"} 
 #' for a normal Q-Q plot of the standardized residuals, \code{"rindex"} for a 
@@ -673,9 +676,9 @@ diagnosticPlot <- function(x, ...) UseMethod("diagnosticPlot")
 #' @method diagnosticPlot seqModel
 #' @export
 
-diagnosticPlot.seqModel <- function(x, s = NA, ...) {
+diagnosticPlot.seqModel <- function(x, s = NA, covArgs = list(), ...) {
   # call default method with all information required for plotting
-  diagnosticPlot(fortify(x, s=s), ...)
+  diagnosticPlot(fortify(x, s=s, covArgs=covArgs), ...)
 }
 
 
@@ -695,9 +698,9 @@ diagnosticPlot.perrySeqModel <- function(x, ...) {
 
 diagnosticPlot.sparseLTS <- function(x, s = NA, 
                                      fit = c("reweighted", "raw", "both"), 
-                                     ...) {
+                                     covArgs = list(), ...) {
   # call default method with all information required for plotting
-  diagnosticPlot(fortify(x, s=s, fit=fit), ...)
+  diagnosticPlot(fortify(x, s=s, fit=fit, covArgs=covArgs), ...)
 }
 
 

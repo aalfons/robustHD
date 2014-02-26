@@ -4,10 +4,12 @@
 \alias{fortify.sparseLTS}
 \title{Convert a sequence of regression models into a data frame for plotting}
 \usage{
-  \method{fortify}{seqModel} (model, data, s = NA, ...)
+  \method{fortify}{seqModel} (model, data, s = NA,
+    covArgs = list(...), ...)
 
   \method{fortify}{sparseLTS} (model, data, s = NA,
-    fit = c("reweighted", "raw", "both"), ...)
+    fit = c("reweighted", "raw", "both"),
+    covArgs = list(...), ...)
 }
 \arguments{
   \item{model}{the model fit to be converted.}
@@ -27,7 +29,13 @@
   convert the raw fit, or \code{"both"} to convert both
   fits.}
 
-  \item{\dots}{currently ignored.}
+  \item{covArgs}{a list of arguments to be passed to
+  \code{\link[robustbase]{covMcd}} for computing robust
+  Mahalanobis distances.}
+
+  \item{\dots}{additional arguments to be passed to
+  \code{\link[robustbase]{covMcd}} can be specified
+  directly instead of via \code{covArgs}.}
 }
 \value{
   A data frame containing the columns listed below, as well
