@@ -10,7 +10,7 @@ popular BBC television show \emph{Top Gear}.
 }
 \usage{data("TopGear")}
 \format{
-  A data frame with 297 observations on the following 30 variables.
+  A data frame with 297 observations on the following 32 variables.
   \describe{
     \item{\code{Maker}}{factor; the car maker.}
     \item{\code{Model}}{factor; the car model.}
@@ -37,7 +37,7 @@ popular BBC television show \emph{Top Gear}.
     headlights (\code{"no"}, \code{"optional"} or \code{"standard"}).}
     \item{\code{AdjustableSteering}}{factor; whether the car has adjustable 
     steering (\code{"no"} or \code{"standard"}).}
-    \item{\code{AirConditioning}}{factor; whether the car has air conditioning 
+    \item{\code{AlarmSystem}}{factor; whether the car has an alarm system 
     (\code{"no/optional"} or \code{"standard"}).}
     \item{\code{Automatic}}{factor; whether the car has an automatic 
     transmission (\code{"no"}, \code{"optional"} or \code{"standard"}).}
@@ -53,8 +53,12 @@ popular BBC television show \emph{Top Gear}.
     (\code{"no"}, \code{"optional"} or \code{"standard"}).}
     \item{\code{ParkingSensors}}{factor; whether the car has parking sensors 
     (\code{"no"}, \code{"optional"} or \code{"standard"}).}
+    \item{\code{PowerSteering}}{factor; whether the car has power steering 
+    (\code{"no"} or \code{"standard"}).}
     \item{\code{SatNav}}{factor; whether the car has a satellite navigation 
     system (\code{"no"}, \code{"optional"} or \code{"standard"}).}
+    \item{\code{ESP}}{factor; whether the car has ESP (\code{"no"}, 
+    \code{"optional"} or \code{"standard"}).}
     \item{\code{Verdict}}{numeric; review score between 1 (lowest) and 10 
     (highest).}
     \item{\code{Origin}}{factor; the origin of the car maker (\code{"Asia"}, 
