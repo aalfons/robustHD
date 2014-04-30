@@ -4,8 +4,6 @@
 # ------------------------------------
 
 ## workhorse function for groupwise LARS
-#' @import Rcpp 
-#' @import RcppArmadillo
 #' @import parallel
 
 grouplars <- function(x, y, sMax = NA, assign, robust = FALSE, 

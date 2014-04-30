@@ -202,8 +202,6 @@
 #' @keywords regression robust
 #' 
 #' @export 
-#' @import Rcpp 
-#' @import RcppArmadillo
 #' @import parallel
 #' @import perry
 

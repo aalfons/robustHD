@@ -87,8 +87,6 @@
 #' @keywords multivariate robust
 #' 
 #' @export
-#' @import Rcpp 
-#' @import RcppArmadillo
 
 
 # robust correlation based on winsorization
