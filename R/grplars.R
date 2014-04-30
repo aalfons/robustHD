@@ -151,6 +151,8 @@
 #' \code{\link[=residuals.seqModel]{residuals}}, 
 #' \code{\link[robustbase]{lmrob}}
 #' 
+#' @example inst/doc/examples/example-rgrplars.R
+#' 
 #' @keywords regression robust
 #' 
 #' @export
