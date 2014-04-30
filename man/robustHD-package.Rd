@@ -18,7 +18,7 @@ Version: \tab 0.5.0\cr
 Date: \tab 2014-04-30\cr
 Depends: \tab R (>= 3.0.2), ggplot2 (>= 0.9.2), perry (>= 0.2.0), robustbase
 (>= 0.9-5)\cr
-Imports: \tab Rcpp, RcppArmadillo, MASS, parallel, stats\cr
+Imports: \tab MASS, parallel, stats\cr
 LinkingTo: \tab Rcpp (>= 0.9.10), RcppArmadillo (>= 0.3.0)\cr
 Suggests: \tab mvtnorm\cr
 License: \tab GPL (>= 2)\cr
