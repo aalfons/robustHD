@@ -154,16 +154,16 @@ getComponent.sparseLTS <- function(x, which, s = NA,
 
 getScale <- function(x, ...) UseMethod("getScale")
 
-#' @S3method getScale default
+#' @export getScale default
 getScale.default <- function(x, ...) mad(residuals(x))  # use MAD by default
 
-#' @S3method getScale lmrob
+#' @export getScale lmrob
 getScale.lmrob <- function(x, ...) x$scale
 
-#' @S3method getScale lts
+#' @export getScale lts
 getScale.lts <- function(x, ...) x$scale
 
-#' @S3method getScale rlm
+#' @export getScale rlm
 getScale.rlm <- function(x, ...) x$s
 
 #' @rdname getScale

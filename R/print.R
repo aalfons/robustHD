@@ -3,7 +3,7 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-#' @S3method print bicSelect
+#' @export print bicSelect
 print.bicSelect <- function(x, best = TRUE, ...) {
   # print BIC values
   cat("\nBIC:\n")
@@ -22,7 +22,7 @@ print.bicSelect <- function(x, best = TRUE, ...) {
   invisible(x)
 }
 
-#' @S3method print fitSelect
+#' @export print fitSelect
 print.fitSelect <- function(x, ...) {
   # indices of the best reweighted and raw fit
   cat("Index of best model:\n")
@@ -31,7 +31,7 @@ print.fitSelect <- function(x, ...) {
   invisible(x)
 }
 
-#' @S3method print perrySeqModel
+#' @export print perrySeqModel
 #' @import perry
 print.perrySeqModel <- function(x, ...) {
   # print prediction error results
@@ -46,7 +46,7 @@ print.perrySeqModel <- function(x, ...) {
   invisible(x)
 }
 
-#' @S3method print perrySparseLTS
+#' @export print perrySparseLTS
 #' @import perry
 print.perrySparseLTS <- function(x, ...) {
   # print prediction error results
@@ -63,7 +63,7 @@ print.perrySparseLTS <- function(x, ...) {
   invisible(x)
 }
 
-#' @S3method print seqModel
+#' @export print seqModel
 print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   # print function call
   if(!is.null(call <- x$call)) {
@@ -91,7 +91,7 @@ print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   invisible(x)
 }
 
-#' @S3method print sparseLTS
+#' @export print sparseLTS
 print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
                             zeros = FALSE, ...) {
   # initializations
@@ -141,7 +141,7 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
   invisible(x)
 }
 
-#' @S3method print tslarsP
+#' @export print tslarsP
 print.tslarsP <- function(x, ...) {
   # print "grplars" model
   print.seqModel(x, best=FALSE, ...)
@@ -158,7 +158,7 @@ print.tslarsP <- function(x, ...) {
   invisible(x)
 }
 
-#' @S3method print tslars
+#' @export print tslars
 print.tslars <- function(x, ...) {
   # print "grplars" model with optimal lag length
   pOpt <- x$pOpt
