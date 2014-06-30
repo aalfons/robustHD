@@ -186,8 +186,8 @@ fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
       callCovFun <- getCallFun(covArgs)
       mcd <- callCovFun(xs, fun=covMcd, args=covArgs)
       sqrt(mahalanobis(xs, mcd$center, mcd$cov))
-    })
-    if(inherits(rd, "try-eror")) {
+    }, silent=TRUE)
+    if(inherits(rd, "try-error")) {
       ok <- FALSE
       warning("robust distances cannot be computed")
     }
@@ -379,8 +379,8 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
         cov <- mcd$raw.cov
       }
       sqrt(mahalanobis(xs, center, cov))
-    })
-    if(inherits(rd, "try-eror")) {
+    }, silent=TRUE)
+    if(inherits(rd, "try-error")) {
       ok <- FALSE
       warning("robust distances cannot be computed")
     }
