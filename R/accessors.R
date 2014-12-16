@@ -18,13 +18,13 @@ getBest.default <- function(x, ...) NULL
 
 
 ## get a component for certain steps of the model sequence
-# this is used for accessors that are exported to the namespace 
-# (coefficients, fitted values, residuals, ...), so checks for the 
+# this is used for accessors that are exported to the namespace
+# (coefficients, fitted values, residuals, ...), so checks for the
 # arguments are necessary
 
 getComponent <- function(x, which, ...) UseMethod("getComponent")
 
-getComponent.seqModel <- function(x, component, s = NA, 
+getComponent.seqModel <- function(x, component, s = NA,
                                   drop = !is.null(s), ...) {
   # extract component
   comp <- x[[component]]
@@ -44,23 +44,23 @@ getComponent.seqModel <- function(x, component, s = NA,
   if(isTRUE(drop)) dropCol(comp) else comp
 }
 
-getComponent.sparseLTS <- function(x, which, s = NA, 
-                                   fit = c("reweighted", "raw", "both"), 
+getComponent.sparseLTS <- function(x, which, s = NA,
+                                   fit = c("reweighted", "raw", "both"),
                                    drop = !is.null(s), ...) {
   ## initializations
   fit <- match.arg(fit)
   if(fit != "reweighted") raw.which <- paste("raw", which, sep=".")
   sMax <- length(x$lambda)
-  ## check lambda contains more than one value for the penalty parameter 
+  ## check lambda contains more than one value for the penalty parameter
   if(sMax > 1) {
     # extract component
-    comp <- switch(fit, reweighted=x[[which]], raw=x[[raw.which]], 
+    comp <- switch(fit, reweighted=x[[which]], raw=x[[raw.which]],
                    both={
                      rew <- x[[which]]
                      raw <- x[[raw.which]]
                      if(is.null(dim(rew))) unlist(list(reweighted=rew, raw=raw))
                      else {
-                       colnames(rew) <- paste("reweighted", 
+                       colnames(rew) <- paste("reweighted",
                                               colnames(rew), sep=".")
                        colnames(raw) <- paste("raw", colnames(raw), sep=".")
                        cbind(rew, raw)
@@ -101,69 +101,73 @@ getComponent.sparseLTS <- function(x, which, s = NA,
 
 
 #' Extract the residual scale of a robust regression model
-#' 
-#' Extract the robust scale estimate of the residuals from a robust regression 
+#'
+#' Extract the robust scale estimate of the residuals from a robust regression
 #' model.
-#' 
-#' Methods are implemented for models of class \code{"lmrob"} (see 
-#' \code{\link[robustbase]{lmrob}}), \code{"lts"} (see 
-#' \code{\link[robustbase]{ltsReg}}), \code{"rlm"} (see 
-#' \code{\link[MASS]{rlm}}), \code{"seqModel"} (see \code{\link{rlars}}) and 
-#' \code{"sparseLTS"} (see \code{\link{sparseLTS}}).  The default method 
+#'
+#' Methods are implemented for models of class \code{"lmrob"} (see
+#' \code{\link[robustbase]{lmrob}}), \code{"lts"} (see
+#' \code{\link[robustbase]{ltsReg}}), \code{"rlm"} (see
+#' \code{\link[MASS]{rlm}}), \code{"seqModel"} (see \code{\link{rlars}}) and
+#' \code{"sparseLTS"} (see \code{\link{sparseLTS}}).  The default method
 #' computes the MAD of the residuals.
-#' 
-#' @param x  the model fit from which to extract the robust residual scale 
+#'
+#' @param x  the model fit from which to extract the robust residual scale
 #' estimate.
-#' @param s  for the \code{"seqModel"} method, an integer vector giving 
-#' the steps of the submodels for which to extract the robust residual scale 
-#' estimate (the default is to use the optimal submodel).  For the 
-#' \code{"sparseLTS"} method, an integer vector giving the indices of the 
-#' models from which to extract the robust residual scale estimate.  If 
-#' \code{fit} is \code{"both"}, this can be a list with two components, with 
-#' the first component giving the indices of the reweighted fits and the second 
-#' the indices of the raw fits.  The default is to use the optimal model for 
-#' each of the requested estimators.  Note that the optimal models may not 
-#' correspond to the same value of the penalty parameter for the reweighted 
+#' @param s  for the \code{"seqModel"} method, an integer vector giving
+#' the steps of the submodels for which to extract the robust residual scale
+#' estimate (the default is to use the optimal submodel).  For the
+#' \code{"sparseLTS"} method, an integer vector giving the indices of the
+#' models from which to extract the robust residual scale estimate.  If
+#' \code{fit} is \code{"both"}, this can be a list with two components, with
+#' the first component giving the indices of the reweighted fits and the second
+#' the indices of the raw fits.  The default is to use the optimal model for
+#' each of the requested estimators.  Note that the optimal models may not
+#' correspond to the same value of the penalty parameter for the reweighted
 #' and the raw estimator.
-#' @param fit  a character string specifying from which fit to extract the 
-#' robust residual scale estimate.  Possible values are \code{"reweighted"} 
-#' (the default) for the residual scale of the reweighted fit, \code{"raw"} for 
-#' the residual scale of the raw fit, or \code{"both"} for the residual scale 
+#' @param fit  a character string specifying from which fit to extract the
+#' robust residual scale estimate.  Possible values are \code{"reweighted"}
+#' (the default) for the residual scale of the reweighted fit, \code{"raw"} for
+#' the residual scale of the raw fit, or \code{"both"} for the residual scale
 #' of both fits.
 #' @param \dots  additional arguments to be passed down to methods.
-#' 
-#' @return  
-#' A numeric vector or matrix giving the robust residual scale estimates for 
+#'
+#' @return
+#' A numeric vector or matrix giving the robust residual scale estimates for
 #' the requested model fits.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
-#' @seealso \code{\link[=AIC.seqModel]{AIC}}, \code{\link[robustbase]{lmrob}}, 
-#' \code{\link[robustbase]{ltsReg}}, \code{\link[MASS]{rlm}}, 
+#'
+#' @seealso \code{\link[=AIC.seqModel]{AIC}}, \code{\link[robustbase]{lmrob}},
+#' \code{\link[robustbase]{ltsReg}}, \code{\link[MASS]{rlm}},
 #' \code{\link{rlars}}, \code{\link{sparseLTS}}
-#' 
-#' @examples 
+#'
+#' @examples
 #' data("coleman")
 #' fit <- lmrob(Y ~ ., data=coleman)
 #' getScale(fit)
-#' 
+#'
 #' @keywords regression
-#' 
+#'
 #' @import stats
 #' @export
 
 getScale <- function(x, ...) UseMethod("getScale")
 
-#' @export getScale default
+#' @method getScale default
+#' @export
 getScale.default <- function(x, ...) mad(residuals(x))  # use MAD by default
 
-#' @export getScale lmrob
+#' @method getScale lmrob
+#' @export
 getScale.lmrob <- function(x, ...) x$scale
 
-#' @export getScale lts
+#' @method getScale lts
+#' @export
 getScale.lts <- function(x, ...) x$scale
 
-#' @export getScale rlm
+#' @method getScale rlm
+#' @export
 getScale.rlm <- function(x, ...) x$s
 
 #' @rdname getScale
@@ -174,8 +178,8 @@ getScale.seqModel <- function(x, s = NA, ...) getComponent(x, "scale", s=s, ...)
 #' @rdname getScale
 #' @method getScale sparseLTS
 #' @export
-getScale.sparseLTS <- function(x, s = NA, 
-                               fit = c("reweighted", "raw", "both"), 
+getScale.sparseLTS <- function(x, s = NA,
+                               fit = c("reweighted", "raw", "both"),
                                ...) {
   getComponent(x, "scale", s=s, fit=fit, ...)
 }

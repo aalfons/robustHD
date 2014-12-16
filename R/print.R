@@ -3,7 +3,8 @@
 #         Erasmus University Rotterdam
 # ------------------------------------
 
-#' @export print bicSelect
+#' @method print bicSelect
+#' @export
 print.bicSelect <- function(x, best = TRUE, ...) {
   # print BIC values
   cat("\nBIC:\n")
@@ -22,7 +23,8 @@ print.bicSelect <- function(x, best = TRUE, ...) {
   invisible(x)
 }
 
-#' @export print fitSelect
+#' @method print fitSelect
+#' @export
 print.fitSelect <- function(x, ...) {
   # indices of the best reweighted and raw fit
   cat("Index of best model:\n")
@@ -31,7 +33,8 @@ print.fitSelect <- function(x, ...) {
   invisible(x)
 }
 
-#' @export print perrySeqModel
+#' @method print perrySeqModel
+#' @export
 #' @import perry
 print.perrySeqModel <- function(x, ...) {
   # print prediction error results
@@ -46,7 +49,8 @@ print.perrySeqModel <- function(x, ...) {
   invisible(x)
 }
 
-#' @export print perrySparseLTS
+#' @method print perrySparseLTS
+#' @export
 #' @import perry
 print.perrySparseLTS <- function(x, ...) {
   # print prediction error results
@@ -63,7 +67,8 @@ print.perrySparseLTS <- function(x, ...) {
   invisible(x)
 }
 
-#' @export print seqModel
+#' @method print seqModel
+#' @export
 print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   # print function call
   if(!is.null(call <- x$call)) {
@@ -91,8 +96,9 @@ print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   invisible(x)
 }
 
-#' @export print sparseLTS
-print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"), 
+#' @method print sparseLTS
+#' @export
+print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
                             zeros = FALSE, ...) {
   # initializations
   fit <- match.arg(fit)
@@ -141,7 +147,8 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
   invisible(x)
 }
 
-#' @export print tslarsP
+#' @method print tslarsP
+#' @export
 print.tslarsP <- function(x, ...) {
   # print "grplars" model
   print.seqModel(x, best=FALSE, ...)
@@ -158,7 +165,8 @@ print.tslarsP <- function(x, ...) {
   invisible(x)
 }
 
-#' @export print tslars
+#' @method print tslars
+#' @export
 print.tslars <- function(x, ...) {
   # print "grplars" model with optimal lag length
   pOpt <- x$pOpt

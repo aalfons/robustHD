@@ -406,7 +406,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   					if(b != 0.0) {
   						// compute the rotation
   						double tau, s, c;
-  						if(abs(b) > abs(a)) {
+  						if(std::abs(b) > std::abs(a)) {
   							tau = -a/b;
   							s = 1.0/sqrt(1.0+tau*tau);
   							c = s * tau;

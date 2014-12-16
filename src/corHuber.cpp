@@ -154,7 +154,7 @@ double corHuberBi(const vec& x, const vec& y, const double& c,
 	double r0 = corHuberAdj(x, y, c);
 	// C++ isnan() is not portable and gives error on Windows systems
 	// use R macro ISNAN() instead
-	if(ISNAN(r0) || (1 - abs(r0) < tol)) {
+	if(ISNAN(r0) || (1 - std::abs(r0) < tol)) {
 		// points almost on a line, leads to computationally singular system
 		return r0;
 	}
