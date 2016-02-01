@@ -1,34 +1,38 @@
 Changes in robustHD version 0.5.1
 
-    + Explicitly calling C++ function std::abs() rather than abs() to avoid 
+    + Explicitly calling C++ function std::abs() rather than abs() to avoid
       clang warning.
+
+    + Correctly importing functions head() and tail() from package 'utils' and
+      function devAskNewPage from package 'grDevices'.
+
 
 
 Changes in robustHD version 0.5.0
 
     + Added functionality for (robust) groupwise least angle regression.
-    
+
     + Added TopGear car data.
-    
+
     + Diagnostic plots now allow to pass arguments to covMcd().
-    
+
     + Removed PCA step from data cleaning RLARS to consolidate code.
-    
+
     + Updated package dependencies.
 
 
 
 Changes in robustHD version 0.4.0
 
-    + sparseLTS() no longer uses subsampling algorithm in the special case of 
+    + sparseLTS() no longer uses subsampling algorithm in the special case of
       alpha = 1.
-    
+
     + sparseLTS() now has argument 'normalize' to specify whether the predictor
       variables should be normalized.
-    
-    + sparseLTS() now computes objective function with coefficients for 
+
+    + sparseLTS() now computes objective function with coefficients for
       normalized data (if applicable).
-    
+
     + Most required packages are now imports rather than depends.
 
 
@@ -40,37 +44,37 @@ Changes in robustHD version 0.3.2
 
 Changes in robustHD version 0.3.1
 
-    + rlars now uses perryFit() instead of perryTuning() for prediction error 
+    + rlars now uses perryFit() instead of perryTuning() for prediction error
       estimation.
-    
-    + Bugfix in rlars() allowing the number of variables to be sequenced to be 
+
+    + Bugfix in rlars() allowing the number of variables to be sequenced to be
       larger than half the number of observations.
-    
+
     + Bugfix in sparseLTS() in case of only one predictor variable.
-    
+
     + Added tests for C++ implementation of the lasso.
 
 
 Changes in robustHD version 0.3.0
 
     + Redesign of the class structure.
-    
+
     + Redesign of how C++ back end is called.
-    
-    + Functionality of sparseLTSGrid() now included in sparseLTS(); 
+
+    + Functionality of sparseLTSGrid() now included in sparseLTS();
       sparseLTSGrid() is now a deprecated wrapper function.
-    
+
     + Restructured internal code for computing initial subsets for sparse LTS.
-    
-    + rlars() now supports data cleaning RLARS, with an extra PCA step for 
+
+    + rlars() now supports data cleaning RLARS, with an extra PCA step for
       high-dimensional data.
-    
-    + New argument 's' in rlars() to select the steps along the sequence for 
+
+    + New argument 's' in rlars() to select the steps along the sequence for
       which to compute submodels
-    
+
     + fortify() and diagnosticPlot() methods for class "seqModel".
-    
-    + Bugfix in predict() method for "sparseLTS" if object was computed without 
+
+    + Bugfix in predict() method for "sparseLTS" if object was computed without
       intercept.
 
 
@@ -78,53 +82,53 @@ Changes in robustHD version 0.3.0
 Changes in robustHD version 0.2.2
 
     + Bugfix in sparseLTS() for more stability of the results.
-    
-    + Bugfix in winsorize(): weights are now correctly returned as vector for 
+
+    + Bugfix in winsorize(): weights are now correctly returned as vector for
       a matrix with only one column.
-    
-    + Bugfix in diagnosticPlot(): previous setting of devAskNewPage() is now 
+
+    + Bugfix in diagnosticPlot(): previous setting of devAskNewPage() is now
       retained on exit.
 
 
 Changes in robustHD version 0.2.1
 
-    + Bugfix in rlars(): formula method now only adds function call and model 
-      terms if the default method returns an "rlars" object, not if only the 
+    + Bugfix in rlars(): formula method now only adds function call and model
+      terms if the default method returns an "rlars" object, not if only the
       sequence is returned.
-    
-    + Bugfix in rlars(): argument cl is now preferred over argument ncores for 
+
+    + Bugfix in rlars(): argument cl is now preferred over argument ncores for
       parallel computing, as stated in the help file.
-    
-    + Plots are no longer using the opts() function from package ggplot2, which 
+
+    + Plots are no longer using the opts() function from package ggplot2, which
       is deprecated since ggplot2 version 0.9.2.
 
 
 Changes in robustHD version 0.2.0
 
     + Graphics are now based on package ggplot2 instead of lattice.
-    
-    + Prediction error estimation is now based on package perry instead of 
+
+    + Prediction error estimation is now based on package perry instead of
       cvTools.
-    
+
     + Parallel computing for sparseLTS() now available via OpenMP.
-    
-    + rlars() is now using C++ code for variable sequencing, including 
-      parallelization of certain tasks via OpenMP.  Further parallel 
+
+    + rlars() is now using C++ code for variable sequencing, including
+      parallelization of certain tasks via OpenMP.  Further parallel
       computing is implemented on the R level via package parallel.
-    
-    + sparseLTSGrid() and rlars() now allow model selection based on the 
+
+    + sparseLTSGrid() and rlars() now allow model selection based on the
       prediction error.
-    
-    + coef(), fitted(), residuals() and wt() methods now have argument 
+
+    + coef(), fitted(), residuals() and wt() methods now have argument
       'drop' to control whether to reduce the dimension if possible.
-    
-    + Renamed components 'weight' and 'raw.weights' of sparse LTS models to 
+
+    + Renamed components 'weight' and 'raw.weights' of sparse LTS models to
       'wt' and 'raw.wt', and renamed the accessor function accordingly to wt().
-    
-    + Print methods for "sparseLTS" and "sparseLTSGrid" now only show non-zero 
+
+    + Print methods for "sparseLTS" and "sparseLTSGrid" now only show non-zero
       coefficients by default; also added argument to print method for "rlars".
-    
+
     + sparseLTS() and sparseLTSGrid() now store the raw fitted values.
-    
-    + Bugfixes in C++ code for sparseLTS() and fastLasso() to prevent memory 
+
+    + Bugfixes in C++ code for sparseLTS() and fastLasso() to prevent memory
       related errors.
