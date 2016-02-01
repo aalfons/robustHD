@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Plot a sequence of regression models
 #'
@@ -81,15 +81,14 @@ plot.tslars <- function(x, p, method = c("coefficients", "crit", "diagnostic"),
 
 
 #' @rdname plot.seqModel
-#' @method plot sparseLTS
+#' @method plot penModel
 #' @export
 
-plot.sparseLTS <- function(x, method = c("coefficients", "crit", "diagnostic"),
-                           ...) {
+plot.penModel <- function(x, method = c("coefficients", "crit", "diagnostic"),
+                          ...) {
   ## initializations
   crit <- x$crit
-  if(is.null(crit) || inherits(crit, "fitSelect")) method <- "diagnostic"
-  else method <- match.arg(method)
+  method <- if(is.null(crit)) "diagnostic" else match.arg(method)
   ## call plot function
   if(method == "coefficients") coefPlot(x, ...)
   else if(method == "crit") critPlot(x, ...)
@@ -143,6 +142,35 @@ coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
   coefData
 }
 
+coefify.penModel <- function(model, fit = c("reweighted", "raw", "both"),
+                             zeros = FALSE, labels, ...) {
+  # prepare coefficients and labels
+  coef <- removeIntercept(t(coef(model, s=NULL)))
+  sigmaX <- model$sigmaX
+  if(!isTRUE(zeros)) {
+    keep <- apply(coef != 0, 2, any)
+    coef <- coef[, keep, drop=FALSE]
+    sigmaX <- sigmaX[keep]
+    if(!is.null(labels)) labels <- labels[keep]
+  }
+  # standardize coeffients
+  coef <- sweep(coef, 2, model$sigmaX, "/", check.margin=FALSE)
+  # prepare other information
+  m <- ncol(coef)             # number of variables
+  lambda <- model$lambda      # tuning parameters
+  steps <- seq_along(lambda)  # step numbers
+  sMax <- length(steps)       # number of steps
+  df <- model$df              # degrees of freedom
+  vn <- colnames(coef)        # variable names
+  # build data frame
+  coefData <- data.frame(lambda=rep.int(lambda, m), step=rep.int(steps, m),
+                         df=rep.int(df, m), coefficient=as.numeric(coef),
+                         variable=factor(rep(vn, each=sMax), levels=vn))
+  if(!is.null(labels))
+    coefData$label <- rep(as.character(labels), each=sMax)
+  coefData
+}
+
 coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
                               zeros = FALSE, labels, ...) {
   # initializations
@@ -169,7 +197,7 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
 #   steps <- seq_along(lambda)  # step numbers
 #   if(fit %in% c("reweighted", "both")) {
 #     cdelta <- model$cnp2
-#     wt <- as.matrix(wt(model, s=NULL, fit="raw"))
+#     wt <- as.matrix(weights(model, type="robustness", s=NULL, fit="raw"))
 #     sigmaX <- do.call(rbind,
 #                       lapply(steps, function(s) {
 #                         xOk <- x[wt[, s] == 1, , drop=FALSE]
@@ -337,6 +365,34 @@ coefPlot.tslars <- function(x, p, ...) {
   }
   ## call plot function for specified lag length
   coefPlot(x$pFit[[p]], ...)
+}
+
+
+#' @rdname coefPlot
+#' @method coefPlot penModel
+#' @export
+
+coefPlot.penModel <- function(x, fit = c("reweighted", "raw", "both"),
+                              abscissa = c("step", "df"), zeros = FALSE,
+                              size = c(0.5, 2, 4), labels, offset = 1, ...) {
+  ## initializations
+  abscissa <- match.arg(abscissa)
+  if(missing(labels)) labels <- defaultLabels(x)  # default labels
+  ## extract coefficient data extended with other information
+  coefData <- coefify(x, zeros=zeros, labels=labels)
+  ## construct data frame for labels
+  maxX <- max(coefData[, abscissa])
+  labelData <- coefData[coefData[, abscissa] == maxX, ]
+  if(abscissa == "df") {
+    # maximum degree of freedom may occur in more than one step
+    # ensure that label is only drawn once for largest step number
+    keep <- split(rownames(labelData), labelData$variable)
+    keep <- sapply(keep, tail, 1)
+    labelData <- labelData[keep, ]
+  }
+  ## call workhorse function
+  ggCoefPlot(coefData, labelData, abscissa=abscissa,
+             size=size, offset=offset, ...)
 }
 
 
@@ -523,6 +579,21 @@ critPlot.tslars <- function(x, p, ...) {
 
 
 #' @rdname critPlot
+#' @method critPlot penModel
+#' @export
+
+critPlot.penModel <- function(x, size = c(0.5, 2), ...) {
+  ## initializations
+  crit <- x$crit
+  if(is.null(crit)) stop("optimality criterion data not available")
+  ## construct data frame for ggplot2 graphics
+  critData <- fortify(crit, data=data.frame(lambda=x$lambda))
+  ## call workhorse function
+  ggCritPlot(critData, abscissa="lambda", size=size, ...)
+}
+
+
+#' @rdname critPlot
 #' @method critPlot sparseLTS
 #' @export
 
@@ -662,7 +733,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' with the largest distances from that line are identified by a label (the
 #' observation number).  The default for \code{id.n} is the number of
 #' regression outliers, i.e., the number of observations whose residuals are
-#' too large (cf. \code{\link{wt}}).
+#' too large (cf. \code{\link[=weights.penModel]{weights}}).
 #'
 #' In the plots of the standardized residuals versus their index or the fitted
 #' values, horizontal reference lines are drawn at 0 and +/-2.5.  The
@@ -670,7 +741,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' standardized residuals are identified by a label (the observation
 #' number).  The default for \code{id.n} is the number of regression outliers,
 #' i.e., the number of observations whose absolute residuals are too large (cf.
-#' \code{\link{wt}}).
+#' \code{\link[=weights.penModel]{weights}}).
 #'
 #' For the regression diagnostic plot, the robust Mahalanobis distances of the
 #' predictor variables are computed via the MCD based on only those predictors
@@ -683,10 +754,11 @@ labelify <- function(data, which, id.n = NULL) {
 #' of the standardized residuals and/or largest robust Mahalanobis distances
 #' are identified by a label (the observation number).  The default for
 #' \code{id.n} is the number of all outliers: regression outliers (i.e.,
-#' observations whose absolute residuals are too large, cf. \code{\link{wt}})
-#' and leverage points (i.e., observations with robust Mahalanobis distance
-#' larger than the 97.5\% quantile of the \eqn{\chi^{2}}{chi-squared}
-#' distribution with \eqn{p} degrees of freedom).
+#' observations whose absolute residuals are too large, cf.
+#' \code{\link[=weights.penModel]{weights}}) and leverage points (i.e.,
+#' observations with robust Mahalanobis distance larger than the 97.5\%
+#' quantile of the \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
+#' degrees of freedom).
 #'
 #' @aliases diagnosticPlot.rlars diagnosticPlot.grplars diagnosticPlot.tslarsP
 #'
@@ -800,6 +872,16 @@ diagnosticPlot.tslars <- function(x, p, ...) {
   }
   ## call plot function for specified lag length
   diagnosticPlot(x$pFit[[p]], ...)
+}
+
+
+#' @rdname diagnosticPlot
+#' @method diagnosticPlot penModel
+#' @export
+
+diagnosticPlot.penModel <- function(x, s = NA, covArgs = list(), ...) {
+  # call default method with all information required for plotting
+  diagnosticPlot(fortify(x, s=s, covArgs=covArgs), ...)
 }
 
 

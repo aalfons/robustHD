@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## get component 'best'
 
@@ -42,6 +42,27 @@ getComponent.seqModel <- function(x, component, s = NA,
   }
   # drop dimension if requested and return component
   if(isTRUE(drop)) dropCol(comp) else comp
+}
+
+getComponent.penModel <- function(x, component, s = NA,
+                                  drop = !is.null(s), ...) {
+  # extract component
+  comp <- x[[component]]
+  # check selected steps and extract corresponding parts of the component
+  sMax <- length(x$lambda)
+  if(sMax > 1) {
+    if(!is.null(s)) {
+      # check selected steps
+      if(isTRUE(is.na(s))) s <- getSOpt(x)  # defaults to optimal step
+      else s <- checkSteps(s, sMin=1, sMax=sMax, ...)
+      # extract corresponding parts of the component
+      if(is.null(dim(comp))) comp <- comp[s]
+      else comp <- comp[, s, drop=FALSE]
+    }
+    if(isTRUE(drop)) comp <- dropCol(comp)  # drop dimension if requested
+  }
+  # return component
+  comp
 }
 
 getComponent.sparseLTS <- function(x, which, s = NA,
@@ -176,6 +197,11 @@ getScale.rlm <- function(x, ...) x$s
 getScale.seqModel <- function(x, s = NA, ...) getComponent(x, "scale", s=s, ...)
 
 #' @rdname getScale
+#' @method getScale penModel
+#' @export
+getScale.penModel <- function(x, s = NA, ...) getComponent(x, "scale", s=s, ...)
+
+#' @rdname getScale
 #' @method getScale sparseLTS
 #' @export
 getScale.sparseLTS <- function(x, s = NA,
@@ -194,6 +220,8 @@ getSOpt.seqModel <- function(x, ...) {
   if(!is.null(sOpt)) sOpt <- sOpt + x$s[1] - 1
   sOpt
 }
+
+getSOpt.penModel <- function(x, ...) getBest(x$crit)
 
 getSOpt.sparseLTS <- function(x, fit = "reweighted", ...) {
   sOpt <- getBest(x$crit)

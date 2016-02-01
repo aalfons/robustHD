@@ -2,6 +2,7 @@
 \name{coefPlot}
 \alias{coefPlot}
 \alias{coefPlot.grplars}
+\alias{coefPlot.penModel}
 \alias{coefPlot.rlars}
 \alias{coefPlot.seqModel}
 \alias{coefPlot.sparseLTS}
@@ -15,6 +16,10 @@ coefPlot(x, ...)
   size = c(0.5, 2, 4), labels, offset = 1, ...)
 
 \method{coefPlot}{tslars}(x, p, ...)
+
+\method{coefPlot}{penModel}(x, fit = c("reweighted", "raw", "both"),
+  abscissa = c("step", "df"), zeros = FALSE, size = c(0.5, 2, 4), labels,
+  offset = 1, ...)
 
 \method{coefPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"),
   abscissa = c("step", "df"), zeros = FALSE, size = c(0.5, 2, 4), labels,

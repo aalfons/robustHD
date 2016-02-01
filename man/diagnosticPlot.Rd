@@ -3,6 +3,7 @@
 \alias{diagnosticPlot}
 \alias{diagnosticPlot.default}
 \alias{diagnosticPlot.grplars}
+\alias{diagnosticPlot.penModel}
 \alias{diagnosticPlot.perrySeqModel}
 \alias{diagnosticPlot.perrySparseLTS}
 \alias{diagnosticPlot.rlars}
@@ -19,6 +20,8 @@ diagnosticPlot(x, ...)
 \method{diagnosticPlot}{perrySeqModel}(x, ...)
 
 \method{diagnosticPlot}{tslars}(x, p, ...)
+
+\method{diagnosticPlot}{penModel}(x, s = NA, covArgs = list(), ...)
 
 \method{diagnosticPlot}{sparseLTS}(x, s = NA, fit = c("reweighted", "raw",
   "both"), covArgs = list(), ...)
@@ -103,7 +106,7 @@ drawn through the first and third quartile.  The \code{id.n} observations
 with the largest distances from that line are identified by a label (the
 observation number).  The default for \code{id.n} is the number of
 regression outliers, i.e., the number of observations whose residuals are
-too large (cf. \code{\link{wt}}).
+too large (cf. \code{\link[=weights.penModel]{weights}}).
 
 In the plots of the standardized residuals versus their index or the fitted
 values, horizontal reference lines are drawn at 0 and +/-2.5.  The
@@ -111,7 +114,7 @@ values, horizontal reference lines are drawn at 0 and +/-2.5.  The
 standardized residuals are identified by a label (the observation
 number).  The default for \code{id.n} is the number of regression outliers,
 i.e., the number of observations whose absolute residuals are too large (cf.
-\code{\link{wt}}).
+\code{\link[=weights.penModel]{weights}}).
 
 For the regression diagnostic plot, the robust Mahalanobis distances of the
 predictor variables are computed via the MCD based on only those predictors
@@ -124,10 +127,11 @@ coefficients.  The \code{id.n} observations with the largest absolute values
 of the standardized residuals and/or largest robust Mahalanobis distances
 are identified by a label (the observation number).  The default for
 \code{id.n} is the number of all outliers: regression outliers (i.e.,
-observations whose absolute residuals are too large, cf. \code{\link{wt}})
-and leverage points (i.e., observations with robust Mahalanobis distance
-larger than the 97.5\% quantile of the \eqn{\chi^{2}}{chi-squared}
-distribution with \eqn{p} degrees of freedom).
+observations whose absolute residuals are too large, cf.
+\code{\link[=weights.penModel]{weights}}) and leverage points (i.e.,
+observations with robust Mahalanobis distance larger than the 97.5\%
+quantile of the \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
+degrees of freedom).
 }
 \examples{
 ## generate data

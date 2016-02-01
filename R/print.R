@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' @method print bicSelect
 #' @export
@@ -96,6 +96,79 @@ print.seqModel <- function(x, zeros = FALSE, best = TRUE, ...) {
   invisible(x)
 }
 
+#' @method print tslarsP
+#' @export
+print.tslarsP <- function(x, ...) {
+  # print "grplars" model
+  print.seqModel(x, best=FALSE, ...)
+  # print optimal step and lag length
+  sOpt <- getSOpt(x)
+  if(is.null(sOpt)) {
+    sOpt <- x$s  # only one step
+    text <- "Step:"
+  } else text <- "Optimal step:"
+  info <- rbind(sOpt, x$p)
+  dimnames(info) <- list(c(text, "Lag length:"), "")
+  print(info, ...)
+  # return object invisibly
+  invisible(x)
+}
+
+#' @method print tslars
+#' @export
+print.tslars <- function(x, ...) {
+  # print "grplars" model with optimal lag length
+  pOpt <- x$pOpt
+  xOpt <- x$pFit[[pOpt]]
+  xOpt$call <- x$call
+  print.seqModel(xOpt, best = FALSE, ...)
+  # print optimal step and lag length
+  sOpt <- getSOpt(xOpt)
+  if(is.null(sOpt)) {
+    sOpt <- xOpt$s  # only one step
+    text <- "Step:"
+  } else text <- "Optimal step:"
+  info <- rbind(sOpt, pOpt)
+  dimnames(info) <- list(c(text, "Optimal lag length:"), "")
+  print(info, ...)
+  # return object invisibly
+  invisible(x)
+}
+
+#' @method print penModel
+#' @export
+print.penModel <- function(x, zeros = FALSE, ...) {
+  # initializations
+  lambda <- x$lambda
+  sOpt <- getSOpt(x)
+  # print function call
+  if(!is.null(call <- x$call)) {
+    cat("\nCall:\n")
+    dput(x$call)
+  }
+  # print coefficients of sparse LTS model
+  coefficients <- coef(x, zeros=zeros)
+  if(length(lambda) == 1) cat("\nCoefficients:\n")
+  else cat("\nCoefficients of optimal submodel:\n")
+  print(coefficients, ...)
+  # print penalty parameter and robust scale estimate
+  scale <- getScale(x)
+  if(length(lambda) == 1) {
+    text <- c("Penalty parameter:", "Residual scale estimate:")
+    info <- matrix(c(lambda, scale), 2, 1)
+    dimnames(info) <- list(text, "")
+    print(info, ...)
+  } else {
+    lambda <- lambda[sOpt]
+    info <- rbind(lambda, scale)
+    text <- c("Optimal penalty parameter:", "Residual scale estimate:")
+    dimnames(info) <- list(text, "")
+    print(info, ...)
+  }
+  # return object invisibly
+  invisible(x)
+}
+
 #' @method print sparseLTS
 #' @export
 print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
@@ -143,45 +216,6 @@ print.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
     } else dimnames(info) <- list(text, "")
     print(info, ...)
   }
-  # return object invisibly
-  invisible(x)
-}
-
-#' @method print tslarsP
-#' @export
-print.tslarsP <- function(x, ...) {
-  # print "grplars" model
-  print.seqModel(x, best=FALSE, ...)
-  # print optimal step and lag length
-  sOpt <- getSOpt(x)
-  if(is.null(sOpt)) {
-    sOpt <- x$s  # only one step
-    text <- "Step:"
-  } else text <- "Optimal step:"
-  info <- rbind(sOpt, x$p)
-  dimnames(info) <- list(c(text, "Lag length:"), "")
-  print(info, ...)
-  # return object invisibly
-  invisible(x)
-}
-
-#' @method print tslars
-#' @export
-print.tslars <- function(x, ...) {
-  # print "grplars" model with optimal lag length
-  pOpt <- x$pOpt
-  xOpt <- x$pFit[[pOpt]]
-  xOpt$call <- x$call
-  print.seqModel(xOpt, best = FALSE, ...)
-  # print optimal step and lag length
-  sOpt <- getSOpt(xOpt)
-  if(is.null(sOpt)) {
-    sOpt <- xOpt$s  # only one step
-    text <- "Step:"
-  } else text <- "Optimal step:"
-  info <- rbind(sOpt, pOpt)
-  dimnames(info) <- list(c(text, "Optimal lag length:"), "")
-  print(info, ...)
   # return object invisibly
   invisible(x)
 }

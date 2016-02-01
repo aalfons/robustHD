@@ -151,8 +151,8 @@ If \code{crit} is \code{"PE"}, an object of class \code{"perrySparseLTS"}
 prediction error criterion, and includes the final model with the optimal
 tuning paramter as component \code{finalModel}.
 
-Otherwise an object of class \code{"sparseLTS"} with the following
-components:
+Otherwise an object of class \code{"sparseLTS"} (inheriting from class
+\code{"penModel"}) with the following components:
 
 \item{lambda}{a numeric vector giving the values of the penalty
 parameter.}
@@ -191,6 +191,9 @@ indicate outliers from the respective reweighted fits, i.e., the weights are
 \item{df}{an integer vector giving the respective degrees of freedom
 of the obtained reweighted model fits, i.e., the number of nonzero
 coefficient estimates.}
+
+\item{normalize}{a logical indicating whether the predictor variables
+were normalized to have unit \eqn{L_{2}}{L2} norm on the subsamples.}
 
 \item{intercept}{a logical indicating whether the model includes a
 constant term.}
@@ -284,10 +287,11 @@ of Applied Statistics}, \bold{7}(1), 226--248.
 \seealso{
 \code{\link[=coef.sparseLTS]{coef}},
 \code{\link[=fitted.sparseLTS]{fitted}},
-\code{\link[=plot.sparseLTS]{plot}},
+\code{\link[=plot.penModel]{plot}},
 \code{\link[=predict.sparseLTS]{predict}},
 \code{\link[=residuals.sparseLTS]{residuals}},
-\code{\link{wt}}, \code{\link[robustbase]{ltsReg}}
+\code{\link[=weights.sparseLTS]{weights}},
+\code{\link[robustbase]{ltsReg}}
 }
 \keyword{regression}
 \keyword{robust}

@@ -1,20 +1,20 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## workhorse function for groupwise LARS
 #' @import parallel
 
-grouplars <- function(x, y, sMax = NA, assign, robust = FALSE, 
-                      centerFun = mean, scaleFun = sd, 
-                      regFun = lm.fit, regArgs = list(), 
-                      combine = c("min", "euclidean", "mahalanobis"), 
-                      winsorize = FALSE, const = 2, prob = 0.95, 
-                      fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"), 
-                      splits = foldControl(), cost = rmspe, costArgs = list(), 
-                      selectBest = c("hastie", "min"), seFactor = 1, 
-                      ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
+grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
+                      centerFun = mean, scaleFun = sd,
+                      regFun = lm.fit, regArgs = list(),
+                      combine = c("min", "euclidean", "mahalanobis"),
+                      winsorize = FALSE, const = 2, prob = 0.95,
+                      fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"),
+                      splits = foldControl(), cost = rmspe, costArgs = list(),
+                      selectBest = c("hastie", "min"), seFactor = 1,
+                      ncores = 1, cl = NULL, seed = NULL, model = TRUE,
                       call = NULL) {
   ## initializations
   n <- length(y)
@@ -44,9 +44,9 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     ncores <- 1  # use default value
     warning("invalid value of 'ncores'; using default value")
   } else ncores <- as.integer(ncores)
-  
+
   ## check whether submodels along the sequence should be computed
-  ## if yes, check whether the final model should be found via resampling-based 
+  ## if yes, check whether the final model should be found via resampling-based
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
@@ -59,7 +59,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
         if(s[1] > sMax) s[1] <- sMax
       }
       # set up function call to be passed to perryFit()
-      remove <- c("x", "y", "crit", "splits", "cost", "costArgs", 
+      remove <- c("x", "y", "crit", "splits", "cost", "costArgs",
                   "selectBest", "seFactor", "ncores", "cl", "seed")
       remove <- match(remove, names(call), nomatch=0)
       funCall <- call[-remove]
@@ -68,9 +68,9 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
       # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
       selectBest <- match.arg(selectBest)
-      out <- perryFit(funCall, x=x, y=y, splits=splits, 
-                      predictArgs=list(s=s, recycle=TRUE), cost=cost, 
-                      costArgs=costArgs, envir=parent.frame(2), 
+      out <- perryFit(funCall, x=x, y=y, splits=splits,
+                      predictArgs=list(s=s, recycle=TRUE), cost=cost,
+                      costArgs=costArgs, envir=parent.frame(2),
                       ncores=ncores, cl=cl, seed=seed)
       out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
       fits(out) <- s
@@ -87,7 +87,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
       return(out)
     }
   }
-  
+
   ## prepare the data
   if(!is.null(seed)) set.seed(seed)
   if(fit || (robust && !winsorize)) {
@@ -109,7 +109,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     }
   }
   if(robust) {
-    # use fallback mode (standardization with mean/SD) for dummies 
+    # use fallback mode (standardization with mean/SD) for dummies
     z <- robStandardize(y, centerFun, scaleFun)
     xs <- robStandardize(x, centerFun, scaleFun, fallback=TRUE)
     muY <- attr(z, "center")
@@ -119,10 +119,10 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     if(winsorize) {
       if(is.null(const)) const <- 2
       # obtain data cleaning weights from winsorization
-      w <- winsorize(cbind(z, xs), standardized=TRUE, const=const, 
+      w <- winsorize(cbind(z, xs), standardized=TRUE, const=const,
                      prob=prob, return="weights")
     } else {
-      # clean data in a limited sense: there may still be correlation 
+      # clean data in a limited sense: there may still be correlation
       # outliers between the groups, but these should not be a problem
       # compute weights from robust regression for each group
       # intercept column needs to be used in robust short regressions
@@ -143,11 +143,11 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
           w <- parSapply(cl, assignList, getWeights, xs, z)
         } else w <- sapply(assignList, getWeights, xs, z)
         w <- sqrt(apply(w, 1, min))  # square root of smallest weights
-        # observations can have zero weight, in which case the number 
+        # observations can have zero weight, in which case the number
         # of observations needs to be adjusted
         n <- length(which(w > 0))
       } else {
-        # define function to compute scaled residuals for each 
+        # define function to compute scaled residuals for each
         # predictor group
         getResiduals <- function(i, x, y) {
           x <- x[, i, drop=FALSE]
@@ -171,7 +171,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
           w <- pmin(sqrt(d/rowSums(residuals^2)), 1)
         } else {
           # obtain weights from multivariate winsorization
-          w <- winsorize(residuals, standardized=TRUE, const=const, 
+          w <- winsorize(residuals, standardized=TRUE, const=const,
                          prob=prob, return="weights")
         }
       }
@@ -194,9 +194,9 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
     muX <- attr(xs, "center")
     sigmaX <- attr(xs, "scale")
   }
-  
+
 #   ## find first ranked predictor group
-#   zHat <- sapply(assignList, 
+#   zHat <- sapply(assignList,
 #                  function(i, x, y) {
 #                    x <- x[, i, drop=FALSE]
 #                    model <- lm.fit(x, y)
@@ -216,7 +216,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
 #   # not yet sequenced groups
 #   inactive <- seq_len(m)[-active]
 #   corZ <- corZ[-active]
-#   
+#
 #   ## update active set
 #   R <- diag(1, sMax[1])
 #   a <- 1
@@ -231,7 +231,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
 #     if(k == 1) u <- zHat[, active] # equiangular vector equals first direction
 #     else {
 #       # compute correlations between fitted values for active groups
-#       R[k, seq_len(k-1)] <- R[seq_len(k-1), k] <- 
+#       R[k, seq_len(k-1)] <- R[seq_len(k-1), k] <-
 #         apply(zHat[, active[seq_len(k-1)], drop=FALSE], 2, cor, zHat[, active[k]])
 #       # other computations according to algorithm
 #       invR <- solve(R[seq_len(k), seq_len(k), drop=FALSE])
@@ -247,7 +247,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
 #     # compute the fitted values of the equiangular vector for each
 #     # inactive predictor group, as well as the correlations involving the
 #     # inactive predictor groups and the equiangular vector
-#     uHat <- sapply(assignList[inactive], 
+#     uHat <- sapply(assignList[inactive],
 #                    function(i, x, u) {
 #                      x <- x[, i, drop=FALSE]
 #                      model <- lm.fit(x, u)
@@ -282,20 +282,20 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
 #     active <- c(active, inactive[whichMin])  # update active set
 #     inactive <- inactive[-whichMin]          # update not yet sequenced groups
 #   }
-  
+
   ## call C++ function
-  active <- .Call("R_fastGrplars", R_x=xs, R_y=z, R_sMax=sMax, 
-                  R_assign=assignList, R_ncores=ncores, 
+  active <- .Call("R_fastGrplars", R_x=xs, R_y=z, R_sMax=sMax,
+                  R_assign=assignList, R_ncores=ncores,
                   PACKAGE="robustHD")
-  
+
   ## choose optimal model according to specified criterion
   if(fit) {
     # add ones to matrix of predictors to account for intercept
     x <- addIntercept(x)
     # call function to fit models along the sequence
-    out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2], 
-                    assign=assignList, robust=robust, regFun=regFun, 
-                    useFormula=regControl$useFormula, regArgs=regArgs, 
+    out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2],
+                    assign=assignList, robust=robust, regFun=regFun,
+                    useFormula=regControl$useFormula, regArgs=regArgs,
                     crit=crit, cl=cl)
     # add center and scale estimates
     out[c("muX", "sigmaX", "muY", "sigmaY")] <- list(muX, sigmaX, muY, sigmaY)

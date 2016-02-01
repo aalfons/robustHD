@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## add default column names to matrix
 addColnames <- function(x) {
@@ -17,22 +17,19 @@ addIntercept <- function(x, check = FALSE) {
   } else x
 }
 
-# ## backtransform regression coefficients to original scale (including intercept)
-# backtransform <- function(beta, muY, sigmaY, mu, sigma) {
-#   apply(beta, 2, 
-#         function(b) {
-#           b <- b * sigmaY / sigma
-#           a <- muY - sum(b * mu)  # intercept
-#           c("(Intercept)"=a, b)
-#         })
-# }
+## backtransform regression coefficients to original scale (including intercept)
+backtransform <- function(beta, centerY, scaleY, centerX, scaleX) {
+  alpha <- beta[1]
+  beta <- beta[-1] * scaleY / scaleX
+  c(centerY + alpha*scaleY - sum(beta*centerX), beta)
+}
 
 ## call C++ back end
 #' @useDynLib robustHD
 callBackend <- function(..., PACKAGE) {
   # check the platfrom and if the RcppEigen back end is available
   # (RcppEigen back end does not work with 32-bit Windows)
-  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") && 
+  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") &&
        exists(".CallSparseLTSEigen")) {
     # RcppEigen back end from package sparseLTSEigen
     callFun <- get(".CallSparseLTSEigen")
@@ -81,7 +78,7 @@ checkSteps <- function(s, sMin, sMax, recycle = FALSE, ...) {
 ## copy names from a vector or matrix to another vector or matrix
 copyNames <- function(from, to, which = "col", target = "row") {
   # read names from source
-  if(is.null(dim(from))) nam <- names(from) 
+  if(is.null(dim(from))) nam <- names(from)
   else if(which == "row") nam <- rownames(from)
   else if(which == "col") nam <- colnames(from)
   # write names to target
@@ -95,7 +92,7 @@ copyNames <- function(from, to, which = "col", target = "row") {
 ## utility function to get default labels for plot
 defaultLabels <- function(x) UseMethod("defaultLabels")
 
-defaultLabels.seqModel <- defaultLabels.sparseLTS <- function(x) {
+defaultLabels.seqModel <- defaultLabels.penModel <- function(x) {
   as.character(seq_along(removeIntercept(coef(x))))
 }
 
@@ -104,13 +101,13 @@ defaultLabels.grplars <- function(x) {
   labels <- split(as.character(assign), assign)
   p <- sapply(labels, length)  # number of variables per group
   append <- which(p > 1)
-  labels[append] <- mapply(function(l, p) paste(l, seq_len(p), sep="."), 
+  labels[append] <- mapply(function(l, p) paste(l, seq_len(p), sep="."),
                            labels[append], p[append], SIMPLIFY=FALSE)
   unsplit(labels, assign)
 }
 
 ## utility function to get default main plot title
-defaultMain <- function() "Coefficient path" 
+defaultMain <- function() "Coefficient path"
 
 ## drop dimension in case of matrix with one column
 dropCol <- function(x) {
@@ -161,7 +158,7 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
   length(which(abs(beta) > tol))
 }
 
-## construct blocks of original and lagged values for prediction from time 
+## construct blocks of original and lagged values for prediction from time
 ## series models
 newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
   n <- length(y)

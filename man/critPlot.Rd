@@ -2,6 +2,7 @@
 \name{critPlot}
 \alias{critPlot}
 \alias{critPlot.grplars}
+\alias{critPlot.penModel}
 \alias{critPlot.perrySeqModel}
 \alias{critPlot.perrySparseLTS}
 \alias{critPlot.rlars}
@@ -18,6 +19,8 @@ critPlot(x, ...)
 \method{critPlot}{perrySeqModel}(x, ...)
 
 \method{critPlot}{tslars}(x, p, ...)
+
+\method{critPlot}{penModel}(x, size = c(0.5, 2), ...)
 
 \method{critPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"),
   size = c(0.5, 2), ...)

@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         Erasmus University Rotterdam
+ *         Erasmus Universiteit Rotterdam
  */
 
 #ifndef _robustHD_FASTLARS_H

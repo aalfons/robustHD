@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         Erasmus University Rotterdam
+ *         Erasmus Universiteit Rotterdam
  */
 
 #include <R.h>
@@ -92,7 +92,7 @@ vec computeStepSizes(const double& r, const double& a, const vec& corY,
   vec gammas(n);
   // compute step size for each predictor group
   for(uword j = 0; j < n; j++) {
-    gammas(j) = findSolution(a*a - tau(j)*tau(j), 2 * (corY(j)*corU(j) - r*a), 
+    gammas(j) = findSolution(a*a - tau(j)*tau(j), 2 * (corY(j)*corU(j) - r*a),
         r*r - corY(j)*corY(j));
   }
   // return step sizes
