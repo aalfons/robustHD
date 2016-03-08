@@ -129,6 +129,7 @@
 #' @keywords regression robust
 #'
 #' @export
+#' @import parallel
 
 sparseS <- function(x, ...) UseMethod("sparseS")
 

@@ -691,7 +691,7 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
 
   // initialize solution of MM-estimator
   best = bestS;
-  best.scale = mean(Mrho(best.residuals/bestS.scale, k)) * pow(bestS.scale, 2);
+  best.scale = sqrt(mean(Mrho(best.residuals/bestS.scale, k))) * bestS.scale;
   // another criterion is used for sparse MM than for sparse S
   if(control.findLambda) {
     // cannot use the lambda found in S-estimator since penalty parameter plays
@@ -701,7 +701,7 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
     best.crit = R_PosInf;
   } else {
     best.lambda = fixedLambda;
-    best.crit = best.scale + best.lambda * norm(best.coefficients, 1);
+    best.crit = pow(best.scale, 2) + best.lambda * norm(best.coefficients, 1);
   }
   best.continueSteps = true;
 
@@ -718,8 +718,8 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
               best.coefficients, best.residuals);
     best.lambda /= 2.0; // transform lambda back to actual value
     // compute value of objective function
-    best.scale = mean(Mrho(best.residuals/bestS.scale, k)) * pow(bestS.scale,2);
-    best.crit = best.scale + best.lambda * norm(best.coefficients, 1);
+    best.scale = sqrt(mean(Mrho(best.residuals/bestS.scale, k))) * bestS.scale;
+    best.crit = pow(best.scale, 2) + best.lambda * norm(best.coefficients, 1);
     // check for convergence
     best.continueSteps = (abs(previousCrit - best.crit) > control.tol);
     r++;

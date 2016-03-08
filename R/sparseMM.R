@@ -124,6 +124,7 @@
 #' @keywords regression robust
 #'
 #' @export
+#' @import parallel
 
 sparseMM <- function(x, ...) UseMethod("sparseMM")
 
