@@ -5,7 +5,7 @@
 
 ## prepare BIC values for plotting
 # model .... object of class "bicSelect"
-# data ..... data frame containing additional information such as step numbers 
+# data ..... data frame containing additional information such as step numbers
 #            or values of a tuning parameter
 # select ... indicates columns of a BIC matrix to keep
 fortify.bicSelect <- function(model, data = NULL, select = NULL, ...) {
@@ -41,69 +41,71 @@ fortify.bicSelect <- function(model, data = NULL, select = NULL, ...) {
 
 
 #' Convert a sequence of regression models into a data frame for plotting
-#' 
-#' Supplement the fitted values and residuals of a sequence of regression 
-#' models (such as robust least angle regression models or sparse least trimmed 
-#' squares regression models) with other useful information for diagnostic 
+#'
+#' Supplement the fitted values and residuals of a sequence of regression
+#' models (such as robust least angle regression models or sparse least trimmed
+#' squares regression models) with other useful information for diagnostic
 #' plots.
-#' 
+#'
 #' @method fortify seqModel
 #' @aliases fortify.rlars
-#' 
+#'
 #' @param model  the model fit to be converted.
 #' @param data  currently ignored.
-#' @param s  for the \code{"seqModel"} method, an integer vector giving 
-#' the steps of the submodels to be converted (the default is to use the 
-#' optimal submodel).  For the \code{"sparseLTS"} method, an integer vector 
-#' giving the indices of the models to be converted (the default is to use the 
+#' @param s  for the \code{"seqModel"} method, an integer vector giving
+#' the steps of the submodels to be converted (the default is to use the
+#' optimal submodel).  For the \code{"sparseLTS"} method, an integer vector
+#' giving the indices of the models to be converted (the default is to use the
 #' optimal model for each of the requested fits).
-#' @param fit  a character string specifying which fit to convert.  Possible 
-#' values are \code{"reweighted"} (the default) to convert the reweighted fit, 
+#' @param fit  a character string specifying which fit to convert.  Possible
+#' values are \code{"reweighted"} (the default) to convert the reweighted fit,
 #' \code{"raw"} to convert the raw fit, or \code{"both"} to convert both fits.
-#' @param covArgs  a list of arguments to be passed to 
+#' @param covArgs  a list of arguments to be passed to
 #' \code{\link[robustbase]{covMcd}} for computing robust Mahalanobis distances.
-#' @param \dots  additional arguments to be passed to 
-#' \code{\link[robustbase]{covMcd}} can be specified directly instead of via 
+#' @param \dots  additional arguments to be passed to
+#' \code{\link[robustbase]{covMcd}} can be specified directly instead of via
 #' \code{covArgs}.
-#' 
-#' @return  A data frame containing the columns listed below, as well as 
-#' additional information stored in the attributes \code{"qqLine"} (intercepts 
-#' and slopes of the respective reference lines to be displayed in residual Q-Q 
-#' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff 
-#' points for detecting leverage points), and \code{"facets"} (default faceting 
+#'
+#' @return  A data frame containing the columns listed below, as well as
+#' additional information stored in the attributes \code{"qqLine"} (intercepts
+#' and slopes of the respective reference lines to be displayed in residual Q-Q
+#' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff
+#' points for detecting leverage points), and \code{"facets"} (default faceting
 #' formula for the diagnostic plots).
-#' @returnItem step  the steps (for the \code{"seqModel"} method) or indices 
-#' (for the \code{"sparseLTS"} method) of the models (only returned if more 
-#' than one model is requested).
-#' @returnItem fit  the model fits (only returned if both the reweighted 
-#' and raw fit are requested in the \code{"sparseLTS"} method).
-#' @returnItem index  the indices of the observations.
-#' @returnItem fitted  the fitted values.
-#' @returnItem residual  the standardized residuals.
-#' @returnItem theoretical  the corresponding theoretical quantiles from the 
-#' standard normal distribution.
-#' @returnItem qqd  the absolute distances from a reference line through the 
-#' first and third sample and theoretical quartiles.
-#' @returnItem rd  the robust Mahalanobis distances computed via the MCD (see 
-#' \code{\link[robustbase]{covMcd}}).
-#' @returnItem xyd  the pairwise maxima of the absolute values of the 
-#' standardized residuals and the robust Mahalanobis distances, divided by the 
-#' respective other outlier detection cutoff point.
-#' @returnItem weight  the weights indicating regression outliers.
-#' @returnItem leverage  logicals indicating leverage points (i.e., outliers in 
-#' the predictor space).
-#' @returnItem classification  a factor with levels \code{"outlier"} 
-#' (regression outliers) and \code{"good"} (data points following the model).
-#' 
+#' \describe{
+#'   \item{\code{step}}{the steps (for the \code{"seqModel"} method) or indices
+#'   (for the \code{"sparseLTS"} method) of the models (only returned if more
+#'   than one model is requested).}
+#'   \item{\code{fit}}{the model fits (only returned if both the reweighted
+#'   and raw fit are requested in the \code{"sparseLTS"} method).}
+#'   \item{\code{index}}{the indices of the observations.}
+#'   \item{\code{fitted}}{the fitted values.}
+#'   \item{\code{residual}}{the standardized residuals.}
+#'   \item{\code{theoretical}}{the corresponding theoretical quantiles from the
+#'   standard normal distribution.}
+#'   \item{\code{qqd}}{the absolute distances from a reference line through the
+#'   first and third sample and theoretical quartiles.}
+#'   \item{\code{rd}}{the robust Mahalanobis distances computed via the MCD
+#'   (see \code{\link[robustbase]{covMcd}}).}
+#'   \item{\code{xyd}}{the pairwise maxima of the absolute values of the
+#'   standardized residuals and the robust Mahalanobis distances, divided by
+#'   the respective other outlier detection cutoff point.}
+#'   \item{\code{weight}}{the weights indicating regression outliers.}
+#'   \item{\code{leverage}}{logicals indicating leverage points (i.e., outliers
+#'   in the predictor space).}
+#'   \item{\code{classification}}{a factor with levels \code{"outlier"}
+#'   (regression outliers) and \code{"good"} (data points following the model).}
+#' }
+#'
 #' @author Andreas Alfons
-#' 
-#' @seealso \code{\link[ggplot2]{fortify}}, \code{\link{diagnosticPlot}}, 
+#'
+#' @seealso \code{\link[ggplot2]{fortify}}, \code{\link{diagnosticPlot}},
 #' \code{\link{sparseLTS}}, \code{\link{sparseLTS}}
-#' 
+#'
 #' @example inst/doc/examples/example-fortify.R
-#' 
+#'
 #' @keywords utilities
-#' 
+#'
 #' @import ggplot2
 #' @export
 
@@ -193,7 +195,7 @@ fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
     }
   }
   if(!ok) rd <- rep.int(NA, n)
-  # take maximum of the distances in the x- and y-space, divided by the 
+  # take maximum of the distances in the x- and y-space, divided by the
   # respective other cutoff point
   q <- sqrt(qchisq(0.975, p))
   xyd <- pmax.int(abs(rd/2.5), abs(residuals/q))
@@ -203,8 +205,8 @@ fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
   class <- ifelse(wt == 0, "outlier", "good")
   class <- factor(class, levels=c("outlier", "good"))
   ## construct data frame
-  data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-                     theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, 
+  data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals,
+                     theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd,
                      weight=wt, leverage=leverage, classification=class)
   attr(data, "qqLine") <- as.data.frame(qql)
   attr(data, "q") <- data.frame(q=max(q, 2.5))
@@ -217,8 +219,8 @@ fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
 #' @method fortify sparseLTS
 #' @export
 
-fortify.sparseLTS <- function(model, data, s = NA, 
-                              fit = c("reweighted", "raw", "both"), 
+fortify.sparseLTS <- function(model, data, s = NA,
+                              fit = c("reweighted", "raw", "both"),
                               covArgs = list(...), ...) {
   ## initializations
   fit <- match.arg(fit)
@@ -258,23 +260,23 @@ fortify.sparseLTS <- function(model, data, s = NA,
     reweighted <- fortifySparseLTSFit(model, s=s[1], fit="reweighted", x=x)
     raw <- fortifySparseLTSFit(model, s=s[2], fit="raw", x=x)
     ## combine data for Q-Q reference line
-    qql <- data.frame(fit=factor(fits, levels=fits), 
-                      rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
+    qql <- data.frame(fit=factor(fits, levels=fits),
+                      rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")),
                       row.names=NULL)
     ## combine data for cutoff chi-squared quantile
-    q <- data.frame(fit=factor(fits, levels=fits), 
-                    rbind(attr(reweighted, "q"), attr(raw, "q")), 
+    q <- data.frame(fit=factor(fits, levels=fits),
+                    rbind(attr(reweighted, "q"), attr(raw, "q")),
                     row.names=NULL)
     ## combine results
     n <- c(nrow(reweighted), nrow(raw))
-    data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
+    data <- data.frame(fit=rep.int(factor(fits, levels=fits), n),
                        rbind(reweighted, raw), row.names=NULL)
     attr(data, "facets") <- . ~ fit
     attr(data, "qqLine") <- qql
     attr(data, "q") <- q
   } else if(length(s) > 1) {
     # extract the data from each requested step
-    data <- lapply(s, fortifySparseLTSStep, model=model, fit=fit, 
+    data <- lapply(s, fortifySparseLTSStep, model=model, fit=fit,
                    x=x, covArgs=covArgs)
     qql <- lapply(data, attr, which="qqLine")
     q <- lapply(data, attr, which="q")
@@ -297,26 +299,26 @@ fortify.sparseLTS <- function(model, data, s = NA,
 ## workhorse functions
 
 # fortify a single sparse LTS step
-fortifySparseLTSStep <- function(s, model, fit = "reweighted", 
+fortifySparseLTSStep <- function(s, model, fit = "reweighted",
                                  x = NULL, covArgs = list()) {
   ## construct data frame with all information for plotting
   if(fit == "both") {
     fits <- c("reweighted", "raw")
     ## call workhorse function for each fit
-    reweighted <- fortifySparseLTSFit(model, s=s, fit="reweighted", 
+    reweighted <- fortifySparseLTSFit(model, s=s, fit="reweighted",
                                       x=x, covArgs=covArgs)
     raw <- fortifySparseLTSFit(model, s=s, fit="raw", x=x, covArgs=covArgs)
     ## combine data for Q-Q reference line
-    qql <- data.frame(fit=factor(fits, levels=fits), 
-                      rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")), 
+    qql <- data.frame(fit=factor(fits, levels=fits),
+                      rbind(attr(reweighted, "qqLine"), attr(raw, "qqLine")),
                       row.names=NULL)
     ## combine data for cutoff chi-squared quantile
-    q <- data.frame(fit=factor(fits, levels=fits), 
-                    rbind(attr(reweighted, "q"), attr(raw, "q")), 
+    q <- data.frame(fit=factor(fits, levels=fits),
+                    rbind(attr(reweighted, "q"), attr(raw, "q")),
                     row.names=NULL)
     ## combine results
     n <- c(nrow(reweighted), nrow(raw))
-    data <- data.frame(fit=rep.int(factor(fits, levels=fits), n), 
+    data <- data.frame(fit=rep.int(factor(fits, levels=fits), n),
                        rbind(reweighted, raw), row.names=NULL)
     attr(data, "facets") <- . ~ fit
     attr(data, "qqLine") <- qql
@@ -327,7 +329,7 @@ fortifySparseLTSStep <- function(s, model, fit = "reweighted",
 }
 
 # fortify a single sparse LTS fit
-fortifySparseLTSFit <- function(model, s, fit = "reweighted", 
+fortifySparseLTSFit <- function(model, s, fit = "reweighted",
                                 x = NULL, covArgs = list()) {
   ## extract fitted values
   fitted <- fitted(model, s=s, fit=fit)
@@ -362,7 +364,7 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
     # check fraction for subset size
     if(alpha < 0.5) {
       alpha <- 0.5
-      warning(sprintf("cannot compute MCD with h = %d; using h = %d", 
+      warning(sprintf("cannot compute MCD with h = %d; using h = %d",
                       model$quan, h.alpha.n(alpha, n, p)))
     }
     # compute distances
@@ -386,7 +388,7 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
     }
   }
   if(!ok) rd <- rep.int(NA, n)
-  # take maximum of the distances in the x- and y-space, divided by the 
+  # take maximum of the distances in the x- and y-space, divided by the
   # respective other cutoff point
   q <- sqrt(qchisq(0.975, p))
   xyd <- pmax.int(abs(rd/2.5), abs(residuals/q))
@@ -396,8 +398,8 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
   class <- ifelse(wt == 0, "outlier", "good")
   class <- factor(class, levels=c("outlier", "good"))
   ## construct data frame
-  data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals, 
-                     theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd, 
+  data <- data.frame(index=seq_len(n), fitted=fitted, residual=residuals,
+                     theoretical=theoretical, qqd=qqd, rd=rd, xyd=xyd,
                      weight=wt, leverage=leverage, classification=class)
   attr(data, "qqLine") <- as.data.frame(qql)
   attr(data, "q") <- data.frame(q=max(q, 2.5))

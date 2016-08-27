@@ -6,155 +6,159 @@
 # -------------------------------------------------------------------
 
 #' Robust least angle regression
-#' 
-#' Robustly sequence candidate predictors according to their predictive content 
+#'
+#' Robustly sequence candidate predictors according to their predictive content
 #' and find the optimal model along the sequence.
-#' 
+#'
 #' @aliases print.rlars
-#' 
+#'
 #' @param formula  a formula describing the full model.
-#' @param data  an optional data frame, list or environment (or object coercible 
-#' to a data frame by \code{\link{as.data.frame}}) containing the variables in 
-#' the model.  If not found in data, the variables are taken from 
-#' \code{environment(formula)}, typically the environment from which 
+#' @param data  an optional data frame, list or environment (or object coercible
+#' to a data frame by \code{\link{as.data.frame}}) containing the variables in
+#' the model.  If not found in data, the variables are taken from
+#' \code{environment(formula)}, typically the environment from which
 #' \code{rlars} is called.
 #' @param x  a matrix or data frame containing the candidate predictors.
 #' @param y  a numeric vector containing the response.
-#' @param sMax  an integer giving the number of predictors to be sequenced.  If 
-#' it is \code{NA} (the default), predictors are sequenced as long as there are 
+#' @param sMax  an integer giving the number of predictors to be sequenced.  If
+#' it is \code{NA} (the default), predictors are sequenced as long as there are
 #' twice as many observations as predictors.
-#' @param centerFun  a function to compute a robust estimate for the center 
+#' @param centerFun  a function to compute a robust estimate for the center
 #' (defaults to \code{\link[stats]{median}}).
-#' @param scaleFun  a function to compute a robust estimate for the scale 
+#' @param scaleFun  a function to compute a robust estimate for the scale
 #' (defaults to \code{\link[stats]{mad}}).
-#' @param winsorize  a logical indicating whether to clean the full data set by 
-#' multivariate winsorization, i.e., to perform data cleaning RLARS instead of 
+#' @param winsorize  a logical indicating whether to clean the full data set by
+#' multivariate winsorization, i.e., to perform data cleaning RLARS instead of
 #' plug-in RLARS (defaults to \code{FALSE}).
-#' @param const numeric; tuning constant to be used in the initial corralation 
+#' @param const numeric; tuning constant to be used in the initial corralation
 #' estimates based on adjusted univariate winsorization (defaults to 2).
-#' @param prob  numeric; probability for the quantile of the 
-#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate or 
+#' @param prob  numeric; probability for the quantile of the
+#' \eqn{\chi^{2}}{chi-squared} distribution to be used in bivariate or
 #' multivariate winsorization (defaults to 0.95).
-#' @param fit  a logical indicating whether to fit submodels along the sequence 
+#' @param fit  a logical indicating whether to fit submodels along the sequence
 #' (\code{TRUE}, the default) or to simply return the sequence (\code{FALSE}).
-#' @param s  an integer vector of length two giving the first and last step 
-#' along the sequence for which to compute submodels.  The default is to start 
-#' with a model containing only an intercept (step 0) and iteratively add all 
-#' variables along the sequence (step \code{sMax}).  If the second element is 
-#' \code{NA}, predictors are added to the model as long as there are twice 
-#' as many observations as predictors.  If only one value is supplied, it is 
+#' @param s  an integer vector of length two giving the first and last step
+#' along the sequence for which to compute submodels.  The default is to start
+#' with a model containing only an intercept (step 0) and iteratively add all
+#' variables along the sequence (step \code{sMax}).  If the second element is
+#' \code{NA}, predictors are added to the model as long as there are twice
+#' as many observations as predictors.  If only one value is supplied, it is
 #' recycled.
-#' @param regFun  a function to compute robust linear regressions along the 
+#' @param regFun  a function to compute robust linear regressions along the
 #' sequence (defaults to \code{\link[robustbase]{lmrob}}).
 #' @param regArgs  a list of arguments to be passed to \code{regFun}.
-#' @param crit  a character string specifying the optimality criterion to be 
-#' used for selecting the final model.  Possible values are \code{"BIC"} for 
-#' the Bayes information criterion and \code{"PE"} for resampling-based 
+#' @param crit  a character string specifying the optimality criterion to be
+#' used for selecting the final model.  Possible values are \code{"BIC"} for
+#' the Bayes information criterion and \code{"PE"} for resampling-based
 #' prediction error estimation.
-#' @param splits  an object giving data splits to be used for prediction error 
+#' @param splits  an object giving data splits to be used for prediction error
 #' estimation (see \code{\link[perry]{perry}}).
-#' @param cost  a cost function measuring prediction loss (see 
-#' \code{\link[perry]{perry}} for some requirements).  The 
-#' default is to use the root trimmed mean squared prediction error 
+#' @param cost  a cost function measuring prediction loss (see
+#' \code{\link[perry]{perry}} for some requirements).  The
+#' default is to use the root trimmed mean squared prediction error
 #' (see \code{\link[perry]{cost}}).
-#' @param costArgs  a list of additional arguments to be passed to the 
+#' @param costArgs  a list of additional arguments to be passed to the
 #' prediction loss function \code{cost}.
-#' @param selectBest,seFactor  arguments specifying a criterion for selecting 
-#' the best model (see \code{\link[perry]{perrySelect}}).  The default is to 
+#' @param selectBest,seFactor  arguments specifying a criterion for selecting
+#' the best model (see \code{\link[perry]{perrySelect}}).  The default is to
 #' use a one-standard-error rule.
-#' @param ncores  a positive integer giving the number of processor cores to be 
-#' used for parallel computing (the default is 1 for no parallelization).  If 
-#' this is set to \code{NA}, all available processor cores are used.  For 
-#' fitting models along the sequence and for prediction error estimation, 
-#' parallel computing is implemented on the \R level using package 
-#' \pkg{parallel}.  Otherwise parallel computing for some of of the more 
-#' computer-intensive computations in the sequencing step is implemented on the 
+#' @param ncores  a positive integer giving the number of processor cores to be
+#' used for parallel computing (the default is 1 for no parallelization).  If
+#' this is set to \code{NA}, all available processor cores are used.  For
+#' fitting models along the sequence and for prediction error estimation,
+#' parallel computing is implemented on the \R level using package
+#' \pkg{parallel}.  Otherwise parallel computing for some of of the more
+#' computer-intensive computations in the sequencing step is implemented on the
 #' C++ level via OpenMP (\url{http://openmp.org/}).
-#' @param cl  a \pkg{parallel} cluster for parallel computing as generated by 
-#' \code{\link[parallel]{makeCluster}}.  This is preferred over \code{ncores} 
-#' for tasks that are parallelized on the \R level, in which case \code{ncores} 
+#' @param cl  a \pkg{parallel} cluster for parallel computing as generated by
+#' \code{\link[parallel]{makeCluster}}.  This is preferred over \code{ncores}
+#' for tasks that are parallelized on the \R level, in which case \code{ncores}
 #' is only used for tasks that are parallelized on the C++ level.
-#' @param seed  optional initial seed for the random number generator (see 
-#' \code{\link{.Random.seed}}).  This is useful because many robust regression 
-#' functions (including \code{\link[robustbase]{lmrob}}) involve randomness, 
-#' or for prediction error estimation.  On parallel \R worker processes, random 
-#' number streams are used and the seed is set via 
+#' @param seed  optional initial seed for the random number generator (see
+#' \code{\link{.Random.seed}}).  This is useful because many robust regression
+#' functions (including \code{\link[robustbase]{lmrob}}) involve randomness,
+#' or for prediction error estimation.  On parallel \R worker processes, random
+#' number streams are used and the seed is set via
 #' \code{\link{clusterSetRNGStream}}.
-#' @param model  a logical indicating whether the model data should be included 
+#' @param model  a logical indicating whether the model data should be included
 #' in the returned object.
-#' @param tol  a small positive numeric value.  This is used in bivariate 
-#' winsorization to determine whether the initial estimate from adjusted 
-#' univariate winsorization is close to 1 in absolute value.  In this case, 
-#' bivariate winsorization would fail since the points form almost a straight 
+#' @param tol  a small positive numeric value.  This is used in bivariate
+#' winsorization to determine whether the initial estimate from adjusted
+#' univariate winsorization is close to 1 in absolute value.  In this case,
+#' bivariate winsorization would fail since the points form almost a straight
 #' line, and the initial estimate is returned.
-#' @param \dots  additional arguments to be passed down.  For the default 
-#' method, additional arguments to be passed down to 
+#' @param \dots  additional arguments to be passed down.  For the default
+#' method, additional arguments to be passed down to
 #' \code{\link[=standardize]{robStandardize}}.
-#' 
-#' @return 
-#' If \code{fit} is \code{FALSE}, an integer vector containing the indices of 
+#'
+#' @return
+#' If \code{fit} is \code{FALSE}, an integer vector containing the indices of
 #' the sequenced predictors.
-#'  
-#' Else if \code{crit} is \code{"PE"}, an object of class 
-#' \code{"perrySeqModel"} (inheriting from class \code{"perrySelect"}, 
-#' see \code{\link[perry]{perrySelect}}).  It contains information on the 
-#' prediction error criterion, and includes the final model as component 
+#'
+#' Else if \code{crit} is \code{"PE"}, an object of class
+#' \code{"perrySeqModel"} (inheriting from class \code{"perrySelect"},
+#' see \code{\link[perry]{perrySelect}}).  It contains information on the
+#' prediction error criterion, and includes the final model as component
 #' \code{finalModel}.
-#' 
-#' Otherwise an object of class \code{"rlars"} (inheriting from class 
+#'
+#' Otherwise an object of class \code{"rlars"} (inheriting from class
 #' \code{"seqModel"}) with the following components:
-#' @returnItem active  an integer vector containing the indices of the 
-#' sequenced predictors.
-#' @returnItem s  an integer vector containing the steps for which submodels 
-#' along the sequence have been computed.
-#' @returnItem coefficients  a numeric matrix in which each column contains the 
-#' regression coefficients of the corresponding submodel along the sequence.
-#' @returnItem fitted.values  a numeric matrix in which each column contains 
-#' the fitted values of the corresponding submodel along the sequence.
-#' @returnItem residuals  a numeric matrix in which each column contains 
-#' the residuals of the corresponding submodel along the sequence.
-#' @returnItem df  an integer vector containing the degrees of freedom of the 
-#' submodels along the sequence (i.e., the number of estimated coefficients).
-#' @returnItem robust  a logical indicating whether a robust fit was computed 
-#' (\code{TRUE} for \code{"rlars"} models).
-#' @returnItem scale  a numeric vector giving the robust residual scale 
-#' estimates for the submodels along the sequence.
-#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC 
-#' values and indicating the final model (only returned if argument \code{crit} 
-#' is \code{"BIC"} and argument \code{s} indicates more than one step along the 
-#' sequence).
-#' @returnItem muX  a numeric vector containing the center estimates of the 
-#' predictors.
-#' @returnItem sigmaX  a numeric vector containing the scale estimates of the 
-#' predictors.
-#' @returnItem muY  numeric; the center estimate of the response.
-#' @returnItem sigmaY  numeric; the scale estimate of the response.
-#' @returnItem x  the matrix of candidate predictors (if \code{model} is 
-#' \code{TRUE}).
-#' @returnItem y  the response (if \code{model} is \code{TRUE}).
-#' @returnItem w  a numeric vector giving the data cleaning weights (if 
-#' \code{winsorize} is \code{TRUE}).
-#' @returnItem call  the matched function call.
-#' 
-#' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and 
+#' \describe{
+#'   \item{\code{active}}{an integer vector containing the indices of the
+#'   sequenced predictors.}
+#'   \item{\code{s}}{an integer vector containing the steps for which submodels
+#'   along the sequence have been computed.}
+#'   \item{\code{coefficients}}{a numeric matrix in which each column contains
+#'   the regression coefficients of the corresponding submodel along the
+#'   sequence.}
+#'   \item{\code{fitted.values}}{a numeric matrix in which each column contains
+#'   the fitted values of the corresponding submodel along the sequence.}
+#'   \item{\code{residuals}}{a numeric matrix in which each column contains
+#'   the residuals of the corresponding submodel along the sequence.}
+#'   \item{\code{df}}{an integer vector containing the degrees of freedom of
+#'   the submodels along the sequence (i.e., the number of estimated
+#'   coefficients).}
+#'   \item{\code{robust}}{a logical indicating whether a robust fit was
+#'   computed (\code{TRUE} for \code{"rlars"} models).}
+#'   \item{\code{scale}}{a numeric vector giving the robust residual scale
+#'   estimates for the submodels along the sequence.}
+#'   \item{\code{crit}}{an object of class \code{"bicSelect"} containing the
+#'   BIC values and indicating the final model (only returned if argument
+#'   \code{crit} is \code{"BIC"} and argument \code{s} indicates more than one
+#'   step along the sequence).}
+#'   \item{\code{muX}}{a numeric vector containing the center estimates of the
+#'   predictors.}
+#'   \item{\code{sigmaX}}{a numeric vector containing the scale estimates of
+#'   the predictors.}
+#'   \item{\code{muY}}{numeric; the center estimate of the response.}
+#'   \item{\code{sigmaY}}{numeric; the scale estimate of the response.}
+#'   \item{\code{x}}{the matrix of candidate predictors (if \code{model} is
+#'   \code{TRUE}).}
+#'   \item{\code{y}}{the response (if \code{model} is \code{TRUE}).}
+#'   \item{\code{w}}{a numeric vector giving the data cleaning weights (if
+#'   \code{winsorize} is \code{TRUE}).}
+#'   \item{\code{call}}{the matched function call.}
+#' }
+#'
+#' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
 #' Ruben H. Zamar
-#' 
-#' @references 
-#' Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model 
-#' selection based on least angle regression. \emph{Journal of the American 
+#'
+#' @references
+#' Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model
+#' selection based on least angle regression. \emph{Journal of the American
 #' Statistical Association}, \bold{102}(480), 1289--1299.
-#' 
-#' @seealso \code{\link[=coef.seqModel]{coef}}, 
-#' \code{\link[=fitted.seqModel]{fitted}}, 
-#' \code{\link[=plot.seqModel]{plot}}, 
-#' \code{\link[=predict.seqModel]{predict}}, 
-#' \code{\link[=residuals.seqModel]{residuals}}, 
+#'
+#' @seealso \code{\link[=coef.seqModel]{coef}},
+#' \code{\link[=fitted.seqModel]{fitted}},
+#' \code{\link[=plot.seqModel]{plot}},
+#' \code{\link[=predict.seqModel]{predict}},
+#' \code{\link[=residuals.seqModel]{residuals}},
 #' \code{\link[robustbase]{lmrob}}
-#' 
+#'
 #' @example inst/doc/examples/example-rlars.R
-#' 
+#'
 #' @keywords regression robust
-#' 
+#'
 #' @export
 #' @import parallel
 #' @import perry
@@ -198,14 +202,14 @@ rlars.formula <- function(formula, data, ...) {
 #' @method rlars default
 #' @export
 
-rlars.default <- function(x, y, sMax = NA, centerFun = median, 
-                          scaleFun = mad, winsorize = FALSE, const = 2, 
-                          prob = 0.95, fit = TRUE, s = c(0, sMax), 
-                          regFun = lmrob, regArgs = list(), 
-                          crit = c("BIC", "PE"), splits = foldControl(), 
-                          cost = rtmspe, costArgs = list(), 
-                          selectBest = c("hastie", "min"), seFactor = 1, 
-                          ncores = 1, cl = NULL, seed = NULL, model = TRUE, 
+rlars.default <- function(x, y, sMax = NA, centerFun = median,
+                          scaleFun = mad, winsorize = FALSE, const = 2,
+                          prob = 0.95, fit = TRUE, s = c(0, sMax),
+                          regFun = lmrob, regArgs = list(),
+                          crit = c("BIC", "PE"), splits = foldControl(),
+                          cost = rtmspe, costArgs = list(),
+                          selectBest = c("hastie", "min"), seFactor = 1,
+                          ncores = 1, cl = NULL, seed = NULL, model = TRUE,
                           tol = .Machine$double.eps^0.5, ...) {
   ## initializations
   matchedCall <- match.call()  # get function call
@@ -230,9 +234,9 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     ncores <- 1  # use default value
     warning("invalid value of 'ncores'; using default value")
   } else ncores <- as.integer(ncores)
-  
+
   ## check whether submodels along the sequence should be computed
-  ## if yes, check whether the final model should be found via resampling-based 
+  ## if yes, check whether the final model should be found via resampling-based
   ## prediction error estimation
   fit <- isTRUE(fit)
   if(fit) {
@@ -245,7 +249,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
         if(s[1] > sMax) s[1] <- sMax
       }
       # set up function call to be passed to perryFit()
-      remove <- c("x", "y", "crit", "splits", "cost", "costArgs", 
+      remove <- c("x", "y", "crit", "splits", "cost", "costArgs",
                   "selectBest", "seFactor", "ncores", "cl", "seed")
       remove <- match(remove, names(matchedCall), nomatch=0)
       call <- matchedCall[-remove]
@@ -254,9 +258,9 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
       selectBest <- match.arg(selectBest)
-      out <- perryFit(call, x=x, y=y, splits=splits, 
-                      predictArgs=list(s=s, recycle=TRUE), cost=cost, 
-                      costArgs=costArgs, envir=parent.frame(), 
+      out <- perryFit(call, x=x, y=y, splits=splits,
+                      predictArgs=list(s=s, recycle=TRUE), cost=cost,
+                      costArgs=costArgs, envir=parent.frame(),
                       ncores=ncores, cl=cl, seed=seed)
       out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
       fits(out) <- s
@@ -272,7 +276,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       return(out)
     }
   }
-  
+
   ## prepare the data
   if(!is.null(seed)) set.seed(seed)
   # robustly standardize data
@@ -285,7 +289,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
   # if requested, clean the data via multivariate winsorization
   if(winsorize) {
     # obtain data cleaning weights from winsorization
-    w <- winsorize(cbind(z, xs), standardized=TRUE, 
+    w <- winsorize(cbind(z, xs), standardized=TRUE,
                    const=const, prob=prob, return="weights")
     # standardize data with mean and standard deviation
     z <- standardize(w*z)    # standardize cleaned response
@@ -297,14 +301,14 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     muX <- muX + attr(xs, "center")
     sigmaX <- sigmaX * attr(xs, "scale")
   }
-  
+
   ## call C++ function
-  active <- .Call("R_fastLars", R_x=xs, R_y=z, R_sMax=sMax, 
-                  R_robust=!winsorize, R_c=as.numeric(const), 
-                  R_prob=as.numeric(prob), R_tol=as.numeric(tol), 
-                  scaleFun=scaleFun, R_ncores=ncores, 
+  active <- .Call("R_fastLars", R_x=xs, R_y=z, R_sMax=sMax,
+                  R_robust=!winsorize, R_c=as.numeric(const),
+                  R_prob=as.numeric(prob), R_tol=as.numeric(tol),
+                  scaleFun=scaleFun, R_ncores=ncores,
                   PACKAGE="robustHD")
-  
+
   ## choose optimal model according to specified criterion
   if(fit) {
     # check whether parallel computing should be used
@@ -326,8 +330,8 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
     # add ones to matrix of predictors to account for intercept
     x <- addIntercept(x)
     # call function to fit models along the sequence
-    out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2], robust=TRUE, 
-                    regFun=regFun, useFormula=regControl$useFormula, 
+    out <- seqModel(x, y, active=active, sMin=s[1], sMax=s[2], robust=TRUE,
+                    regFun=regFun, useFormula=regControl$useFormula,
                     regArgs=regArgs, crit=crit, cl=cl)
     # add center and scale estimates
     out[c("muX", "sigmaX", "muY", "sigmaY")] <- list(muX, sigmaX, muY, sigmaY)
