@@ -52,7 +52,7 @@ weights.rlm <- function(object, ...) object$w
 #' @export
 
 weights.sparseLTS <- function(object, type = "robustness", s = NA,
-                         fit = c("reweighted", "raw", "both"),
-                         drop = !is.null(s), ...) {
+                              fit = c("reweighted", "raw", "both"),
+                              drop = !is.null(s), ...) {
   getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)
 }
