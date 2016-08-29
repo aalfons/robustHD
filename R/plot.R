@@ -169,7 +169,7 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
 #   steps <- seq_along(lambda)  # step numbers
 #   if(fit %in% c("reweighted", "both")) {
 #     cdelta <- model$cnp2
-#     wt <- as.matrix(wt(model, s=NULL, fit="raw"))
+#     wt <- as.matrix(weights(model, type="robustness", s=NULL, fit="raw"))
 #     sigmaX <- do.call(rbind,
 #                       lapply(steps, function(s) {
 #                         xOk <- x[wt[, s] == 1, , drop=FALSE]
@@ -662,7 +662,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' with the largest distances from that line are identified by a label (the
 #' observation number).  The default for \code{id.n} is the number of
 #' regression outliers, i.e., the number of observations whose residuals are
-#' too large (cf. \code{\link{wt}}).
+#' too large (cf. \code{\link[=weights.sparseLTS]{weights}}).
 #'
 #' In the plots of the standardized residuals versus their index or the fitted
 #' values, horizontal reference lines are drawn at 0 and +/-2.5.  The
@@ -670,7 +670,7 @@ labelify <- function(data, which, id.n = NULL) {
 #' standardized residuals are identified by a label (the observation
 #' number).  The default for \code{id.n} is the number of regression outliers,
 #' i.e., the number of observations whose absolute residuals are too large (cf.
-#' \code{\link{wt}}).
+#' \code{\link[=weights.sparseLTS]{weights}}).
 #'
 #' For the regression diagnostic plot, the robust Mahalanobis distances of the
 #' predictor variables are computed via the MCD based on only those predictors
@@ -683,10 +683,11 @@ labelify <- function(data, which, id.n = NULL) {
 #' of the standardized residuals and/or largest robust Mahalanobis distances
 #' are identified by a label (the observation number).  The default for
 #' \code{id.n} is the number of all outliers: regression outliers (i.e.,
-#' observations whose absolute residuals are too large, cf. \code{\link{wt}})
-#' and leverage points (i.e., observations with robust Mahalanobis distance
-#' larger than the 97.5\% quantile of the \eqn{\chi^{2}}{chi-squared}
-#' distribution with \eqn{p} degrees of freedom).
+#' observations whose absolute residuals are too large, cf.
+#' \code{\link[=weights.sparseLTS]{weights}}) and leverage points (i.e.,
+#' observations with robust Mahalanobis distance larger than the 97.5\%
+#' quantile of the \eqn{\chi^{2}}{chi-squared} distribution with \eqn{p}
+#' degrees of freedom).
 #'
 #' @aliases diagnosticPlot.rlars diagnosticPlot.grplars diagnosticPlot.tslarsP
 #'

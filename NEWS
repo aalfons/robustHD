@@ -1,3 +1,9 @@
+Changes in robustHD version 0.5.2
+
+    + Method for function weights() is now used to retrieve robustness weights
+      from objects of class "sparseLTS" (with argument type = "robustness").
+
+
 Changes in robustHD version 0.5.1
 
     + Explicitly calling C++ function std::abs() rather than abs() to avoid

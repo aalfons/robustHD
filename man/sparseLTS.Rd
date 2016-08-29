@@ -265,7 +265,8 @@ of Applied Statistics}, \bold{7}(1), 226--248.
 \code{\link[=plot.sparseLTS]{plot}},
 \code{\link[=predict.sparseLTS]{predict}},
 \code{\link[=residuals.sparseLTS]{residuals}},
-\code{\link{wt}}, \code{\link[robustbase]{ltsReg}}
+\code{\link[=weights.sparseLTS]{weights}},
+\code{\link[robustbase]{ltsReg}}
 }
 \keyword{regression}
 \keyword{robust}

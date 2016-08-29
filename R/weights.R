@@ -16,6 +16,8 @@ weights.rlm <- function(object, ...) object$w
 #' squares regression models.
 #'
 #' @param object  the model fit from which to extract outlier weights.
+#' @param type  the type of weights to be returned.  Currently only robustness
+#' weights are implemented (\code{"robustness"}).
 #' @param s  an integer vector giving the indices of the models for which to
 #' extract outlier weights.  If \code{fit} is \code{"both"}, this can be a list
 #' with two components, with the first component giving the indices of the
@@ -42,20 +44,14 @@ weights.rlm <- function(object, ...) object$w
 #'
 #' @seealso \code{\link{sparseLTS}}
 #'
-#' @example inst/doc/examples/example-wt.R
+#' @example inst/doc/examples/example-weights.R
 #'
 #' @keywords regression
 #'
+#' @method weights sparseLTS
 #' @export
 
-wt <- function(object, ...) UseMethod("wt")
-
-
-#' @rdname wt
-#' @method wt sparseLTS
-#' @export
-
-wt.sparseLTS <- function(object, s = NA,
+weights.sparseLTS <- function(object, type = "robustness", s = NA,
                          fit = c("reweighted", "raw", "both"),
                          drop = !is.null(s), ...) {
   getComponent(object, "wt", s=s, fit=fit, drop=drop, ...)

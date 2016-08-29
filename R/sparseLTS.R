@@ -197,7 +197,8 @@
 #' \code{\link[=plot.sparseLTS]{plot}},
 #' \code{\link[=predict.sparseLTS]{predict}},
 #' \code{\link[=residuals.sparseLTS]{residuals}},
-#' \code{\link{wt}}, \code{\link[robustbase]{ltsReg}}
+#' \code{\link[=weights.sparseLTS]{weights}},
+#' \code{\link[robustbase]{ltsReg}}
 #'
 #' @example inst/doc/examples/example-sparseLTS.R
 #'

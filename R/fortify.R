@@ -337,7 +337,7 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
   residuals <- residuals(model, s=s, fit=fit, standardized=TRUE)
   n <- length(residuals)  # number of observations
   ## extract outlier weights
-  wt <- wt(model, s=s, fit=fit)
+  wt <- weights(model, type="robustness", s=s, fit=fit)
   ## compute theoretical quantiles and distances from Q-Q reference line
   theoretical <- qqNorm(residuals)
   qql <- qqLine(residuals)  # Q-Q reference line
