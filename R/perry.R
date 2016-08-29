@@ -1,7 +1,7 @@
-# ----------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Resampling-based prediction error for a sequential regression model
 #'

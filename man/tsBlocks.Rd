@@ -7,35 +7,35 @@
 tsBlocks(x, y, p = 2, subset = NULL, intercept = TRUE)
 }
 \arguments{
-\item{x}{a numeric matrix or data frame containing the exogenous predictor 
+\item{x}{a numeric matrix or data frame containing the exogenous predictor
 series.}
 
 \item{y}{a numeric vector containing the response series.}
 
 \item{p}{an integer giving the number of lags to include (defaults to 2).}
 
-\item{subset}{a logical or integer vector defining a subset of observations 
+\item{subset}{a logical or integer vector defining a subset of observations
 from which to construct the matrix of predictor blocks.}
 
-\item{intercept}{a logical indicating whether a column of ones should be 
+\item{intercept}{a logical indicating whether a column of ones should be
 added to the matrix of predictor blocks to account for the intercept.}
 }
 \value{
-A matrix containing blocks of original and lagged values of the 
+A matrix containing blocks of original and lagged values of the
 time series \code{y} and \code{x}.
 }
 \description{
-Construct blocks of original and lagged values for autoregressive time 
-series models with exogenous inputs.  The typical use case is to supply the 
-output as \code{newdata} argument to the 
-\code{\link[=predict.tslars]{predict}} method of robust groupwise least 
+Construct blocks of original and lagged values for autoregressive time
+series models with exogenous inputs.  The typical use case is to supply the
+output as \code{newdata} argument to the
+\code{\link[=predict.tslars]{predict}} method of robust groupwise least
 angle regression models.
 }
 \author{
 Andreas Alfons
 }
 \seealso{
-\code{\link{predict.tslars}}, \code{\link{tslars}}, 
+\code{\link{predict.tslars}}, \code{\link{tslars}},
 \code{\link{predict.tslarsP}}, \code{\link{tslarsP}}
 }
 \keyword{ts}

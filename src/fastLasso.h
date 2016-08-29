@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         Erasmus University Rotterdam
+ *         Erasmus Universiteit Rotterdam
  */
 
 #ifndef _robustHD_FASTLASSO_H
@@ -15,15 +15,15 @@ using namespace arma;
 
 // functions to export to R
 RcppExport SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
-  	SEXP R_subset, SEXP R_normalize, SEXP R_intercept, SEXP R_eps, 
+  	SEXP R_subset, SEXP R_normalize, SEXP R_intercept, SEXP R_eps,
     SEXP R_useGram);
 
 // functions to be used within C++
 void fastLasso(const mat& x, const vec& y, const double& lambda,
-  	const bool& useSubset, const uvec& subset, const bool& normalize, 
-    const bool& useIntercept, const double& eps, const bool& useGram, 
+  	const bool& useSubset, const uvec& subset, const bool& normalize,
+    const bool& useIntercept, const double& eps, const bool& useGram,
     const bool& useCrit,
-    // intercept, coefficients, residuals and objective function are returned 
+    // intercept, coefficients, residuals and objective function are returned
     // through the following parameters
     double& intercept, vec& beta, vec& residuals, double& crit);
 

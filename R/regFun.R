@@ -1,13 +1,13 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## get a call function
 # this returns a function that either
 # 1) simply evaluates a supplied function for the basic arguments if there are
 #    no additional arguments in list format
-# 2) evaluates a supplied function with 'do.call' if there are additional 
+# 2) evaluates a supplied function with 'do.call' if there are additional
 #    arguments in list format
 getCallFun <- function(args) {
   if(length(args) == 0) function(..., fun, args) fun(...)

@@ -1,45 +1,45 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Data standardization
-#' 
+#'
 #' Standardize data with given functions for computing center and scale.
-#' 
+#'
 #' @param x  a numeric vector, matrix or data frame to be standardized.
-#' @param centerFun  a function to compute an estimate of the center of a 
+#' @param centerFun  a function to compute an estimate of the center of a
 #' variable (defaults to \code{\link{mean}}).
-#' @param scaleFun  a function to compute an estimate of the scale of a 
+#' @param scaleFun  a function to compute an estimate of the scale of a
 #' variable (defaults to \code{\link[stats]{sd}}).
-#' 
-#' @return An object of the same type as the original data \code{x} containing 
-#' the centered and scaled data.  The center and scale estimates of the 
-#' original data are returned as attributes \code{"center"} and \code{"scale"}, 
+#'
+#' @return An object of the same type as the original data \code{x} containing
+#' the centered and scaled data.  The center and scale estimates of the
+#' original data are returned as attributes \code{"center"} and \code{"scale"},
 #' respectively.
-#' 
-#' @note The implementation contains special cases for the typically used 
-#' combinations \code{\link{mean}}/\code{\link[stats]{sd}} and 
-#' \code{\link[stats]{median}}/\code{\link[stats]{mad}} in order to reduce 
+#'
+#' @note The implementation contains special cases for the typically used
+#' combinations \code{\link{mean}}/\code{\link[stats]{sd}} and
+#' \code{\link[stats]{median}}/\code{\link[stats]{mad}} in order to reduce
 #' computation time.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
+#'
 #' @seealso \code{\link{scale}}, \code{\link{sweep}}
-#' 
-#' @examples 
+#'
+#' @examples
 #' ## generate data
 #' set.seed(1234)     # for reproducibility
 #' x <- rnorm(10)     # standard normal
 #' x[1] <- x[1] * 10  # introduce outlier
-#' 
+#'
 #' ## standardize data
 #' x
 #' standardize(x)     # mean and sd
 #' robStandardize(x)  # median and MAD
-#' 
+#'
 #' @keywords array
-#' 
+#'
 #' @export
 
 standardize <- function(x, centerFun = mean, scaleFun = sd) {
@@ -81,31 +81,31 @@ standardize <- function(x, centerFun = mean, scaleFun = sd) {
 
 
 # wrapper function to robustly standardize data
-# if the robust scale of a variable is too small, it is standardized with mean 
+# if the robust scale of a variable is too small, it is standardized with mean
 # and standard deviation
 
 #' @rdname standardize
-#' 
-#' @param fallback  a logical indicating whether standardization with 
-#' \code{\link{mean}} and \code{\link[stats]{sd}} should be performed as a 
-#' fallback mode for variables whose robust scale estimate is too small.  This 
+#'
+#' @param fallback  a logical indicating whether standardization with
+#' \code{\link{mean}} and \code{\link[stats]{sd}} should be performed as a
+#' fallback mode for variables whose robust scale estimate is too small.  This
 #' is useful, e.g., for data containing dummy variables.
-#' @param eps  a small positive numeric value used to determine whether the 
+#' @param eps  a small positive numeric value used to determine whether the
 #' robust scale estimate of a variable is too small (an effective zero).
 #' @param \dots  currently ignored.
-#' 
-#' @details 
-#' \code{robStandardize} is a wrapper function for robust standardization, 
-#' hence the default is to use \code{\link[stats]{median}} and 
+#'
+#' @details
+#' \code{robStandardize} is a wrapper function for robust standardization,
+#' hence the default is to use \code{\link[stats]{median}} and
 #' \code{\link[stats]{mad}}.
-#' 
+#'
 #' @export
 
-robStandardize <- function(x, centerFun = median, scaleFun = mad, 
+robStandardize <- function(x, centerFun = median, scaleFun = mad,
                            fallback = FALSE, eps = .Machine$double.eps, ...) {
   # robustly standardize data
   xs <- standardize(x, centerFun=centerFun, scaleFun=scaleFun)
-  # if requested, check if some variables have too small a robust scale and 
+  # if requested, check if some variables have too small a robust scale and
   # use standardization with mean/sd as fallback mode
   if(isTRUE(fallback)) {
     scale <- attr(xs, "scale")

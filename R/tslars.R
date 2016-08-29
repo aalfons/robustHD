@@ -1,9 +1,9 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
+#         Erasmus Universiteit Rotterdam
 #
 # based on code by Sarah Gelper
-# ------------------------------------
+# --------------------------------------
 
 #' (Robust) least angle regression for time series data
 #'

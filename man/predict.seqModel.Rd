@@ -21,56 +21,56 @@
 \arguments{
 \item{object}{the model fit from which to make predictions.}
 
-\item{newdata}{new data for the predictors.  If the model fit was computed 
-with the formula method, this should be a data frame from which to extract 
-the predictor variables.  Otherwise this should be a matrix containing the 
-same variables as the predictor matrix used to fit the model (including a 
+\item{newdata}{new data for the predictors.  If the model fit was computed
+with the formula method, this should be a data frame from which to extract
+the predictor variables.  Otherwise this should be a matrix containing the
+same variables as the predictor matrix used to fit the model (including a
 column of ones to account for the intercept).}
 
-\item{s}{for the \code{"seqModel"} method, an integer vector giving the 
-steps of the submodels for which to make predictions (the default is to use 
-the optimal submodel).  For the \code{"sparseLTS"} method, an integer vector 
-giving the indices of the models for which to make predictions.  If 
-\code{fit} is \code{"both"}, this can be a list with two components, with 
-the first component giving the indices of the reweighted fits and the second 
-the indices of the raw fits.  The default is to use the optimal model for 
-each of the requested estimators.  Note that the optimal models may not 
-correspond to the same value of the penalty parameter for the reweighted and 
+\item{s}{for the \code{"seqModel"} method, an integer vector giving the
+steps of the submodels for which to make predictions (the default is to use
+the optimal submodel).  For the \code{"sparseLTS"} method, an integer vector
+giving the indices of the models for which to make predictions.  If
+\code{fit} is \code{"both"}, this can be a list with two components, with
+the first component giving the indices of the reweighted fits and the second
+the indices of the raw fits.  The default is to use the optimal model for
+each of the requested estimators.  Note that the optimal models may not
+correspond to the same value of the penalty parameter for the reweighted and
 the raw estimator.}
 
-\item{p}{an integer giving the lag length for which to make predictions 
+\item{p}{an integer giving the lag length for which to make predictions
 (the default is to use the optimal lag length).}
 
-\item{fit}{a character string specifying for which fit to make 
-predictions.  Possible values are \code{"reweighted"} (the default) for 
-predicting values from the reweighted fit, \code{"raw"} for predicting 
-values from the raw fit, or \code{"both"} for predicting values from both 
+\item{fit}{a character string specifying for which fit to make
+predictions.  Possible values are \code{"reweighted"} (the default) for
+predicting values from the reweighted fit, \code{"raw"} for predicting
+values from the raw fit, or \code{"both"} for predicting values from both
 fits.}
 
-\item{\dots}{for the \code{"tslars"} method, additional arguments to be 
-passed down to the \code{"tslarsP"} method.  For the other methods, 
-additional arguments to be passed down to the respective method of 
+\item{\dots}{for the \code{"tslars"} method, additional arguments to be
+passed down to the \code{"tslarsP"} method.  For the other methods,
+additional arguments to be passed down to the respective method of
 \code{\link[=coef.seqModel]{coef}}.}
 }
 \value{
 A numeric vector or matrix containing the requested predicted values.
 }
 \description{
-Make predictions from a sequence of regression models, such as submodels 
-along a robust or groupwise least angle regression sequence, or sparse least 
-trimmed squares regression models for a grid of values for the penalty 
-parameter.  For autoregressive time series models with exogenous inputs, 
+Make predictions from a sequence of regression models, such as submodels
+along a robust or groupwise least angle regression sequence, or sparse least
+trimmed squares regression models for a grid of values for the penalty
+parameter.  For autoregressive time series models with exogenous inputs,
 \eqn{h}-step ahead forecasts are performed.
 }
 \details{
-The \code{newdata} argument defaults to the matrix of predictors used to fit 
+The \code{newdata} argument defaults to the matrix of predictors used to fit
 the model such that the fitted values are computed.
 
-For autoregressive time series models with exogenous inputs with forecast 
-horizon \eqn{h}, the \eqn{h} most recent observations of the predictors are 
-omitted from fitting the model since there are no corresponding values for 
-the response.  Hence the \code{newdata} argument for \code{predict.tslarsP} 
-and \code{predict.tslars} defaults to those \eqn{h} observations of the 
+For autoregressive time series models with exogenous inputs with forecast
+horizon \eqn{h}, the \eqn{h} most recent observations of the predictors are
+omitted from fitting the model since there are no corresponding values for
+the response.  Hence the \code{newdata} argument for \code{predict.tslarsP}
+and \code{predict.tslars} defaults to those \eqn{h} observations of the
 predictors.
 }
 \examples{
@@ -114,9 +114,9 @@ head(predict(fitSparseLTS, fit = "both", s = NULL))
 Andreas Alfons
 }
 \seealso{
-\code{\link[stats]{predict}}, \code{\link{rlars}}, 
-\code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
-\code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}, 
+\code{\link[stats]{predict}}, \code{\link{rlars}},
+\code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
+\code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
 \code{\link{sparseLTS}}
 }
 \keyword{regression}

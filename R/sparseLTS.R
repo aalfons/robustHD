@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Sparse least trimmed squares regression
 #'

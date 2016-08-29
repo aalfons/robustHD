@@ -1,6 +1,6 @@
 # -------------------------------------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
+#         Erasmus Universiteit Rotterdam
 #
 # based on code by Jafar A. Khan, Stefan Van Aelst and Ruben H. Zamar
 # -------------------------------------------------------------------

@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## prepare BIC values for plotting
 # model .... object of class "bicSelect"

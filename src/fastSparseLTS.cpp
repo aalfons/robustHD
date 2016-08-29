@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         Erasmus University Rotterdam
+ *         Erasmus Universiteit Rotterdam
  */
 
 #include "fastSparseLTS.h"
@@ -62,16 +62,16 @@ inline Subset::Subset(const uvec& initial) {
 
 // compute lasso solution, residuals and value of objective function
 void Subset::lasso(const mat& x, const vec& y, const double& lambda,
-		const bool& normalize, const bool& useIntercept, const double& eps, 
+		const bool& normalize, const bool& useIntercept, const double& eps,
     const bool& useGram) {
 	// call standalone function
-	fastLasso(x, y, lambda, true, indices, normalize, useIntercept, eps, 
+	fastLasso(x, y, lambda, true, indices, normalize, useIntercept, eps,
       useGram, true, intercept, coefficients, residuals, crit);
 }
 
 // perform C-Step
 void Subset::cStep(const mat& x, const vec& y, const double& lambda,
-		const bool& normalize, const bool& useIntercept, const double& tol, 
+		const bool& normalize, const bool& useIntercept, const double& tol,
     const double& eps, const bool& useGram) {
 	// update subset
 	const uword h = indices.n_elem;
@@ -154,7 +154,7 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 
 // R interface for object-based C-Step (for testing purposes)
 SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
-		SEXP R_normalize, SEXP R_intercept, SEXP R_tol, SEXP R_eps, 
+		SEXP R_normalize, SEXP R_intercept, SEXP R_tol, SEXP R_eps,
     SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix
@@ -322,8 +322,8 @@ double partialScale(const vec& x, const double& center, const int& h) {
 // center ......... residual center estimate is returned through this parameter
 // scale .......... residual scale estimate is returned through this parameter
 Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
-		const umat& initial, const bool& normalize, const bool& useIntercept, 
-    const int& ncstep, int& nkeep, const double& tol, const double& eps, 
+		const umat& initial, const bool& normalize, const bool& useIntercept,
+    const int& ncstep, int& nkeep, const double& tol, const double& eps,
     const bool& useGram, int& ncores, double& center, double& scale) {
 	// initializations
 	const int h = initial.n_rows, nsamp = initial.n_cols;
@@ -388,7 +388,7 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 // R interface to fastSparseLTS()
 // initial subsets are constructed in R and passed down to C++
 SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
-		SEXP R_normalize, SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep, 
+		SEXP R_normalize, SEXP R_intercept, SEXP R_ncstep, SEXP R_nkeep,
     SEXP R_tol, SEXP R_eps, SEXP R_useGram, SEXP R_ncores) {
 	// data initializations
 	NumericMatrix Rcpp_x(R_x);						// predictor matrix

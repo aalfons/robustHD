@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         Erasmus University Rotterdam
+ *         Erasmus Universiteit Rotterdam
  */
 
 #include "fastLasso.h"
@@ -76,7 +76,7 @@ uvec findDrops(const vec& beta, const uvec& active, const vec& w,
 
 // compute objective function on a subset of the data
 // (L1 penalized trimmed sum of squared residuals)
-double objective(const vec& beta, const vec& residuals, 
+double objective(const vec& beta, const vec& residuals,
     const uvec& subset, const double& lambda) {
   // compute sum of squared residuals for subset
 	const uword h = subset.n_elem;
@@ -106,10 +106,10 @@ double objective(const vec& beta, const vec& residuals,
 //                  in advance
 // useCrit ........ logical indicating whether to compute objective function
 void fastLasso(const mat& x, const vec& y, const double& lambda,
-		const bool& useSubset, const uvec& subset, const bool& normalize, 
-    const bool& useIntercept, const double& eps, const bool& useGram, 
+		const bool& useSubset, const uvec& subset, const bool& normalize,
+    const bool& useIntercept, const double& eps, const bool& useGram,
     const bool& useCrit,
-    // intercept, coefficients, residuals and objective function are returned 
+    // intercept, coefficients, residuals and objective function are returned
     // through the following parameters
     double& intercept, vec& beta, vec& residuals, double& crit) {
 
@@ -188,7 +188,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   if(p == 1) {
 
     // special case of only one variable (with sufficiently large norm)
-    uword j = inactive(0);          
+    uword j = inactive(0);
     // set maximum step size in the direction of that variable
     double maxStep = corY(j);
     if(maxStep < 0) maxStep = -maxStep; // absolute value
@@ -212,7 +212,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
     double previousLambda = R_PosInf, currentLambda = R_PosInf;
   	// indicates variables to be dropped
     uvec drops;
-  	// keep track of sign of correlations for the active variables 
+  	// keep track of sign of correlations for the active variables
     // (double precision is necessary for solve())
     vec signs;
   	// Cholesky L of Gram matrix of active variables
@@ -463,9 +463,9 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
     } else {
     	// penalty parameter within two steps
       if(k == maxActive) {
-          // current coefficients are the least squares solution (in the 
+          // current coefficients are the least squares solution (in the
           // high-dimensional case, as far along the solution path as possible)
-          // current and previous values of the penalty parameter need to be 
+          // current and previous values of the penalty parameter need to be
           // reset for interpolation
           previousLambda = currentLambda;
           currentLambda = 0;
@@ -498,7 +498,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
 
 // R interface to fastLasso()
 SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
-		SEXP R_subset, SEXP R_normalize, SEXP R_intercept, SEXP R_eps, 
+		SEXP R_subset, SEXP R_normalize, SEXP R_intercept, SEXP R_eps,
     SEXP R_useGram) {
     // data initializations
 	NumericMatrix Rcpp_x(R_x);						  // predictor matrix
@@ -525,7 +525,7 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 	// call native C++ function and return results as list
   double intercept, crit;
 	vec coefficients, residuals;
-	fastLasso(x, y, lambda, useSubset, subset, normalize, useIntercept, eps, 
+	fastLasso(x, y, lambda, useSubset, subset, normalize, useIntercept, eps,
       useGram, false, intercept, coefficients, residuals, crit);
 	if(useIntercept) {
 		// prepend intercept

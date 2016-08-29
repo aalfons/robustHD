@@ -1,71 +1,71 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Predict from a sequence of regression models
-#' 
-#' Make predictions from a sequence of regression models, such as submodels 
-#' along a robust or groupwise least angle regression sequence, or sparse least 
-#' trimmed squares regression models for a grid of values for the penalty 
-#' parameter.  For autoregressive time series models with exogenous inputs, 
+#'
+#' Make predictions from a sequence of regression models, such as submodels
+#' along a robust or groupwise least angle regression sequence, or sparse least
+#' trimmed squares regression models for a grid of values for the penalty
+#' parameter.  For autoregressive time series models with exogenous inputs,
 #' \eqn{h}-step ahead forecasts are performed.
-#' 
-#' The \code{newdata} argument defaults to the matrix of predictors used to fit 
+#'
+#' The \code{newdata} argument defaults to the matrix of predictors used to fit
 #' the model such that the fitted values are computed.
-#' 
-#' For autoregressive time series models with exogenous inputs with forecast 
-#' horizon \eqn{h}, the \eqn{h} most recent observations of the predictors are 
-#' omitted from fitting the model since there are no corresponding values for 
-#' the response.  Hence the \code{newdata} argument for \code{predict.tslarsP} 
-#' and \code{predict.tslars} defaults to those \eqn{h} observations of the 
+#'
+#' For autoregressive time series models with exogenous inputs with forecast
+#' horizon \eqn{h}, the \eqn{h} most recent observations of the predictors are
+#' omitted from fitting the model since there are no corresponding values for
+#' the response.  Hence the \code{newdata} argument for \code{predict.tslarsP}
+#' and \code{predict.tslars} defaults to those \eqn{h} observations of the
 #' predictors.
-#' 
+#'
 #' @method predict seqModel
 #' @aliases predict.rlars predict.grplars
-#' 
+#'
 #' @param object  the model fit from which to make predictions.
-#' @param newdata  new data for the predictors.  If the model fit was computed 
-#' with the formula method, this should be a data frame from which to extract 
-#' the predictor variables.  Otherwise this should be a matrix containing the 
-#' same variables as the predictor matrix used to fit the model (including a 
+#' @param newdata  new data for the predictors.  If the model fit was computed
+#' with the formula method, this should be a data frame from which to extract
+#' the predictor variables.  Otherwise this should be a matrix containing the
+#' same variables as the predictor matrix used to fit the model (including a
 #' column of ones to account for the intercept).
-#' @param p  an integer giving the lag length for which to make predictions 
-#' (the default is to use the optimal lag length). 
-#' @param s  for the \code{"seqModel"} method, an integer vector giving the 
-#' steps of the submodels for which to make predictions (the default is to use 
-#' the optimal submodel).  For the \code{"sparseLTS"} method, an integer vector 
-#' giving the indices of the models for which to make predictions.  If 
-#' \code{fit} is \code{"both"}, this can be a list with two components, with 
-#' the first component giving the indices of the reweighted fits and the second 
-#' the indices of the raw fits.  The default is to use the optimal model for 
-#' each of the requested estimators.  Note that the optimal models may not 
-#' correspond to the same value of the penalty parameter for the reweighted and 
+#' @param p  an integer giving the lag length for which to make predictions
+#' (the default is to use the optimal lag length).
+#' @param s  for the \code{"seqModel"} method, an integer vector giving the
+#' steps of the submodels for which to make predictions (the default is to use
+#' the optimal submodel).  For the \code{"sparseLTS"} method, an integer vector
+#' giving the indices of the models for which to make predictions.  If
+#' \code{fit} is \code{"both"}, this can be a list with two components, with
+#' the first component giving the indices of the reweighted fits and the second
+#' the indices of the raw fits.  The default is to use the optimal model for
+#' each of the requested estimators.  Note that the optimal models may not
+#' correspond to the same value of the penalty parameter for the reweighted and
 #' the raw estimator.
-#' @param fit  a character string specifying for which fit to make 
-#' predictions.  Possible values are \code{"reweighted"} (the default) for 
-#' predicting values from the reweighted fit, \code{"raw"} for predicting 
-#' values from the raw fit, or \code{"both"} for predicting values from both 
+#' @param fit  a character string specifying for which fit to make
+#' predictions.  Possible values are \code{"reweighted"} (the default) for
+#' predicting values from the reweighted fit, \code{"raw"} for predicting
+#' values from the raw fit, or \code{"both"} for predicting values from both
 #' fits.
-#' @param \dots  for the \code{"tslars"} method, additional arguments to be 
-#' passed down to the \code{"tslarsP"} method.  For the other methods, 
-#' additional arguments to be passed down to the respective method of 
+#' @param \dots  for the \code{"tslars"} method, additional arguments to be
+#' passed down to the \code{"tslarsP"} method.  For the other methods,
+#' additional arguments to be passed down to the respective method of
 #' \code{\link[=coef.seqModel]{coef}}.
-#' 
-#' @return  
+#'
+#' @return
 #' A numeric vector or matrix containing the requested predicted values.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
-#' @seealso \code{\link[stats]{predict}}, \code{\link{rlars}}, 
-#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}}, 
-#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}}, 
+#'
+#' @seealso \code{\link[stats]{predict}}, \code{\link{rlars}},
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
 #' \code{\link{sparseLTS}}
-#' 
+#'
 #' @example inst/doc/examples/example-predict.R
-#' 
+#'
 #' @keywords regression
-#' 
+#'
 #' @export
 
 predict.seqModel <- function(object, newdata, s = NA, ...) {
@@ -82,11 +82,11 @@ predict.seqModel <- function(object, newdata, s = NA, ...) {
   } else {
     # interpret vector as row
     if(is.null(dim(newdata))) newdata <- t(newdata)
-    # check dimensions if model was not specified with a formula, 
+    # check dimensions if model was not specified with a formula,
     # otherwise use the terms object to extract model matrix
     if(is.null(terms)) {
       newdata <- as.matrix(newdata)
-      # add a column of ones to the new data matrix 
+      # add a column of ones to the new data matrix
       # (unless it already contains intercept column)
       newdata <- addIntercept(newdata, check=TRUE)
       # check dimensions of new data
@@ -125,11 +125,11 @@ predict.tslarsP <- function(object, newdata, ...) {
   } else {
     # interpret vector as row
     if(is.null(dim(newdata))) newdata <- t(newdata)
-    # check dimensions if model was not specified with a formula, 
+    # check dimensions if model was not specified with a formula,
     # otherwise use the terms object to extract model matrix
     if(is.null(terms)) {
       newdata <- as.matrix(newdata)
-      # add a column of ones to the new data matrix 
+      # add a column of ones to the new data matrix
       # (unless it already contains intercept column)
       newdata <- addIntercept(newdata, check=TRUE)
       # check dimensions of new data
@@ -150,7 +150,7 @@ predict.tslarsP <- function(object, newdata, ...) {
   out <- newdata %*% coef
   if(is.null(d)) out <- drop(out)
   out
-  
+
 }
 
 
@@ -195,8 +195,8 @@ predict.tslars <- function(object, newdata, p, ...) {
 #' @method predict sparseLTS
 #' @export
 
-predict.sparseLTS <- function(object, newdata, s = NA, 
-                              fit = c("reweighted", "raw", "both"), 
+predict.sparseLTS <- function(object, newdata, s = NA,
+                              fit = c("reweighted", "raw", "both"),
                               ...) {
   ## initializations
   coef <- coef(object, s=s, fit=fit)  # extract coefficients
@@ -210,12 +210,12 @@ predict.sparseLTS <- function(object, newdata, s = NA,
   } else {
     # interpret vector as row
     if(is.null(dim(newdata))) newdata <- t(newdata)
-    # check dimensions if model was not specified with a formula, 
+    # check dimensions if model was not specified with a formula,
     # otherwise use the terms object to extract model matrix
     if(is.null(terms)) {
       newdata <- as.matrix(newdata)
       if(object$intercept) {
-        # if model has an intercept, add a column of ones to the new 
+        # if model has an intercept, add a column of ones to the new
         # data matrix (unless it already contains intercept column)
         newdata <- addIntercept(newdata, check=TRUE)
       }

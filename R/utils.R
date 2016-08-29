@@ -1,7 +1,7 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 ## add default column names to matrix
 addColnames <- function(x) {
@@ -19,7 +19,7 @@ addIntercept <- function(x, check = FALSE) {
 
 # ## backtransform regression coefficients to original scale (including intercept)
 # backtransform <- function(beta, muY, sigmaY, mu, sigma) {
-#   apply(beta, 2, 
+#   apply(beta, 2,
 #         function(b) {
 #           b <- b * sigmaY / sigma
 #           a <- muY - sum(b * mu)  # intercept
@@ -32,7 +32,7 @@ addIntercept <- function(x, check = FALSE) {
 callBackend <- function(..., PACKAGE) {
   # check the platfrom and if the RcppEigen back end is available
   # (RcppEigen back end does not work with 32-bit Windows)
-  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") && 
+  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") &&
        exists(".CallSparseLTSEigen")) {
     # RcppEigen back end from package sparseLTSEigen
     callFun <- get(".CallSparseLTSEigen")
@@ -81,7 +81,7 @@ checkSteps <- function(s, sMin, sMax, recycle = FALSE, ...) {
 ## copy names from a vector or matrix to another vector or matrix
 copyNames <- function(from, to, which = "col", target = "row") {
   # read names from source
-  if(is.null(dim(from))) nam <- names(from) 
+  if(is.null(dim(from))) nam <- names(from)
   else if(which == "row") nam <- rownames(from)
   else if(which == "col") nam <- colnames(from)
   # write names to target
@@ -104,13 +104,13 @@ defaultLabels.grplars <- function(x) {
   labels <- split(as.character(assign), assign)
   p <- sapply(labels, length)  # number of variables per group
   append <- which(p > 1)
-  labels[append] <- mapply(function(l, p) paste(l, seq_len(p), sep="."), 
+  labels[append] <- mapply(function(l, p) paste(l, seq_len(p), sep="."),
                            labels[append], p[append], SIMPLIFY=FALSE)
   unsplit(labels, assign)
 }
 
 ## utility function to get default main plot title
-defaultMain <- function() "Coefficient path" 
+defaultMain <- function() "Coefficient path"
 
 ## drop dimension in case of matrix with one column
 dropCol <- function(x) {
@@ -161,7 +161,7 @@ modelDf <- function(beta, tol = .Machine$double.eps^0.5) {
   length(which(abs(beta) > tol))
 }
 
-## construct blocks of original and lagged values for prediction from time 
+## construct blocks of original and lagged values for prediction from time
 ## series models
 newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
   n <- length(y)

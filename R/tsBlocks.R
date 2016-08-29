@@ -1,35 +1,35 @@
-# ----------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         KU Leuven
-# ----------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Construct predictor blocks for time series models
-#' 
-#' Construct blocks of original and lagged values for autoregressive time 
-#' series models with exogenous inputs.  The typical use case is to supply the 
-#' output as \code{newdata} argument to the 
-#' \code{\link[=predict.tslars]{predict}} method of robust groupwise least 
+#'
+#' Construct blocks of original and lagged values for autoregressive time
+#' series models with exogenous inputs.  The typical use case is to supply the
+#' output as \code{newdata} argument to the
+#' \code{\link[=predict.tslars]{predict}} method of robust groupwise least
 #' angle regression models.
-#' 
-#' @param x  a numeric matrix or data frame containing the exogenous predictor 
+#'
+#' @param x  a numeric matrix or data frame containing the exogenous predictor
 #' series.
 #' @param y  a numeric vector containing the response series.
 #' @param p  an integer giving the number of lags to include (defaults to 2).
-#' @param subset  a logical or integer vector defining a subset of observations 
+#' @param subset  a logical or integer vector defining a subset of observations
 #' from which to construct the matrix of predictor blocks.
-#' @param intercept  a logical indicating whether a column of ones should be 
+#' @param intercept  a logical indicating whether a column of ones should be
 #' added to the matrix of predictor blocks to account for the intercept.
-#' 
-#' @return A matrix containing blocks of original and lagged values of the 
+#'
+#' @return A matrix containing blocks of original and lagged values of the
 #' time series \code{y} and \code{x}.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
-#' @seealso \code{\link{predict.tslars}}, \code{\link{tslars}}, 
+#'
+#' @seealso \code{\link{predict.tslars}}, \code{\link{tslars}},
 #' \code{\link{predict.tslarsP}}, \code{\link{tslarsP}}
-#' 
+#'
 #' @keywords ts
-#' 
+#'
 #' @export
 
 tsBlocks <- function(x, y, p = 2, subset = NULL, intercept = TRUE) {

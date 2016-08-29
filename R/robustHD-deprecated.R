@@ -1,43 +1,43 @@
-# ------------------------------------
+# --------------------------------------
 # Author: Andreas Alfons
-#         Erasmus University Rotterdam
-# ------------------------------------
+#         Erasmus Universiteit Rotterdam
+# --------------------------------------
 
 #' Deprecated functions in package \pkg{robustHD}
-#' 
-#' These functions are provided for compatibility with older versions only, and 
+#'
+#' These functions are provided for compatibility with older versions only, and
 #' may be defunct as soon as the next release.
-#' 
-#' \code{sparseLTSGrid} is a wrapper function for \code{\link{sparseLTS}} 
-#' that only differs in the default values for the penalty parameter 
+#'
+#' \code{sparseLTSGrid} is a wrapper function for \code{\link{sparseLTS}}
+#' that only differs in the default values for the penalty parameter
 #' \code{lambda}.
-#' 
+#'
 #' @name robustHD-deprecated
-#' 
+#'
 #' @param formula  a formula describing the model.
-#' @param data  an optional data frame, list or environment (or object coercible 
-#' to a data frame by \code{\link{as.data.frame}}) containing the variables in 
-#' the model.  If not found in data, the variables are taken from 
-#' \code{environment(formula)}, typically the environment from which 
+#' @param data  an optional data frame, list or environment (or object coercible
+#' to a data frame by \code{\link{as.data.frame}}) containing the variables in
+#' the model.  If not found in data, the variables are taken from
+#' \code{environment(formula)}, typically the environment from which
 #' \code{sparseLTSGrid} is called.
 #' @param x  a numeric matrix containing the predictor variables.
 #' @param y  a numeric vector containing the response variable.
-#' @param lambda  a numeric vector of non-negative values to be used as penalty 
+#' @param lambda  a numeric vector of non-negative values to be used as penalty
 #' parameter.
-#' @param mode  a character string specifying the type of penalty parameter.  If 
-#' \code{"lambda"}, \code{lambda} gives the grid of values for the penalty 
-#' parameter directly.  If \code{"fraction"}, the smallest value of the penalty 
-#' parameter that sets all coefficients to 0 is first estimated based on 
-#' bivariate winsorization, then \code{lambda} gives the fractions of that 
-#' estimate to be used (hence all values of \code{lambda} should be in the 
+#' @param mode  a character string specifying the type of penalty parameter.  If
+#' \code{"lambda"}, \code{lambda} gives the grid of values for the penalty
+#' parameter directly.  If \code{"fraction"}, the smallest value of the penalty
+#' parameter that sets all coefficients to 0 is first estimated based on
+#' bivariate winsorization, then \code{lambda} gives the fractions of that
+#' estimate to be used (hence all values of \code{lambda} should be in the
 #' interval [0,1] in that case).
-#' @param \dots  additional arguments to be passed down, eventually to 
+#' @param \dots  additional arguments to be passed down, eventually to
 #' \code{\link{sparseLTS}}.
-#' 
+#'
 #' @author Andreas Alfons
-#' 
+#'
 #' @seealso \code{\link[base]{Deprecated}}
-#' 
+#'
 #' @keywords regression robust
 
 NULL
@@ -90,14 +90,14 @@ sparseLTSGrid.formula <- function(formula, data, ...) {
 #' @method sparseLTSGrid default
 #' @export
 
-sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"), 
+sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                                   ...) {
   # get function call
   call <- match.call()
   call[[1]] <- as.name("sparseLTSGrid")
   # initializations
   if(missing(lambda)) {
-    # if penalty parameter is not supplied, use fractions of a robust estimate 
+    # if penalty parameter is not supplied, use fractions of a robust estimate
     # of the smallest value that sets all coefficients to zero
     lower <- if(nrow(x) > ncol(x)) 0 else 0.1
     lambda <- seq(from=1, to=lower, by=-0.1)

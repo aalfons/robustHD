@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus Universiteit Rotterdam
  */
 
 #include <R.h>

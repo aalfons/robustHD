@@ -1,6 +1,6 @@
 /*
  * Author: Andreas Alfons
- *         KU Leuven
+ *         Erasmus Universiteit Rotterdam
  */
 
 #ifndef _robustHD_CORHUBER_H
