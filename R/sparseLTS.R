@@ -118,63 +118,63 @@
 #'
 #' Otherwise an object of class \code{"sparseLTS"} (inheriting from class
 #' \code{"penModel"}) with the following components:
-#' @returnItem lambda  a numeric vector giving the values of the penalty
-#' parameter.
-#' @returnItem best  an integer vector or matrix containing the respective best
+#' \item{lambda}{a numeric vector giving the values of the penalty
+#' parameter.}
+#' \item{best}{an integer vector or matrix containing the respective best
 #' subsets of \eqn{h} observations found and used for computing the raw
-#' estimates.
-#' @returnItem objective  a numeric vector giving the respective values of the
+#' estimates.}
+#' \item{objective}{a numeric vector giving the respective values of the
 #' sparse LTS objective function, i.e., the \eqn{L_{1}}{L1} penalized sums of
-#' the \eqn{h} smallest squared residuals from the raw fits.
-#' @returnItem coefficients  a numeric vector or matrix containing the
-#' respective coefficient estimates from the reweighted fits.
-#' @returnItem fitted.values  a numeric vector or matrix containing the
-#' respective fitted values of the response from the reweighted fits.
-#' @returnItem residuals  a numeric vector or matrix containing the
-#' respective residuals from the reweighted fits.
-#' @returnItem center  a numeric vector giving the robust center estimates of
-#' the corresponding reweighted residuals.
-#' @returnItem scale  a numeric vector giving the robust scale estimates of the
-#' corresponding reweighted residuals.
-#' @returnItem cnp2  a numeric vector giving the respective consistency factors
-#' applied to the scale estimates of the reweighted residuals.
-#' @returnItem wt  an integer vector or matrix containing binary weights that
+#' the \eqn{h} smallest squared residuals from the raw fits.}
+#' \item{coefficients}{a numeric vector or matrix containing the
+#' respective coefficient estimates from the reweighted fits.}
+#' \item{fitted.values}{a numeric vector or matrix containing the
+#' respective fitted values of the response from the reweighted fits.}
+#' \item{residuals}{a numeric vector or matrix containing the
+#' respective residuals from the reweighted fits.}
+#' \item{center}{a numeric vector giving the robust center estimates of
+#' the corresponding reweighted residuals.}
+#' \item{scale}{a numeric vector giving the robust scale estimates of the
+#' corresponding reweighted residuals.}
+#' \item{cnp2}{a numeric vector giving the respective consistency factors
+#' applied to the scale estimates of the reweighted residuals.}
+#' \item{wt}{an integer vector or matrix containing binary weights that
 #' indicate outliers from the respective reweighted fits, i.e., the weights are
 #' \eqn{1} for observations with reasonably small reweighted residuals and
-#' \eqn{0} for observations with large reweighted residuals.
-#' @returnItem df  an integer vector giving the respective degrees of freedom
+#' \eqn{0} for observations with large reweighted residuals.}
+#' \item{df}{an integer vector giving the respective degrees of freedom
 #' of the obtained reweighted model fits, i.e., the number of nonzero
-#' coefficient estimates.
-#' @returnItem normalize  a logical indicating whether the predictor variables
-#' were normalized to have unit \eqn{L_{2}}{L2} norm on the subsamples.
-#' @returnItem intercept  a logical indicating whether the model includes a
-#' constant term.
-#' @returnItem alpha  a numeric value giving the percentage of the residuals for
-#' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.
-#' @returnItem quan  the number \eqn{h} of observations used to compute the raw
-#' estimates.
-#' @returnItem raw.coefficients  a numeric vector or matrix containing the
-#' respective coefficient estimates from the raw fits.
-#' @returnItem raw.fitted.values  a numeric vector or matrix containing the
-#' respective fitted values of the response from the raw fits.
-#' @returnItem raw.residuals  a numeric vector or matrix containing the
-#' respective residuals from the raw fits.
-#' @returnItem raw.center  a numeric vector giving the robust center estimates
-#' of the corresponding raw residuals.
-#' @returnItem raw.scale  a numeric vector giving the robust scale estimates of
-#' the corresponding raw residuals.
-#' @returnItem raw.cnp2  a numeric value giving the consistency factor applied
-#' to the scale estimate of the raw residuals.
-#' @returnItem raw.wt  an integer vector or matrix containing binary weights
+#' coefficient estimates.}
+#' \item{normalize}{a logical indicating whether the predictor variables
+#' were normalized to have unit \eqn{L_{2}}{L2} norm on the subsamples.}
+#' \item{intercept}{a logical indicating whether the model includes a
+#' constant term.}
+#' \item{alpha}{a numeric value giving the percentage of the residuals for
+#' which the \eqn{L_{1}}{L1} penalized sum of squares was minimized.}
+#' \item{quan}{the number \eqn{h} of observations used to compute the raw
+#' estimates.}
+#' \item{raw.coefficients}{a numeric vector or matrix containing the
+#' respective coefficient estimates from the raw fits.}
+#' \item{raw.fitted.values}{a numeric vector or matrix containing the
+#' respective fitted values of the response from the raw fits.}
+#' \item{raw.residuals}{a numeric vector or matrix containing the
+#' respective residuals from the raw fits.}
+#' \item{raw.center}{a numeric vector giving the robust center estimates
+#' of the corresponding raw residuals.}
+#' \item{raw.scale}{a numeric vector giving the robust scale estimates of
+#' the corresponding raw residuals.}
+#' \item{raw.cnp2}{a numeric value giving the consistency factor applied
+#' to the scale estimate of the raw residuals.}
+#' \item{raw.wt}{an integer vector or matrix containing binary weights
 #' that indicate outliers from the respective raw fits, i.e., the weights used
-#' for the reweighted fits.
-#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC
+#' for the reweighted fits.}
+#' \item{crit}{an object of class \code{"bicSelect"} containing the BIC
 #' values and indicating the final model (only returned if argument \code{crit}
 #' is \code{"BIC"} and argument \code{lambda} contains more than one value for
-#' the penalty parameter).
-#' @returnItem x  the predictor matrix (if \code{model} is \code{TRUE}).
-#' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
-#' @returnItem call  the matched function call.
+#' the penalty parameter).}
+#' \item{x}{the predictor matrix (if \code{model} is \code{TRUE}).}
+#' \item{y}{the response variable (if \code{model} is \code{TRUE}).}
+#' \item{call}{the matched function call.}
 #'
 #' @note Package \pkg{robustHD} has a built-in back end for sparse least
 #' trimmed squares using the C++ library Armadillo.  Another back end is

@@ -371,14 +371,16 @@ class SparseSControl {
   uword nfpi;
   uword nfpiMax;
   // control parameters for weighted lasso
-  bool findLambda;
+  double lambdaMin;
+  uword sMax;
   double tol;
   double eps;
   bool useGram;
 
   // constructors
   SparseSControl(const double&, const double&, const uword&, const uword&,
-                 const bool&, const double&, const double&, const bool&);
+                 const double&, const uword&, const double&, const double&,
+                 const bool&);
 };
 
 // constructor
@@ -386,7 +388,8 @@ inline SparseSControl::SparseSControl(const double& _k,
                                       const double& _b,
                                       const uword& _nfpi,
                                       const uword& _nfpiMax,
-                                      const bool& _findLambda,
+                                      const double& _lambdaMin,
+                                      const uword& _sMax,
                                       const double& _tol,
                                       const double& _eps,
                                       const bool& _useGram) {
@@ -394,7 +397,8 @@ inline SparseSControl::SparseSControl(const double& _k,
   b = _b;
   nfpi = _nfpi;
   nfpiMax = _nfpiMax;
-  findLambda = _findLambda;
+  lambdaMin = _lambdaMin;
+  sMax = _sMax;
   tol = _tol;
   eps = _eps;
   useGram = _useGram;
@@ -422,8 +426,7 @@ class WeightedSample {
 
   // constructors
   WeightedSample();
-  WeightedSample(const mat&, const vec&, const double&, const uvec&,
-                 const SparseSControl&);
+  WeightedSample(const mat&, const vec&, const uvec&, const SparseSControl&);
   // compute lasso solution and residuals
   void lasso(const mat&, const vec&, const SparseSControl&);
   // perform I-Step
@@ -433,7 +436,7 @@ class WeightedSample {
 
 // constructors
 inline WeightedSample::WeightedSample() {
-  // if the optimal lambda should be found in the weighted lasso fits, it is
+  // since the optimal lambda is determined in the weighted lasso fits, it is
   // important to initialize it with infinity.  this way, when computing the
   // initial lasso with three observations, the most important variable always
   // enters the fit.
@@ -442,10 +445,8 @@ inline WeightedSample::WeightedSample() {
   continueSteps = true;
 }
 inline WeightedSample::WeightedSample(const mat& x, const vec& y,
-                                      const double& fixedLambda,
                                       const uvec& initial,
                                       const SparseSControl& control) {
-  if(!control.findLambda) lambda = fixedLambda;
   // compute lasso fit on initial subsample with three observations
   fastLasso(x, y, lambda, true, initial, false, true, control.eps,
             control.useGram, false, intercept, coefficients, residuals, crit);
@@ -467,8 +468,9 @@ inline WeightedSample::WeightedSample(const mat& x, const vec& y,
 void WeightedSample::lasso(const mat& x, const vec& y,
                            const SparseSControl& control) {
   // call standalone function
-  fastLasso(x, y, control.findLambda, lambda, true, weights, control.tol,
-            control.eps, control.useGram, intercept, coefficients, residuals);
+  fastLasso(x, y, true, weights, control.lambdaMin, control.sMax, control.tol,
+            control.eps, control.useGram, lambda, intercept, coefficients,
+            residuals);
 }
 
 // perform I-Step
@@ -538,14 +540,12 @@ void keepBest(vector<WeightedSample>& weightedSamples, const int& nkeep) {
 // Armadillo library is used for linear algebra
 // x ............. predictor matrix
 // y ............. response
-// fixedLambda ... penalty parameter
 // initial ....... matrix of initial subsets
 // nstep ......... number of initial I-steps
 // nkeep ......... number of subsets to keep after initial I-steps
 // control ....... control parameters for weighted lasso and M-scale
 // ncores ........ number of processor cores for parallel computing
-WeightedSample fastSparseS(const mat& x, const vec& y,
-                           const double& fixedLambda, const umat& initial,
+WeightedSample fastSparseS(const mat& x, const vec& y, const umat& initial,
                            const int& nstep, const int& nkeep,
                            SparseSControl& control, int& ncores) {
 
@@ -561,8 +561,7 @@ WeightedSample fastSparseS(const mat& x, const vec& y,
     #pragma omp for schedule(dynamic)
     for(int k = 0; k < nsamp; k++) {
       // compute lasso fit on initial resample
-      WeightedSample resampleK(x, y, fixedLambda, initial.unsafe_col(k),
-                               control);
+      WeightedSample resampleK(x, y, initial.unsafe_col(k), control);
       // perform initial I-steps with only a few iterations for M-scale
       // last initial I-step requires fully iterated M-scale
       int i = 0, nloop = nstep-1;
@@ -611,7 +610,7 @@ WeightedSample fastSparseS(const mat& x, const vec& y,
 
 // R interface to fastSparseS()
 // initial subsets are constructed in R and passed down to C++
-SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
+SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
                    SEXP R_initial, SEXP R_nistep, SEXP R_nkeep, SEXP R_k,
                    SEXP R_b, SEXP R_nfpi, SEXP R_nfpiMax, SEXP R_tol,
                    SEXP R_eps, SEXP R_useGram, SEXP R_ncores) {
@@ -622,8 +621,8 @@ SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
   mat x(Rcpp_x.begin(), n, p, false);	// reuse memory
   NumericVector Rcpp_y(R_y);			    // response
   vec y(Rcpp_y.begin(), n, false);	  // reuse memory
-  bool findLambda = as<bool>(R_findLambda);
-  double fixedLambda = as<double>(R_fixedLambda);
+  double lambdaMin = as<double>(R_lambdaMin);
+  uword sMax = as<uword>(R_sMax);
   IntegerMatrix Rcpp_initial(R_initial);	// matrix of initial subsets
   const int h = Rcpp_initial.nrow(), nsamp = Rcpp_initial.ncol();
   umat initial(h, nsamp);
@@ -642,11 +641,12 @@ SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
   double tol = as<double>(R_tol);
   double eps = as<double>(R_eps);
   bool useGram = as<bool>(R_useGram);
-  SparseSControl control(k, b, nfpi, nfpiMax, findLambda, tol, eps, useGram);
+  SparseSControl control(k, b, nfpi, nfpiMax, lambdaMin, sMax, tol, eps,
+                         useGram);
   int ncores = as<int>(R_ncores);
   // call native C++ function
-  WeightedSample best = fastSparseS(x, y, fixedLambda, initial, nistep, nkeep,
-                                    control, ncores);
+  WeightedSample best = fastSparseS(x, y, initial, nistep, nkeep, control,
+                                    ncores);
 
   // prepend intercept
   vec coefficients = best.coefficients;
@@ -677,8 +677,7 @@ SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
 // control......... object including parameters
 // best............ object including initial fit and is in the end used to return solution
 
-void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
-                  const double fixedLambdaS, const double& k, const int& rMax,
+void fastSparseMM(const mat& x, const vec& y, const double& k, const int& rMax,
                   const umat& initial, const int& nstep, const int& nkeep,
                   SparseSControl& control, int& ncores,
                   // solutions of sparse S and sparse MM are returned through
@@ -686,23 +685,17 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
                   WeightedSample& best, WeightedSample& bestS) {
 
   // compute initial S-estimator
-  bestS = fastSparseS(x, y, fixedLambdaS, initial, nstep, nkeep,
-                      control, ncores);
+  bestS = fastSparseS(x, y, initial, nstep, nkeep, control, ncores);
 
   // initialize solution of MM-estimator
   best = bestS;
   best.scale = sqrt(mean(Mrho(best.residuals/bestS.scale, k))) * bestS.scale;
   // another criterion is used for sparse MM than for sparse S
-  if(control.findLambda) {
-    // cannot use the lambda found in S-estimator since penalty parameter plays
-    // a different role
-    // TODO: call R function lambdaToLambdaS()
-    best.lambda = R_PosInf;
-    best.crit = R_PosInf;
-  } else {
-    best.lambda = fixedLambda;
-    best.crit = pow(best.scale, 2) + best.lambda * norm(best.coefficients, 1);
-  }
+  // cannot use the lambda found in S-estimator since penalty parameter plays
+  // a different role
+  // TODO: call R function lambdaToLambdaS()
+  best.lambda = R_PosInf;
+  best.crit = R_PosInf;
   best.continueSteps = true;
 
   // reweighting steps (iteratively reweighted lasso)
@@ -713,9 +706,9 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
     // update weights
     best.weights = Mwgt(best.residuals / bestS.scale, k);
     best.lambda *= 2.0; // first order condition requires 2*lambda
-    fastLasso(x, y, control.findLambda, best.lambda, true, best.weights,
-              control.tol, control.eps, control.useGram, best.intercept,
-              best.coefficients, best.residuals);
+    fastLasso(x, y, true, best.weights, 2.0*control.lambdaMin, control.sMax,
+              control.tol, control.eps, control.useGram, best.lambda,
+              best.intercept, best.coefficients, best.residuals);
     best.lambda /= 2.0; // transform lambda back to actual value
     // compute value of objective function
     best.scale = sqrt(mean(Mrho(best.residuals/bestS.scale, k))) * bestS.scale;
@@ -733,10 +726,10 @@ void fastSparseMM(const mat& x, const vec& y, const double& fixedLambda,
 
 // R interface to fastSparseMM()
 // initial subsets are constructed in R and passed down to C++
-SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
-                    SEXP R_fixedLambdaS, SEXP R_k, SEXP R_rMax, SEXP R_initial,
-                    SEXP R_nistep, SEXP R_nkeep, SEXP R_kS, SEXP R_b,
-                    SEXP R_nfpi, SEXP R_nfpiMax, SEXP R_tol, SEXP R_eps,
+SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
+                    SEXP R_k, SEXP R_rMax, SEXP R_initial, SEXP R_nistep,
+                    SEXP R_nkeep, SEXP R_kS, SEXP R_b, SEXP R_nfpi,
+                    SEXP R_nfpiMax, SEXP R_tol, SEXP R_eps,
                     SEXP R_useGram, SEXP R_ncores) {
 
   // data initializations
@@ -745,9 +738,8 @@ SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
   mat x(Rcpp_x.begin(), n, p, false);	// reuse memory
   NumericVector Rcpp_y(R_y);			    // response
   vec y(Rcpp_y.begin(), n, false);	  // reuse memory
-  bool findLambda = as<bool>(R_findLambda);
-  double fixedLambda = as<double>(R_fixedLambda);
-  double fixedLambdaS = as<double>(R_fixedLambdaS);
+  double lambdaMin = as<double>(R_lambdaMin);
+  uword sMax = as<uword>(R_sMax);
   double k = as<double>(R_k);
   int rMax = as<int>(R_rMax);
   IntegerMatrix Rcpp_initial(R_initial);	// matrix of initial subsets
@@ -768,12 +760,13 @@ SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_fixedLambda,
   double tol = as<double>(R_tol);
   double eps = as<double>(R_eps);
   bool useGram = as<bool>(R_useGram);
-  SparseSControl control(kS, b, nfpi, nfpiMax, findLambda, tol, eps, useGram);
+  SparseSControl control(kS, b, nfpi, nfpiMax, lambdaMin, sMax, tol, eps,
+                         useGram);
   int ncores = as<int>(R_ncores);
   // call native C++ function
   WeightedSample best, bestS;
-  fastSparseMM(x, y, fixedLambda, fixedLambdaS, k, rMax, initial, nistep,
-               nkeep, control, ncores, best, bestS);
+  fastSparseMM(x, y, k, rMax, initial, nistep, nkeep, control, ncores,
+               best, bestS);
 
   // prepend intercept
   // sparse MM-estimator

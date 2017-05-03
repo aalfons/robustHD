@@ -92,42 +92,42 @@
 #'
 #' Otherwise an object of class \code{"tslarsP"} (inheriting from classes
 #' \code{"grplars"} and \code{"seqModel"}) with the following components:
-#' @returnItem active  an integer vector containing the sequence of predictor
-#' series.
-#' @returnItem s  an integer vector containing the steps for which submodels
-#' along the sequence have been computed.
-#' @returnItem coefficients  a numeric matrix in which each column contains the
-#' regression coefficients of the corresponding submodel along the sequence.
-#' @returnItem fitted.values  a numeric matrix in which each column contains
-#' the fitted values of the corresponding submodel along the sequence.
-#' @returnItem residuals  a numeric matrix in which each column contains
-#' the residuals of the corresponding submodel along the sequence.
-#' @returnItem df  an integer vector containing the degrees of freedom of the
-#' submodels along the sequence (i.e., the number of estimated coefficients).
-#' @returnItem robust  a logical indicating whether a robust fit was computed.
-#' @returnItem scale  a numeric vector giving the robust residual scale
+#' \item{active}{an integer vector containing the sequence of predictor
+#' series.}
+#' \item{s}{an integer vector containing the steps for which submodels
+#' along the sequence have been computed.}
+#' \item{coefficients}{a numeric matrix in which each column contains the
+#' regression coefficients of the corresponding submodel along the sequence.}
+#' \item{fitted.values}{a numeric matrix in which each column contains
+#' the fitted values of the corresponding submodel along the sequence.}
+#' \item{residuals}{a numeric matrix in which each column contains
+#' the residuals of the corresponding submodel along the sequence.}
+#' \item{df}{an integer vector containing the degrees of freedom of the
+#' submodels along the sequence (i.e., the number of estimated coefficients).}
+#' \item{robust}{a logical indicating whether a robust fit was computed.}
+#' \item{scale}{a numeric vector giving the robust residual scale
 #' estimates for the submodels along the sequence (only returned for a robust
-#' fit).
-#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC
+#' fit).}
+#' \item{crit}{an object of class \code{"bicSelect"} containing the BIC
 #' values and indicating the final model (only returned if argument \code{crit}
 #' is \code{"BIC"} and argument \code{s} indicates more than one step along the
-#' sequence).
-#' @returnItem muX  a numeric vector containing the center estimates of the
-#' predictor variables.
-#' @returnItem sigmaX  a numeric vector containing the scale estimates of the
-#' predictor variables.
-#' @returnItem muY  numeric; the center estimate of the response.
-#' @returnItem sigmaY  numeric; the scale estimate of the response.
-#' @returnItem x  the matrix of candidate predictor series (if \code{model} is
-#' \code{TRUE}).
-#' @returnItem y  the response series (if \code{model} is \code{TRUE}).
-#' @returnItem assign  an integer vector giving the predictor group to which
-#' each predictor variable belongs.
-#' @returnItem w  a numeric vector giving the data cleaning weights (only
-#' returned for a robust fit).
-#' @returnItem h  the forecast horizon.
-#' @returnItem p  the number of lags in the model.
-#' @returnItem call  the matched function call.
+#' sequence).}
+#' \item{muX}{a numeric vector containing the center estimates of the
+#' predictor variables.}
+#' \item{sigmaX}{a numeric vector containing the scale estimates of the
+#' predictor variables.}
+#' \item{muY}{numeric; the center estimate of the response.}
+#' \item{sigmaY}{numeric; the scale estimate of the response.}
+#' \item{x}{the matrix of candidate predictor series (if \code{model} is
+#' \code{TRUE}).}
+#' \item{y}{the response series (if \code{model} is \code{TRUE}).}
+#' \item{assign}{an integer vector giving the predictor group to which
+#' each predictor variable belongs.}
+#' \item{w}{a numeric vector giving the data cleaning weights (only
+#' returned for a robust fit).}
+#' \item{h}{the forecast horizon.}
+#' \item{p}{the number of lags in the model.}
+#' \item{call}{the matched function call.}
 #'
 #' @note The predictor group of lagged values of the response is indicated by
 #' the index 0.

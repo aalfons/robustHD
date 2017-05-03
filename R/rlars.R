@@ -103,38 +103,38 @@
 #'
 #' Otherwise an object of class \code{"rlars"} (inheriting from class
 #' \code{"seqModel"}) with the following components:
-#' @returnItem active  an integer vector containing the indices of the
-#' sequenced predictors.
-#' @returnItem s  an integer vector containing the steps for which submodels
-#' along the sequence have been computed.
-#' @returnItem coefficients  a numeric matrix in which each column contains the
-#' regression coefficients of the corresponding submodel along the sequence.
-#' @returnItem fitted.values  a numeric matrix in which each column contains
-#' the fitted values of the corresponding submodel along the sequence.
-#' @returnItem residuals  a numeric matrix in which each column contains
-#' the residuals of the corresponding submodel along the sequence.
-#' @returnItem df  an integer vector containing the degrees of freedom of the
-#' submodels along the sequence (i.e., the number of estimated coefficients).
-#' @returnItem robust  a logical indicating whether a robust fit was computed
-#' (\code{TRUE} for \code{"rlars"} models).
-#' @returnItem scale  a numeric vector giving the robust residual scale
-#' estimates for the submodels along the sequence.
-#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC
+#' \item{active}{an integer vector containing the indices of the
+#' sequenced predictors.}
+#' \item{s}{an integer vector containing the steps for which submodels
+#' along the sequence have been computed.}
+#' \item{coefficients}{a numeric matrix in which each column contains the
+#' regression coefficients of the corresponding submodel along the sequence.}
+#' \item{fitted.values}{a numeric matrix in which each column contains
+#' the fitted values of the corresponding submodel along the sequence.}
+#' \item{residuals}{a numeric matrix in which each column contains
+#' the residuals of the corresponding submodel along the sequence.}
+#' \item{df}{an integer vector containing the degrees of freedom of the
+#' submodels along the sequence (i.e., the number of estimated coefficients).}
+#' \item{robust}{a logical indicating whether a robust fit was computed
+#' (\code{TRUE} for \code{"rlars"} models).}
+#' \item{scale}{a numeric vector giving the robust residual scale
+#' estimates for the submodels along the sequence.}
+#' \item{crit}{an object of class \code{"bicSelect"} containing the BIC
 #' values and indicating the final model (only returned if argument \code{crit}
 #' is \code{"BIC"} and argument \code{s} indicates more than one step along the
-#' sequence).
-#' @returnItem muX  a numeric vector containing the center estimates of the
-#' predictors.
-#' @returnItem sigmaX  a numeric vector containing the scale estimates of the
-#' predictors.
-#' @returnItem muY  numeric; the center estimate of the response.
-#' @returnItem sigmaY  numeric; the scale estimate of the response.
-#' @returnItem x  the matrix of candidate predictors (if \code{model} is
-#' \code{TRUE}).
-#' @returnItem y  the response (if \code{model} is \code{TRUE}).
-#' @returnItem w  a numeric vector giving the data cleaning weights (if
-#' \code{winsorize} is \code{TRUE}).
-#' @returnItem call  the matched function call.
+#' sequence).}
+#' \item{muX}{a numeric vector containing the center estimates of the
+#' predictors.}
+#' \item{sigmaX}{a numeric vector containing the scale estimates of the
+#' predictors.}
+#' \item{muY}{numeric; the center estimate of the response.}
+#' \item{sigmaY}{numeric; the scale estimate of the response.}
+#' \item{x}{the matrix of candidate predictors (if \code{model} is
+#' \code{TRUE}).}
+#' \item{y}{the response (if \code{model} is \code{TRUE}).}
+#' \item{w}{a numeric vector giving the data cleaning weights (if
+#' \code{winsorize} is \code{TRUE}).}
+#' \item{call}{the matched function call.}
 #'
 #' @author Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
 #' Ruben H. Zamar

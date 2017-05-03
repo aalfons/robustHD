@@ -72,28 +72,28 @@ fortify.bicSelect <- function(model, data = NULL, select = NULL, ...) {
 #' plots), \code{"q"} (quantiles of the Mahalanobis distribution used as cutoff
 #' points for detecting leverage points), and \code{"facets"} (default faceting
 #' formula for the diagnostic plots).
-#' @returnItem step  the steps (for the \code{"seqModel"} method) or indices
+#' \item{step}{the steps (for the \code{"seqModel"} method) or indices
 #' (for the \code{"sparseLTS"} method) of the models (only returned if more
-#' than one model is requested).
-#' @returnItem fit  the model fits (only returned if both the reweighted
-#' and raw fit are requested in the \code{"sparseLTS"} method).
-#' @returnItem index  the indices of the observations.
-#' @returnItem fitted  the fitted values.
-#' @returnItem residual  the standardized residuals.
-#' @returnItem theoretical  the corresponding theoretical quantiles from the
-#' standard normal distribution.
-#' @returnItem qqd  the absolute distances from a reference line through the
-#' first and third sample and theoretical quartiles.
-#' @returnItem rd  the robust Mahalanobis distances computed via the MCD (see
-#' \code{\link[robustbase]{covMcd}}).
-#' @returnItem xyd  the pairwise maxima of the absolute values of the
+#' than one model is requested).}
+#' \item{fit}{the model fits (only returned if both the reweighted
+#' and raw fit are requested in the \code{"sparseLTS"} method).}
+#' \item{index}{the indices of the observations.}
+#' \item{fitted}{the fitted values.}
+#' \item{residual}{the standardized residuals.}
+#' \item{theoretical}{the corresponding theoretical quantiles from the
+#' standard normal distribution.}
+#' \item{qqd}{the absolute distances from a reference line through the
+#' first and third sample and theoretical quartiles.}
+#' \item{rd}{the robust Mahalanobis distances computed via the MCD (see
+#' \code{\link[robustbase]{covMcd}}).}
+#' \item{xyd}{the pairwise maxima of the absolute values of the
 #' standardized residuals and the robust Mahalanobis distances, divided by the
-#' respective other outlier detection cutoff point.
-#' @returnItem weight  the weights indicating regression outliers.
-#' @returnItem leverage  logicals indicating leverage points (i.e., outliers in
-#' the predictor space).
-#' @returnItem classification  a factor with levels \code{"outlier"}
-#' (regression outliers) and \code{"good"} (data points following the model).
+#' respective other outlier detection cutoff point.}
+#' \item{weight}{the weights indicating regression outliers.}
+#' \item{leverage}{logicals indicating leverage points (i.e., outliers in
+#' the predictor space).}
+#' \item{classification}{a factor with levels \code{"outlier"}
+#' (regression outliers) and \code{"good"} (data points following the model).}
 #'
 #' @author Andreas Alfons
 #'

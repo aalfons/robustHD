@@ -81,41 +81,43 @@
 #' @return
 #' An object of class \code{"sparseS"} (inheriting from class
 #' \code{"penModel"}) with the following components:
-#' @returnItem lambda  a numeric vector giving the values of the penalty
-#' parameter.
-#' @returnItem rweights  an integer vector or matrix containing the respective
-#' robustness weights.
-#' @returnItem objective  a numeric vector giving the respective values of the
+#' \item{lambda}{a numeric vector giving the values of the penalty
+#' parameter.}
+#' \item{rweights}{an integer vector or matrix containing the respective
+#' robustness weights.}
+#' \item{objective}{a numeric vector giving the respective values of the
 #' sparse S objective function, i.e., the \eqn{L_{1}}{L1} penalized sums of
-#' the M-scales of the residuals.
-#' @returnItem coefficients  a numeric vector or matrix containing the
-#' respective coefficient estimates.
-#' @returnItem fitted.values  a numeric vector or matrix containing the
-#' respective fitted values of the response.
-#' @returnItem residuals  a numeric vector or matrix containing the
-#' respective residuals.
-#' @returnItem scale  a numeric vector giving the minimized M-scale estimates
-#' of the corresponding residuals.
-#' @returnItem df  an integer vector giving the respective degrees of freedom
+#' the M-scales of the residuals.}
+#' \item{coefficients}{a numeric vector or matrix containing the
+#' respective coefficient estimates.}
+#' \item{fitted.values}{a numeric vector or matrix containing the
+#' respective fitted values of the response.}
+#' \item{residuals}{a numeric vector or matrix containing the
+#' respective residuals.}
+#' \item{scale}{a numeric vector giving the minimized M-scale estimates
+#' of the corresponding residuals.}
+#' \item{df}{an integer vector giving the respective degrees of freedom
 #' of the obtained model fits, i.e., the number of nonzero coefficient
-#' estimates.
-#' @returnItem standardize  a logical indicating whether the predictor
-#' variables were robustly standardized.
-#' @returnItem crit  an object of class \code{"bicSelect"} containing the BIC
+#' estimates.}
+#' \item{standardize}{a logical indicating whether the predictor
+#' variables were robustly standardized.}
+#' \item{crit}{an object of class \code{"bicSelect"} containing the BIC
 #' values and indicating the final model (only returned if argument \code{crit}
 #' is \code{"BIC"} and argument \code{lambda} contains more than one value for
-#' the penalty parameter).
-#' @returnItem muX  a numeric vector containing the center estimates of the
-#' predictors if \code{standardize=TRUE} and a numeric vectors of zeros otherwise.
-#' @returnItem sigmaX  a numeric vector containing the scale estimates of the
-#' predictors if \code{standardize=TRUE} and a numeric vectors of ones otherwise.
-#' @returnItem muY  numeric; the center estimate of the response if
-#' \code{standardize=TRUE} and a numeric vectors of zeros otherwise.
-#' @returnItem sigmaY  numeric; the scale estimate of the response if
-#' \code{standardize=TRUE} and a numeric vectors of ones otherwise.
-#' @returnItem x  the predictor matrix (if \code{model} is \code{TRUE}).
-#' @returnItem y  the response variable (if \code{model} is \code{TRUE}).
-#' @returnItem call  the matched function call.
+#' the penalty parameter).}
+#' \item{muX}{a numeric vector containing the center estimates of the
+#' predictors if \code{standardize=TRUE} and a numeric vectors of zeros
+#' otherwise.}
+#' \item{sigmaX}{a numeric vector containing the scale estimates of the
+#' predictors if \code{standardize=TRUE} and a numeric vectors of ones
+#' otherwise.}
+#' \item{muY}{numeric; the center estimate of the response if
+#' \code{standardize=TRUE} and a numeric vectors of zeros otherwise.}
+#' \item{sigmaY}{numeric; the scale estimate of the response if
+#' \code{standardize=TRUE} and a numeric vectors of ones otherwise.}
+#' \item{x}{the predictor matrix (if \code{model} is \code{TRUE}).}
+#' \item{y}{the response variable (if \code{model} is \code{TRUE}).}
+#' \item{call}{the matched function call.}
 #'
 #' @author Andreas Alfons and Viktoria \enc{Öllerer}{Oellerer}
 #'
@@ -166,9 +168,9 @@ sparseS.formula <- function(formula, data, ...) {
 #' @rdname sparseS
 #' @method sparseS default
 #' @export
-sparseS.default <- function(x, y, lambda = NULL, standardize = TRUE,
-                            nsamp = c(500, 10), nistep = 10,
-                            tuning.chi = 1.547645, bb = NULL,
+sparseS.default <- function(x, y, lambdaMin = 0, sMax = NA,
+                            standardize = TRUE, nsamp = c(500, 10),
+                            nistep = 10, tuning.chi = 1.547645, bb = NULL,
                             nfpi = c(10, 500), tol = .Machine$double.eps^0.5,
                             eps = .Machine$double.eps, use.Gram,
                             crit = "BIC", ncores = 1, seed = NULL,
@@ -181,22 +183,17 @@ sparseS.default <- function(x, y, lambda = NULL, standardize = TRUE,
   x <- addColnames(as.matrix(x))
   d <- dim(x)
   if(!isTRUE(n == d[1])) stop(sprintf("'x' must have %d rows", n))
-  findLambda <- is.null(lambda)
-  if((!is.numeric(lambda) || length(lambda) == 0 || any(!is.finite(lambda))) &&
-       !findLambda) {
-    warning("missing or invalid value of 'lambda'; ",
-            "using optimal lambda on weighted samples")
+  # TODO: sensible default for lambdaMin as small fraction of lambda0() if n < p
+  lambdaMin <- rep(lambdaMin, length.out=1)
+  if(!is.numeric(lambdaMin) || !is.finite(lambdaMin)) {
+    lambdaMin <- formals()$lambdaMin
+    warning("missing or infinite value of 'lambdaMin'; using default value")
   }
-  if(findLambda) lambda <- NA_real_
-  else {
-    if(any(negative <- lambda < 0)) {
-      lambda[negative] <- 0
-      warning("negative value for 'lambda'; using no penalization")
-    }
-    lambda <- sort.int(unique(lambda), decreasing=TRUE)
-  }
-  if(length(lambda) == 1) crit <- "none"
-  else crit <- "BIC"  # CV not yet implemented
+  if(is.na(sMax)) sMax <- d[2]  # suitable value for n < p determined in C++
+  if(!is.numeric(sMax) || is.infinite(sMax) || sMax < 0 || sMax > d[2]) {
+    sMax <- d[2]  # use default value
+    warning("invalid value of 'sMax'; using default value")
+  } else sMax <- as.integer(sMax)
   standardize <- isTRUE(standardize)
   nsamp <- rep(nsamp, length.out=2)
   if(!is.numeric(nsamp) || any(!is.finite(nsamp))) {
@@ -235,6 +232,7 @@ sparseS.default <- function(x, y, lambda = NULL, standardize = TRUE,
     eps <- formals()$eps
     warning("missing or infinite value of 'eps'; using default value")
   }
+  crit <- "none" # CV not yet implemented
   if(missing(use.Gram)) use.Gram <- d[2] >= min(n, 100)
   else use.Gram <- isTRUE(use.Gram)
   ncores <- rep(ncores, length.out=1)
@@ -266,53 +264,25 @@ sparseS.default <- function(x, y, lambda = NULL, standardize = TRUE,
   }
 
   ## call internal function
-  if(length(lambda) == 1) {
-    fit <- fastSparseS(x=xs, y=z, findLambda=findLambda, fixedLambda=lambda,
-                       initial=subsets, nistep=nistep, nkeep=nsamp[2],
-                       tuning.chi=tuning.chi, bb=bb, nfpi=nfpi, tol=tol,
-                       eps=eps, use.Gram=use.Gram, ncores=ncores)
-  } else {
-    # grid of lambda values is supplied
-    names(lambda) <- seq_along(lambda)
-    fit <- lapply(lambda, fastSparseS, x=xs, y=z, findLambda=FALSE,
-                  initial=subsets, nistep=nistep, nkeep=nsamp[2],
-                  tuning.chi=tuning.chi, bb=bb, nfpi=nfpi, tol=tol,
-                  eps=eps, use.Gram=use.Gram, ncores=ncores, drop=FALSE)
-    names(fit) <- names(lambda)
-  }
+  fit <- fastSparseS(x=xs, y=z, lambdaMin=lambdaMin, sMax=sMax,
+                     initial=subsets, nistep=nistep, nkeep=nsamp[2],
+                     tuning.chi=tuning.chi, bb=bb, nfpi=nfpi, tol=tol,
+                     eps=eps, use.Gram=use.Gram, ncores=ncores)
 
   ## construct return object
   x <- addIntercept(x)
-  if(length(lambda) == 1) {
-    # backtransform coefficients, residuals and scale
-    coefficients <- backtransform(fit$coefficients, centerY=muY, scaleY=sigmaY,
-                                  centerX=muX, scaleX=sigmaX)
-    residuals <- fit$residuals * sigmaY
-    df <- modelDf(coefficients, tol)
-    fit <- list(lambda=fit$lambda,
-                rweights=copyNames(from=y, to=fit$weights),
-                objective=fit$objective,
-                coefficients=copyNames(from=x, to=coefficients),
-                fitted.values=copyNames(from=y, to=y-residuals),
-                residuals=copyNames(from=y, to=residuals),
-                scale=fit$scale*sigmaY, df=df, standardize=standardize)
-  } else {
-    # backtransform coefficients, residuals and scale
-    coefficients <- sapply(fit, function(f) {
-      backtransform(f$coefficients, centerY=muY, scaleY=sigmaY,
-                    centerX=muX, scaleX=sigmaX)
-    })
-    residuals <- sapply(fit, "[[", "residuals") * sigmaY
-    df <- apply(coefficients, 2, modelDf, tol)
-    fit <- list(lambda=lambda,
-                rweights=copyNames(from=y, to=sapply(fit, "[[", "weights")),
-                objective=sapply(fit, "[[", "objective"),
-                coefficients=copyNames(from=x, to=coefficients),
-                fitted.values=copyNames(from=y, to=y-residuals),
-                residuals=copyNames(from=y, to=residuals),
-                scale=sapply(fit, "[[", "scale") * sigmaY, df=df,
-                standardize=standardize)
-  }
+  # backtransform coefficients, residuals and scale
+  coefficients <- backtransform(fit$coefficients, centerY=muY, scaleY=sigmaY,
+                                centerX=muX, scaleX=sigmaX)
+  residuals <- fit$residuals * sigmaY
+  df <- modelDf(coefficients, tol)
+  fit <- list(lambda=fit$lambda,
+              rweights=copyNames(from=y, to=fit$weights),
+              objective=fit$objective,
+              coefficients=copyNames(from=x, to=coefficients),
+              fitted.values=copyNames(from=y, to=y-residuals),
+              residuals=copyNames(from=y, to=residuals),
+              scale=fit$scale*sigmaY, df=df, standardize=standardize)
 
   ## assign class
   class(fit) <- c("sparseS", "penModel")
@@ -332,18 +302,17 @@ sparseS.default <- function(x, y, lambda = NULL, standardize = TRUE,
 
 
 ## internal function to compute sparse S-estimator
-fastSparseS <- function(fixedLambda, x, y, findLambda = FALSE, initial,
-                        nistep = 10, nkeep = 10, tuning.chi = 1.547645,
-                        bb = 0.5, nfpi = c(10, 500),
-                        tol = .Machine$double.eps^0.5,
+fastSparseS <- function(x, y, lambdaMin, sMax, initial, nistep = 10,
+                        nkeep = 10, tuning.chi = 1.547645, bb = 0.5,
+                        nfpi = c(10, 500), tol = .Machine$double.eps^0.5,
                         eps = .Machine$double.eps, use.Gram = TRUE,
                         ncores = 1, drop = TRUE) {
   # call C++ function
-  fit <- .Call("R_fastSparseS", R_x=x, R_y=y, R_findLambda=findLambda,
-               R_fixedLambda=fixedLambda, R_initial=initial, R_nistep=nistep,
-               R_nkeep=nkeep, R_k=tuning.chi, R_b=bb, R_nfpi=nfpi[1],
-               R_nfpiMax=nfpi[2], R_tol=tol, R_eps=eps, R_useGram=use.Gram,
-               R_ncores=ncores, PACKAGE="robustHD")
+  fit <- .Call("R_fastSparseS", R_x=x, R_y=y, R_lambdaMin=lambdaMin,
+               R_sMax=sMax, R_initial=initial, R_nistep=nistep, R_nkeep=nkeep,
+               R_k=tuning.chi, R_b=bb, R_nfpi=nfpi[1], R_nfpiMax=nfpi[2],
+               R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores,
+               PACKAGE="robustHD")
   if(drop) {
     # drop the dimension of selected components
     which <- c("weights", "residuals")

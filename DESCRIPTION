@@ -2,7 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
 Version: 0.6.0
-Date: 2016-02-01
+Date: 2017-04-11
 Depends:
     R (>= 3.2.0),
     ggplot2 (>= 0.9.2),
@@ -22,8 +22,11 @@ Description: Robust methods for high-dimensional data, in particular linear
     regression.
 License: GPL (>= 2)
 LazyLoad: yes
-Authors@R: person("Andreas", "Alfons",
-    email = "alfons@ese.eur.nl",
-    role = c("aut", "cre"))
-Author: Andreas Alfons [aut, cre]
+Authors@R: c(person("Andreas", "Alfons", email = "alfons@ese.eur.nl",
+             role = c("aut", "cre")), 
+             person("Viktoria", "Oellerer", role = "ctb"), 
+             person("Christophe", "Croux", role = "ctb"))
+Author: Andreas Alfons [aut, cre], Viktoria Oellerer [ctb], 
+    Christophe Croux [ctb]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
+RoxygenNote: 6.0.1

@@ -500,10 +500,10 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   }
 }
 
-// R interface to fastLasso()
-SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
-                 SEXP R_subset, SEXP R_normalize, SEXP R_intercept,
-                 SEXP R_eps, SEXP R_useGram) {
+// R interface to fastLasso() for lasso on subset
+SEXP R_subsetLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
+                   SEXP R_subset, SEXP R_normalize, SEXP R_intercept,
+                   SEXP R_eps, SEXP R_useGram) {
   // data initializations
   NumericMatrix Rcpp_x(R_x);  					  // predictor matrix
   const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
@@ -544,10 +544,10 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
 }
 
 
-// *******************************************
-// weighted lasso with fixed or optimal lambda
+// ********************************************
+// weighted lasso with choice of optimal lambda
 // (the data are assumed to be standardized)
-// *******************************************
+// ********************************************
 
 // find maximum number of active variables
 // weights ........ weights of observations
@@ -575,13 +575,22 @@ double BIC(const vec& residuals, const vec& weights,
   for(uword j = 0; j < p; j++) {
     if(std::abs(beta(j)) > tol) df++;
   }
+  // // compute weighted residual variance (mean is assumed to be 0)
+  // uword n = residuals.n_elem;
+  // double sigma2 = 0;
+  // for(uword i = 0; i < n; i++) {
+  //   sigma2 += weights(i) * pow(residuals(i), 2);
+  // }
+  // sigma2 /= (double)(n-df); // correct for number of estimated parameters
   // compute weighted residual variance (mean is assumed to be 0)
   uword n = residuals.n_elem;
-  double sigma2 = 0;
+  double sigma2 = 0, denominator = -(double)df;// correct for degrees of freedom
   for(uword i = 0; i < n; i++) {
     sigma2 += weights(i) * pow(residuals(i), 2);
+    denominator += weights(i);
   }
-  sigma2 /= (double)(n-df); // use denominator n
+  if (denominator < 1) denominator = 1;
+  sigma2 /= denominator;
   // compute bic
   return log(sigma2) + df * log(n) / (double)n;
 }
@@ -590,33 +599,27 @@ double BIC(const vec& residuals, const vec& weights,
 // Armadillo library is used for linear algebra
 // x .............. predictor matrix
 // y .............. response
-// findLambda ..... logical; if true, the full lasso solution is computed and
-//                  the optimal value of the penalty parameter is determined
-//                  via BIC.  if false, the lasso solution is computed for a
-//                  specified value of the penalty parameter.
-// lambda ......... penalty parameter
 // useWeights ..... logical indicating whether weighted lasso should be computed
 //                  TODO: this flag can probably be removed
 // weights ........ indices of subset on which lasso should be computed
+// lambdaMin ...... minimum value for the penalty parameter
+// sMax ........... maximum number of predictors
 // eps ............ small numerical value (effective zero)
 // tol ............ numerical tolerance for inactive predictors in BIC
 // useGram ........ logical indicating whether Gram matrix should be computed
 //                  in advance
-void fastLasso(const mat& x, const vec& y, const bool& findLambda,
-               double& lambda, const bool& useWeights, const vec& weights,
+// TODO: properly handle lambdaMin (i.e., interpolation of coefficients)
+void fastLasso(const mat& x, const vec& y, const bool& useWeights,
+               const vec& weights, const double& lambdaMin, const uword& sMax,
                const double& tol, const double& eps, const bool& useGram,
-               // intercept, coefficients and residuals are returned through
-               // the following parameters
-               double& intercept, vec& beta, vec& residuals) {
+               // optimal penalty parameter, intercept, coefficients and
+               // residuals are returned through the following parameters
+               double& lambda, double& intercept, vec& beta, vec& residuals) {
 
   // data initializations
   uword n = x.n_rows, p = x.n_cols;
-  double rescaledLambda;
-  if(findLambda) {
-    rescaledLambda = R_NaReal;
-  } else {
-    rescaledLambda = n * lambda / 2.0;
-  }
+  double rescaledLambda = R_NaReal;
+  double rescaledLambdaMin = n * lambdaMin / 2.0;
 
   // center data and store means
   rowvec meanX;
@@ -673,30 +676,37 @@ void fastLasso(const mat& x, const vec& y, const bool& findLambda,
     // set maximum step size in the direction of that variable
     double maxStep = corY(j);
     if(maxStep < 0) maxStep = -maxStep; // absolute value
-    // compute coefficients for least squares solution
-    vec betaLS = solve(xs.unsafe_col(j), ys);
-    // compute lasso coefficients
+    // compute intercept-only solution
     beta.zeros();
-    if(findLambda) {
-      // intercept-only solution
+    intercept = meanY;
+    residuals = y - intercept;
+    // if maximum step is smaller than minimum lambda, intercept-only solution
+    // is the only viable solution.  otherwise, we have to check against step
+    // towards least squares solution, possibly limited by minimum lambda.
+    if(maxStep <= rescaledLambdaMin) {
+      // set value of penalty parameter to minimum lambda
+      rescaledLambda = rescaledLambdaMin;
+    } else {
+      // set lambda corresponding to intercept-only solution and compute BIC
       rescaledLambda = maxStep;
-      intercept = meanY;
-      residuals = y - intercept;
       double bic = BIC(residuals, weights, beta, tol);
-      // least squares solution
-      double interceptLS = intercept - beta(j)*meanX(j);
-      vec residualsLS = residuals - beta(j)*xs.unsafe_col(j);
+      // compute least squares coefficient
+      vec betaLS = solve(xs.unsafe_col(j), ys);
+      // if necessary, limit step in the direction of least squares coefficient
+      // by minimum lambda (interpolate towards least squares solution)
+      if(rescaledLambdaMin > 0) {
+        betaLS(j) = (maxStep - rescaledLambdaMin) * betaLS(0) / maxStep;
+      }
+      double interceptLS = intercept - betaLS(j)*meanX(j);
+      vec residualsLS = residuals - betaLS(j)*xs.unsafe_col(j);
       double bicLS = BIC(residualsLS, weights, betaLS, tol);
       // compare solutions
       if(bicLS < bic) {
-        rescaledLambda = 0;
+        rescaledLambda = rescaledLambdaMin;
         intercept = interceptLS;
         beta(j) = betaLS(0);
         residuals = residualsLS;
       }
-    } else if(rescaledLambda < maxStep) {
-      // interpolate towards least squares solution
-      beta(j) = (maxStep - rescaledLambda) * betaLS(0) / maxStep;
     }
 
   } else {
@@ -723,22 +733,24 @@ void fastLasso(const mat& x, const vec& y, const bool& findLambda,
     vec absCorInactiveY = abs(corInactiveY);
     double maxCor = absCorInactiveY.max();
 
-    // for fixed lambda, previous and current coefficients need to be stored
-    // such that interpolation between the two is possible
+    // for a given minimum lambda, previous and current coefficients need to be
+    // stored such that interpolation between the two is possible
     vec previousBeta, currentBeta = zeros(p+s);
     // corresponding values of the penalty parameter
     double previousLambda, currentLambda = maxCor;
     // intercept-only solution as starting values for optimal lambda
-    if(findLambda) {
+    if(maxCor < rescaledLambdaMin) {
+      rescaledLambda = rescaledLambdaMin;
+    } else {
       rescaledLambda = maxCor;
-      intercept = meanY;
-      beta.zeros();
-      residuals = y - intercept;
-      bic = BIC(residuals, weights, beta, tol);
-    } else bic = R_NaReal;  // to avoid warning
+    }
+    intercept = meanY;
+    beta.zeros();
+    residuals = y - intercept;
+    bic = BIC(residuals, weights, beta, tol);
 
     // modified LARS algorithm for lasso solution
-    while((k < maxActive) && (findLambda || (currentLambda > rescaledLambda))) {
+    while((k < maxActive) && (k < sMax) && (currentLambda > rescaledLambdaMin)) {
 
       if(drops.n_elem == 0) {
         // new active variables
@@ -875,7 +887,7 @@ void fastLasso(const mat& x, const vec& y, const bool& findLambda,
       // adjust step size if any sign changes and drop corresponding variables
       drops = findDrops(currentBeta, active, w, eps, step);
       // update current regression coefficients
-      if(!findLambda) previousBeta = currentBeta;
+      if(rescaledLambdaMin > 0) previousBeta = currentBeta;
       currentBeta.elem(active) += step * w;
       // update current correlations
       if(useGram) {
@@ -957,7 +969,7 @@ void fastLasso(const mat& x, const vec& y, const bool& findLambda,
         }
       }
       // update current lambda
-      if(!findLambda) previousLambda = currentLambda;
+      if(rescaledLambdaMin > 0) previousLambda = currentLambda;
       if(m == 0) {
         currentLambda = 0;
       } else {
@@ -969,72 +981,73 @@ void fastLasso(const mat& x, const vec& y, const bool& findLambda,
         currentLambda = maxCor;
       }
       // update optimal lambda
-      if(findLambda) {
-        // least squares solution
-        double currentIntercept = meanY - dot(currentBeta, meanX);
-        vec currentResiduals = y - currentIntercept - x * currentBeta;
-        double currentBic = BIC(currentResiduals, weights, currentBeta, tol);
-        // compare solutions
-        if(currentBic < bic) {
-          rescaledLambda = currentLambda;
-          intercept = currentIntercept;
-          beta = currentBeta;
-          residuals = currentResiduals;
-          bic = currentBic;
-        }
+      // if necessary, limit current solution by minimum lambda (interpolate)
+      if(currentLambda < rescaledLambdaMin) {
+        currentBeta = ((rescaledLambdaMin - currentLambda) * previousBeta +
+                      (previousLambda - rescaledLambdaMin) * currentBeta) /
+                      (previousLambda - currentLambda);
+        currentLambda = rescaledLambdaMin;
+      }
+      // current solution
+      double currentIntercept = meanY - dot(currentBeta, meanX);
+      vec currentResiduals = y - currentIntercept - x * currentBeta;
+      double currentBic = BIC(currentResiduals, weights, currentBeta, tol);
+      // compare solutions
+      if(currentBic < bic) {
+        rescaledLambda = currentLambda;
+        intercept = currentIntercept;
+        beta = currentBeta;
+        residuals = currentResiduals;
+        bic = currentBic;
       }
     }
 
-    if(!findLambda) {
-      // interpolate coefficients for given lambda
-      if(k == 0) {
-        // lambda larger than largest lambda from steps of LARS algorithm
-        beta.zeros();
-      } else {
-        // penalty parameter within two steps: interpolate coefficients
-        beta = ((rescaledLambda - currentLambda) * previousBeta +
-          (previousLambda - rescaledLambda) * currentBeta) /
-          (previousLambda - currentLambda);
-      }
-    }
+    // if(!findLambda) {
+    //   // interpolate coefficients for given lambda
+    //   if(k == 0) {
+    //     // lambda larger than largest lambda from steps of LARS algorithm
+    //     beta.zeros();
+    //   } else {
+    //     // penalty parameter within two steps: interpolate coefficients
+    //     beta = ((rescaledLambda - currentLambda) * previousBeta +
+    //       (previousLambda - rescaledLambda) * currentBeta) /
+    //       (previousLambda - currentLambda);
+    //   }
+    // }
   }
 
-  // finalize computations
-  if(findLambda) {
-    // transform lambda back to original scale
-    lambda = 2.0 * rescaledLambda / (double)n;
-  } else {
-    // compute intercept
-    intercept = meanY - dot(beta, meanX);
-    // compute residuals for unweighted observations
-    residuals = y - intercept - x * beta;
-  }
+  // transform lambda back to original scale
+  lambda = 2.0 * rescaledLambda / (double)n;
+
+  // // compute intercept
+  // intercept = meanY - dot(beta, meanX);
+  // // compute residuals for unweighted observations
+  // residuals = y - intercept - x * beta;
 }
 
 // R interface to fastLasso() (for testing)
-SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_findLambda, SEXP R_lambda,
-                 SEXP R_useWeights, SEXP R_weights, SEXP R_tol,
-                 SEXP R_eps, SEXP R_useGram) {
+SEXP R_weightedLasso(SEXP R_x, SEXP R_y, SEXP R_useWeights, SEXP R_weights,
+                     SEXP R_lambdaMin, SEXP R_sMax, SEXP R_tol, SEXP R_eps,
+                     SEXP R_useGram) {
   // data initializations
   NumericMatrix Rcpp_x(R_x);    				  // predictor matrix
   const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
   mat x(Rcpp_x.begin(), n, p, false);		  // reuse memory
   NumericVector Rcpp_y(R_y);			        // response
   vec y(Rcpp_y.begin(), n, false);	      // reuse memory
-  bool findLambda = as<bool>(R_findLambda);
-  double lambda;
-  if(!findLambda) lambda = as<double>(R_lambda);
   bool useWeights = as<bool>(R_useWeights);
   NumericVector Rcpp_weights(R_weights);                         // weights
   vec weights(Rcpp_weights.begin(), Rcpp_weights.size(), false); // reuse memory
+  double lambdaMin = as<double>(R_lambdaMin);
+  uword sMax = as<uword>(R_sMax);
   double tol = as<double>(R_tol);
   double eps = as<double>(R_eps);
   bool useGram = as<bool>(R_useGram);
   // call native C++ function and return results as list
-  double intercept;
+  double lambda, intercept;
   vec coefficients, residuals;
-  fastLasso(x, y, findLambda, lambda, useWeights, weights, tol, eps, useGram,
-            intercept, coefficients, residuals);
+  fastLasso(x, y, useWeights, weights, lambdaMin, sMax, tol, eps, useGram,
+            lambda, intercept, coefficients, residuals);
   // prepend intercept
   coefficients.insert_rows(0, 1, false);
   coefficients(0) = intercept;

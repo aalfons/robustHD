@@ -93,14 +93,14 @@
 #' lag length.
 #'
 #' Otherwise an object of class \code{"tslars"} with the following components:
-#' @returnItem pFit  a list containing the fits for the respective lag lengths
-#' (see \code{\link{tslarsP}}).
-#' @returnItem pOpt  an integer giving the optimal number of lags.
-#' @returnItem pMax  the maximum number of lags considered.
-#' @returnItem x  the matrix of candidate predictor series (if \code{model} is
-#' \code{TRUE}).
-#' @returnItem y  the response series (if \code{model} is \code{TRUE}).
-#' @returnItem call  the matched function call.
+#' \item{pFit}{a list containing the fits for the respective lag lengths
+#' (see \code{\link{tslarsP}}).}
+#' \item{pOpt}{an integer giving the optimal number of lags.}
+#' \item{pMax}{the maximum number of lags considered.}
+#' \item{x}{the matrix of candidate predictor series (if \code{model} is
+#' \code{TRUE}).}
+#' \item{y}{the response series (if \code{model} is \code{TRUE}).}
+#' \item{call}{the matched function call.}
 #'
 #' @note The predictor group of lagged values of the response is indicated by
 #' the index 0.
