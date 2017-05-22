@@ -749,8 +749,14 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
     residuals = y - intercept;
     bic = BIC(residuals, weights, beta, tol);
 
+    // Rprintf("  lambdaMin = %f\n", 2.0 * rescaledLambdaMin / (double)n);
+    // Rprintf("  current lambda (before loop) = %f\n", 2.0 * currentLambda / (double)n);
+
     // modified LARS algorithm for lasso solution
     while((k < maxActive) && (k < sMax) && (currentLambda > rescaledLambdaMin)) {
+
+      // Rprintf("  k = %d\n", k);
+      // Rprintf("    current lambda (begin loop) = %f\n", 2.0 * currentLambda / (double)n);
 
       if(drops.n_elem == 0) {
         // new active variables
@@ -887,7 +893,8 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
       // adjust step size if any sign changes and drop corresponding variables
       drops = findDrops(currentBeta, active, w, eps, step);
       // update current regression coefficients
-      if(rescaledLambdaMin > 0) previousBeta = currentBeta;
+      // if(rescaledLambdaMin > 0)
+        previousBeta = currentBeta;
       currentBeta.elem(active) += step * w;
       // update current correlations
       if(useGram) {
@@ -969,7 +976,8 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
         }
       }
       // update current lambda
-      if(rescaledLambdaMin > 0) previousLambda = currentLambda;
+      // if(rescaledLambdaMin > 0)
+        previousLambda = currentLambda;
       if(m == 0) {
         currentLambda = 0;
       } else {
@@ -988,6 +996,8 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
                       (previousLambda - currentLambda);
         currentLambda = rescaledLambdaMin;
       }
+      // Rprintf("    previous lambda (end loop) = %f\n", 2.0 * previousLambda / (double)n);
+      // Rprintf("    current lambda (end loop) = %f\n", 2.0 * currentLambda / (double)n);
       // current solution
       double currentIntercept = meanY - dot(currentBeta, meanX);
       vec currentResiduals = y - currentIntercept - x * currentBeta;
@@ -1001,28 +1011,10 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
         bic = currentBic;
       }
     }
-
-    // if(!findLambda) {
-    //   // interpolate coefficients for given lambda
-    //   if(k == 0) {
-    //     // lambda larger than largest lambda from steps of LARS algorithm
-    //     beta.zeros();
-    //   } else {
-    //     // penalty parameter within two steps: interpolate coefficients
-    //     beta = ((rescaledLambda - currentLambda) * previousBeta +
-    //       (previousLambda - rescaledLambda) * currentBeta) /
-    //       (previousLambda - currentLambda);
-    //   }
-    // }
   }
 
   // transform lambda back to original scale
   lambda = 2.0 * rescaledLambda / (double)n;
-
-  // // compute intercept
-  // intercept = meanY - dot(beta, meanX);
-  // // compute residuals for unweighted observations
-  // residuals = y - intercept - x * beta;
 }
 
 // R interface to fastLasso() (for testing)

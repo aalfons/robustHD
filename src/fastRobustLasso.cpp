@@ -677,9 +677,10 @@ SEXP R_fastSparseS(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
 // control......... object including parameters
 // best............ object including initial fit and is in the end used to return solution
 
-void fastSparseMM(const mat& x, const vec& y, const double& k, const int& rMax,
-                  const umat& initial, const int& nstep, const int& nkeep,
-                  SparseSControl& control, int& ncores,
+void fastSparseMM(const mat& x, const vec& y, const double& lambdaMin,
+                  const double& k, const int& rMax, const umat& initial,
+                  const int& nstep, const int& nkeep, SparseSControl& control,
+                  int& ncores,
                   // solutions of sparse S and sparse MM are returned through
                   // the following parameters
                   WeightedSample& best, WeightedSample& bestS) {
@@ -701,12 +702,21 @@ void fastSparseMM(const mat& x, const vec& y, const double& k, const int& rMax,
   // reweighting steps (iteratively reweighted lasso)
   int r = 0;
   double previousCrit;
+  // Rprintf("starting iterativel reweighted lasso...\n");
   while((r < rMax) && best.continueSteps) {
+    // Rprintf("iteration %d\n", r+1);
     previousCrit = best.crit;
     // update weights
     best.weights = Mwgt(best.residuals / bestS.scale, k);
+
+    // Rprintf("  residual scale = %f\n", bestS.scale);
+    double sw = 0;
+    int n = best.weights.n_elem;
+    for(int i = 0; i < n; i++) sw += best.weights(i);
+    // Rprintf("  sum of weights = %f\n", sw);
+
     best.lambda *= 2.0; // first order condition requires 2*lambda
-    fastLasso(x, y, true, best.weights, 2.0*control.lambdaMin, control.sMax,
+    fastLasso(x, y, true, best.weights, 2.0*lambdaMin, control.sMax,
               control.tol, control.eps, control.useGram, best.lambda,
               best.intercept, best.coefficients, best.residuals);
     best.lambda /= 2.0; // transform lambda back to actual value
@@ -726,10 +736,10 @@ void fastSparseMM(const mat& x, const vec& y, const double& k, const int& rMax,
 
 // R interface to fastSparseMM()
 // initial subsets are constructed in R and passed down to C++
-SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
-                    SEXP R_k, SEXP R_rMax, SEXP R_initial, SEXP R_nistep,
-                    SEXP R_nkeep, SEXP R_kS, SEXP R_b, SEXP R_nfpi,
-                    SEXP R_nfpiMax, SEXP R_tol, SEXP R_eps,
+SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_lambdaMinM, SEXP R_lambdaMinS,
+                    SEXP R_sMax, SEXP R_k, SEXP R_rMax, SEXP R_initial,
+                    SEXP R_nistep, SEXP R_nkeep, SEXP R_kS, SEXP R_b,
+                    SEXP R_nfpi, SEXP R_nfpiMax, SEXP R_tol, SEXP R_eps,
                     SEXP R_useGram, SEXP R_ncores) {
 
   // data initializations
@@ -738,7 +748,8 @@ SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
   mat x(Rcpp_x.begin(), n, p, false);	// reuse memory
   NumericVector Rcpp_y(R_y);			    // response
   vec y(Rcpp_y.begin(), n, false);	  // reuse memory
-  double lambdaMin = as<double>(R_lambdaMin);
+  double lambdaMinM = as<double>(R_lambdaMinM);
+  double lambdaMinS = as<double>(R_lambdaMinS);
   uword sMax = as<uword>(R_sMax);
   double k = as<double>(R_k);
   int rMax = as<int>(R_rMax);
@@ -760,13 +771,13 @@ SEXP R_fastSparseMM(SEXP R_x, SEXP R_y, SEXP R_lambdaMin, SEXP R_sMax,
   double tol = as<double>(R_tol);
   double eps = as<double>(R_eps);
   bool useGram = as<bool>(R_useGram);
-  SparseSControl control(kS, b, nfpi, nfpiMax, lambdaMin, sMax, tol, eps,
-                         useGram);
+  SparseSControl control(kS, b, nfpi, nfpiMax, lambdaMinS, sMax,
+                         tol, eps, useGram);
   int ncores = as<int>(R_ncores);
   // call native C++ function
   WeightedSample best, bestS;
-  fastSparseMM(x, y, k, rMax, initial, nistep, nkeep, control, ncores,
-               best, bestS);
+  fastSparseMM(x, y, lambdaMinM, k, rMax, initial, nistep, nkeep, control,
+               ncores, best, bestS);
 
   // prepend intercept
   // sparse MM-estimator

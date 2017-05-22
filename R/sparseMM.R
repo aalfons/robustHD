@@ -163,7 +163,7 @@ sparseMM.formula <- function(formula, data, ...) {
 #' @rdname sparseMM
 #' @method sparseMM default
 #' @export
-sparseMM.default <- function(x, y, lambdaMin = 0, sMax = NA,
+sparseMM.default <- function(x, y, lambdaMin = c(0, 0), sMax = NA,
                              standardize = TRUE, tuning.psi = 4.685061,
                              max.it = 500, nsamp = c(500, 10), nistep = 10,
                              tuning.chi = 1.547645, bb = NULL,
@@ -180,8 +180,9 @@ sparseMM.default <- function(x, y, lambdaMin = 0, sMax = NA,
   d <- dim(x)
   if(!isTRUE(n == d[1])) stop(sprintf("'x' must have %d rows", n))
   # TODO: sensible default for lambdaMin as small fraction of lambda0() if n < p
-  lambdaMin <- rep(lambdaMin, length.out=1)
-  if(!is.numeric(lambdaMin) || !is.finite(lambdaMin)) {
+  # TODO: use function lambdaToLambdaS()
+  lambdaMin <- rep(lambdaMin, length.out=2)
+  if(!is.numeric(lambdaMin) || any(!is.finite(lambdaMin))) {
     lambdaMin <- formals()$lambdaMin
     warning("missing or infinite value of 'lambdaMin'; using default value")
   }
@@ -334,8 +335,9 @@ fastSparseMM <- function(x, y, lambdaMin, sMax, tuning.psi = 4.685061,
                          eps = .Machine$double.eps, use.Gram = TRUE,
                          ncores = 1, drop = TRUE) {
   # call C++ function
-  fit <- .Call("R_fastSparseMM", R_x=x, R_y=y, R_lambdaMin=lambdaMin,
-               R_sMax=sMax, R_k=tuning.psi, R_rMax=max.it, R_initial=initial,
+  fit <- .Call("R_fastSparseMM", R_x=x, R_y=y, R_lambdaMinM=lambdaMin[1],
+               R_lambdaMinS=lambdaMin[2], R_sMax=sMax,
+               R_k=tuning.psi, R_rMax=max.it, R_initial=initial,
                R_nistep=nistep, R_nkeep=nkeep, R_kS=tuning.chi, R_b=bb,
                R_nfpi=nfpi[1], R_nfpiMax=nfpi[2], R_tol=tol, R_eps=eps,
                R_useGram=use.Gram, R_ncores=ncores, PACKAGE="robustHD")

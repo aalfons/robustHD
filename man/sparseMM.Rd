@@ -12,7 +12,7 @@ sparseMM(x, ...)
 
 \method{sparseMM}{formula}(formula, data, ...)
 
-\method{sparseMM}{default}(x, y, lambdaMin = 0, sMax = NA,
+\method{sparseMM}{default}(x, y, lambdaMin = c(0, 0), sMax = NA,
   standardize = TRUE, tuning.psi = 4.685061, max.it = 500,
   nsamp = c(500, 10), nistep = 10, tuning.chi = 1.547645, bb = NULL,
   nfpi = c(10, 500), tol = .Machine$double.eps^0.5,
