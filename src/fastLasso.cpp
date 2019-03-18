@@ -619,9 +619,11 @@ void fastLasso(const mat& x, const vec& y, const bool& useWeights,
   // data initializations
   uword n = x.n_rows, p = x.n_cols;
   double rescaledLambda = R_NaReal;
+  // FIXME: use sum of weights below instead of n
   double rescaledLambdaMin = n * lambdaMin / 2.0;
 
   // center data and store means
+  // TODO: also scale data with standard deviation
   rowvec meanX;
   double meanY;
   if(useWeights) {
