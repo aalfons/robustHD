@@ -3,19 +3,22 @@
 \name{robustHD-deprecated}
 \alias{robustHD-deprecated}
 \alias{sparseLTSGrid}
-\alias{sparseLTSGrid.default}
 \alias{sparseLTSGrid.formula}
+\alias{sparseLTSGrid.default}
 \title{Deprecated functions in package \pkg{robustHD}}
 \usage{
 sparseLTSGrid(x, ...)
 
 \method{sparseLTSGrid}{formula}(formula, data, ...)
 
-\method{sparseLTSGrid}{default}(x, y, lambda, mode = c("lambda", "fraction"),
-  ...)
+\method{sparseLTSGrid}{default}(x, y, lambda, mode = c("lambda",
+  "fraction"), ...)
 }
 \arguments{
 \item{x}{a numeric matrix containing the predictor variables.}
+
+\item{\dots}{additional arguments to be passed down, eventually to
+\code{\link{sparseLTS}}.}
 
 \item{formula}{a formula describing the model.}
 
@@ -37,9 +40,6 @@ parameter that sets all coefficients to 0 is first estimated based on
 bivariate winsorization, then \code{lambda} gives the fractions of that
 estimate to be used (hence all values of \code{lambda} should be in the
 interval [0,1] in that case).}
-
-\item{\dots}{additional arguments to be passed down, eventually to
-\code{\link{sparseLTS}}.}
 }
 \description{
 These functions are provided for compatibility with older versions only, and
@@ -50,12 +50,11 @@ may be defunct as soon as the next release.
 that only differs in the default values for the penalty parameter
 \code{lambda}.
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link[base]{Deprecated}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
 \keyword{robust}
-

@@ -71,11 +71,10 @@ head(weights(fitGrid, fit = "both"))
 head(weights(fitGrid, s = NULL))
 head(weights(fitGrid, fit = "both", s = NULL))
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link{sparseLTS}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
-

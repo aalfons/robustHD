@@ -2,24 +2,31 @@
 % Please edit documentation in R/winsorize.R
 \name{winsorize}
 \alias{winsorize}
-\alias{winsorize.data.frame}
 \alias{winsorize.default}
 \alias{winsorize.matrix}
+\alias{winsorize.data.frame}
 \title{Data cleaning by winsorization}
 \usage{
 winsorize(x, ...)
 
-\method{winsorize}{default}(x, standardized = FALSE, centerFun = median,
-  scaleFun = mad, const = 2, return = c("data", "weights"), ...)
+\method{winsorize}{default}(x, standardized = FALSE,
+  centerFun = median, scaleFun = mad, const = 2, return = c("data",
+  "weights"), ...)
 
 \method{winsorize}{matrix}(x, standardized = FALSE, centerFun = median,
-  scaleFun = mad, const = 2, prob = 0.95, tol = .Machine$double.eps^0.5,
-  return = c("data", "weights"), ...)
+  scaleFun = mad, const = 2, prob = 0.95,
+  tol = .Machine$double.eps^0.5, return = c("data", "weights"), ...)
 
 \method{winsorize}{data.frame}(x, ...)
 }
 \arguments{
 \item{x}{a numeric vector, matrix or data frame to be cleaned.}
+
+\item{\dots}{for the generic function, additional arguments to be passed
+down to methods.  For the \code{"data.frame"} method, additional arguments
+to be passed down to the \code{"matrix"} method.  For the other methods,
+additional arguments to be passed down to
+\code{\link[=standardize]{robStandardize}}.}
 
 \item{standardized}{a logical indicating whether the data are already
 robustly standardized.}
@@ -47,12 +54,6 @@ winsorization (defaults to 0.95).}
 \item{tol}{a small positive numeric value used to determine singularity
 issues in the computation of correlation estimates based on bivariate
 winsorization (see \code{\link{corHuber}}).}
-
-\item{\dots}{for the generic function, additional arguments to be passed
-down to methods.  For the \code{"data.frame"} method, additional arguments
-to be passed down to the \code{"matrix"} method.  For the other methods,
-additional arguments to be passed down to
-\code{\link[=standardize]{robStandardize}}.}
 }
 \value{
 If \code{standardize} is \code{TRUE} and \code{return} is \code{"weights"},
@@ -95,10 +96,6 @@ x
 winsorize(x)
 
 }
-\author{
-Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
-Ruben H. Zamar
-}
 \references{
 Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model
 selection based on least angle regression. \emph{Journal of the American
@@ -107,5 +104,8 @@ Statistical Association}, \bold{102}(480), 1289--1299.
 \seealso{
 \code{\link{corHuber}}
 }
+\author{
+Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
+Ruben H. Zamar
+}
 \keyword{robust}
-

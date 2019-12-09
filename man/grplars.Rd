@@ -2,14 +2,14 @@
 % Please edit documentation in R/grplars.R
 \name{grplars}
 \alias{grplars}
+\alias{print.grplars}
+\alias{grplars.formula}
 \alias{grplars.data.frame}
 \alias{grplars.default}
-\alias{grplars.formula}
-\alias{print.grplars}
 \alias{rgrplars}
+\alias{rgrplars.formula}
 \alias{rgrplars.data.frame}
 \alias{rgrplars.default}
-\alias{rgrplars.formula}
 \title{(Robust) groupwise least angle regression}
 \usage{
 grplars(x, ...)
@@ -18,10 +18,11 @@ grplars(x, ...)
 
 \method{grplars}{data.frame}(x, y, ...)
 
-\method{grplars}{default}(x, y, sMax = NA, assign, fit = TRUE, s = c(0,
-  sMax), crit = c("BIC", "PE"), splits = foldControl(), cost = rmspe,
-  costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1,
-  ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
+\method{grplars}{default}(x, y, sMax = NA, assign, fit = TRUE,
+  s = c(0, sMax), crit = c("BIC", "PE"), splits = foldControl(),
+  cost = rmspe, costArgs = list(), selectBest = c("hastie", "min"),
+  seFactor = 1, ncores = 1, cl = NULL, seed = NULL, model = TRUE,
+  ...)
 
 rgrplars(x, ...)
 
@@ -30,14 +31,17 @@ rgrplars(x, ...)
 \method{rgrplars}{data.frame}(x, y, ...)
 
 \method{rgrplars}{default}(x, y, sMax = NA, assign, centerFun = median,
-  scaleFun = mad, regFun = lmrob, regArgs = list(), combine = c("min",
-  "euclidean", "mahalanobis"), const = 2, prob = 0.95, fit = TRUE,
-  s = c(0, sMax), crit = c("BIC", "PE"), splits = foldControl(),
-  cost = rtmspe, costArgs = list(), selectBest = c("hastie", "min"),
-  seFactor = 1, ncores = 1, cl = NULL, seed = NULL, model = TRUE, ...)
+  scaleFun = mad, regFun = lmrob, regArgs = list(),
+  combine = c("min", "euclidean", "mahalanobis"), const = 2,
+  prob = 0.95, fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"),
+  splits = foldControl(), cost = rtmspe, costArgs = list(),
+  selectBest = c("hastie", "min"), seFactor = 1, ncores = 1,
+  cl = NULL, seed = NULL, model = TRUE, ...)
 }
 \arguments{
 \item{x}{a matrix or data frame containing the candidate predictors.}
+
+\item{\dots}{additional arguments to be passed down.}
 
 \item{formula}{a formula describing the full model.}
 
@@ -143,8 +147,6 @@ winsorization (defaults to 2).}
 \item{prob}{numeric; probability for the quantile of the
 \eqn{\chi^{2}}{chi-squared} distribution to be used in multivariate
 winsorization (defaults to 0.95).}
-
-\item{\dots}{additional arguments to be passed down.}
 }
 \value{
 If \code{fit} is \code{FALSE}, an integer vector containing the indices of
@@ -216,9 +218,6 @@ TopGear$Price <- log(TopGear$Price)
 # robust groupwise LARS
 rgrplars(MPG ~ ., data = TopGear, sMax = 15)
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link[=coef.seqModel]{coef}},
 \code{\link[=fitted.seqModel]{fitted}},
@@ -227,6 +226,8 @@ Andreas Alfons
 \code{\link[=residuals.seqModel]{residuals}},
 \code{\link[robustbase]{lmrob}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
 \keyword{robust}
-

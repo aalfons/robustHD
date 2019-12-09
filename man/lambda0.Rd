@@ -5,8 +5,8 @@
 \title{Penalty parameter for sparse LTS regression}
 \usage{
 lambda0(x, y, normalize = TRUE, intercept = TRUE, const = 2,
-  prob = 0.95, tol = .Machine$double.eps^0.5, eps = .Machine$double.eps,
-  ...)
+  prob = 0.95, tol = .Machine$double.eps^0.5,
+  eps = .Machine$double.eps, ...)
 }
 \arguments{
 \item{x}{a numeric matrix containing the predictor variables.}
@@ -82,9 +82,6 @@ x[i,] <- x[i,] + 5              # bad leverage points
 ## that sets all coefficients to 0
 lambda0(x, y)
 }
-\author{
-Andreas Alfons
-}
 \references{
 Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares
 regression for analyzing high-dimensional large data sets. \emph{The Annals
@@ -100,6 +97,8 @@ Statistical Association}, \bold{102}(480), 1289--1299.
 \seealso{
 \code{\link{sparseLTS}}, \code{\link{winsorize}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{robust}
 \keyword{utilities}
-

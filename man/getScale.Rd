@@ -17,6 +17,8 @@ getScale(x, ...)
 \item{x}{the model fit from which to extract the robust residual scale
 estimate.}
 
+\item{\dots}{additional arguments to be passed down to methods.}
+
 \item{s}{for the \code{"seqModel"} method, an integer vector giving
 the steps of the submodels for which to extract the robust residual scale
 estimate (the default is to use the optimal submodel).  For the
@@ -34,8 +36,6 @@ robust residual scale estimate.  Possible values are \code{"reweighted"}
 (the default) for the residual scale of the reweighted fit, \code{"raw"} for
 the residual scale of the raw fit, or \code{"both"} for the residual scale
 of both fits.}
-
-\item{\dots}{additional arguments to be passed down to methods.}
 }
 \value{
 A numeric vector or matrix giving the robust residual scale estimates for
@@ -59,13 +59,12 @@ fit <- lmrob(Y ~ ., data=coleman)
 getScale(fit)
 
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link[=AIC.seqModel]{AIC}}, \code{\link[robustbase]{lmrob}},
 \code{\link[robustbase]{ltsReg}}, \code{\link[MASS]{rlm}},
 \code{\link{rlars}}, \code{\link{sparseLTS}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
-

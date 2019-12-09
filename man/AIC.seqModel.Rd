@@ -9,8 +9,8 @@
 \usage{
 \method{AIC}{seqModel}(object, ..., k = 2)
 
-\method{AIC}{sparseLTS}(object, ..., fit = c("reweighted", "raw", "both"),
-  k = 2)
+\method{AIC}{sparseLTS}(object, ..., fit = c("reweighted", "raw",
+  "both"), k = 2)
 
 \method{BIC}{seqModel}(object, ...)
 
@@ -18,6 +18,10 @@
 }
 \arguments{
 \item{object}{the model fit for which to compute the information criterion.}
+
+\item{\dots}{for the \code{BIC} method, additional arguments to be passed
+down to the \code{AIC} method.  For the \code{AIC} method, additional
+arguments are currently ignored.}
 
 \item{k}{a numeric value giving the penalty per parameter to be used.  The
 default is to use \eqn{2} as in the classical definition of the AIC.}
@@ -27,10 +31,6 @@ information criterion.  Possible values are \code{"reweighted"} (the
 default) for the information criterion of the reweighted fit, \code{"raw"}
 for the information criterion of the raw fit, or \code{"both"} for the
 information criteria of both fits.}
-
-\item{\dots}{for the \code{BIC} method, additional arguments to be passed
-down to the \code{AIC} method.  For the \code{AIC} method, additional
-arguments are currently ignored.}
 }
 \value{
 A numeric vector or matrix giving the information criteria for the requested
@@ -92,9 +92,6 @@ fitSparseLTS <- sparseLTS(x, y, lambda = frac, mode = "fraction")
 AIC(fitSparseLTS)
 BIC(fitSparseLTS)
 }
-\author{
-Andreas Alfons
-}
 \references{
 Akaike, H. (1970) Statistical predictor identification. \emph{Annals of the
 Institute of Statistical Mathematics}, \bold{22}(2), 203--217.
@@ -106,5 +103,7 @@ Statistics}, \bold{6}(2), 461--464.
 \code{\link[stats]{AIC}}, \code{\link{rlars}},
 \code{\link{sparseLTS}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{regression}
-

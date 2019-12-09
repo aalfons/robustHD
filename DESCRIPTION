@@ -27,4 +27,4 @@ Authors@R: person("Andreas", "Alfons",
     role = c("aut", "cre"))
 Author: Andreas Alfons [aut, cre]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
-RoxygenNote: 5.0.1
+RoxygenNote: 6.1.1

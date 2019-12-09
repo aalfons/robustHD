@@ -5,8 +5,8 @@
 \title{Robust correlation based on winsorization.}
 \usage{
 corHuber(x, y, type = c("bivariate", "adjusted", "univariate"),
-  standardized = FALSE, centerFun = median, scaleFun = mad, const = 2,
-  prob = 0.95, tol = .Machine$double.eps^0.5, ...)
+  standardized = FALSE, centerFun = median, scaleFun = mad,
+  const = 2, prob = 0.95, tol = .Machine$double.eps^0.5, ...)
 }
 \arguments{
 \item{x}{a numeric vector.}
@@ -88,10 +88,6 @@ cor(x, y)
 corHuber(x, y)
 
 }
-\author{
-Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
-Ruben H. Zamar
-}
 \references{
 Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model
 selection based on least angle regression. \emph{Journal of the American
@@ -100,6 +96,9 @@ Statistical Association}, \bold{102}(480), 1289--1299.
 \seealso{
 \code{\link{winsorize}}
 }
+\author{
+Andreas Alfons, based on code by Jafar A. Khan, Stefan Van Aelst and
+Ruben H. Zamar
+}
 \keyword{multivariate}
 \keyword{robust}
-

@@ -31,12 +31,11 @@ output as \code{newdata} argument to the
 \code{\link[=predict.tslars]{predict}} method of robust groupwise least
 angle regression models.
 }
-\author{
-Andreas Alfons
-}
 \seealso{
 \code{\link{predict.tslars}}, \code{\link{tslars}},
 \code{\link{predict.tslarsP}}, \code{\link{tslarsP}}
 }
+\author{
+Andreas Alfons
+}
 \keyword{ts}
-
