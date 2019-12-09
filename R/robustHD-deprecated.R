@@ -12,6 +12,10 @@
 #' that only differs in the default values for the penalty parameter
 #' \code{lambda}.
 #'
+#' \code{wt} is a wrapper function for \code{\link[stats]{weights}}.  Its
+#' method for objects of class \code{"\link[=weights.sparseLTS]{sparseLTS}"}
+#' is a wrapper for \code{weights(object, type = "robustness", ...)}.
+#'
 #' @name robustHD-deprecated
 #'
 #' @param formula  a formula describing the model.
@@ -31,8 +35,8 @@
 #' bivariate winsorization, then \code{lambda} gives the fractions of that
 #' estimate to be used (hence all values of \code{lambda} should be in the
 #' interval [0,1] in that case).
-#' @param \dots  additional arguments to be passed down, eventually to
-#' \code{\link{sparseLTS}}.
+#' @param object  the model fit from which to extract outlier weights.
+#' @param \dots  additional arguments to be passed down.
 #'
 #' @author Andreas Alfons
 #'
@@ -107,3 +111,19 @@ sparseLTSGrid.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
   fit$call <- call  # add call to return object
   fit
 }
+
+
+#' @rdname robustHD-deprecated
+#' @export
+
+wt <- function(object, ...) {
+  .Deprecated("weights")
+  UseMethod("wt")
+}
+
+
+#' @rdname robustHD-deprecated
+#' @method wt sparseLTS
+#' @export
+
+wt.sparseLTS <- function(object, ...) weights(object, type = "robustness", ...)

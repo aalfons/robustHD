@@ -5,6 +5,8 @@
 \alias{sparseLTSGrid}
 \alias{sparseLTSGrid.formula}
 \alias{sparseLTSGrid.default}
+\alias{wt}
+\alias{wt.sparseLTS}
 \title{Deprecated functions in package \pkg{robustHD}}
 \usage{
 sparseLTSGrid(x, ...)
@@ -13,12 +15,15 @@ sparseLTSGrid(x, ...)
 
 \method{sparseLTSGrid}{default}(x, y, lambda, mode = c("lambda",
   "fraction"), ...)
+
+wt(object, ...)
+
+\method{wt}{sparseLTS}(object, ...)
 }
 \arguments{
 \item{x}{a numeric matrix containing the predictor variables.}
 
-\item{\dots}{additional arguments to be passed down, eventually to
-\code{\link{sparseLTS}}.}
+\item{\dots}{additional arguments to be passed down.}
 
 \item{formula}{a formula describing the model.}
 
@@ -40,6 +45,8 @@ parameter that sets all coefficients to 0 is first estimated based on
 bivariate winsorization, then \code{lambda} gives the fractions of that
 estimate to be used (hence all values of \code{lambda} should be in the
 interval [0,1] in that case).}
+
+\item{object}{the model fit from which to extract outlier weights.}
 }
 \description{
 These functions are provided for compatibility with older versions only, and
@@ -49,6 +56,10 @@ may be defunct as soon as the next release.
 \code{sparseLTSGrid} is a wrapper function for \code{\link{sparseLTS}}
 that only differs in the default values for the penalty parameter
 \code{lambda}.
+
+\code{wt} is a wrapper function for \code{\link[stats]{weights}}.  Its
+method for objects of class \code{"\link[=weights.sparseLTS]{sparseLTS}"}
+is a wrapper for \code{weights(object, type = "robustness", ...)}.
 }
 \seealso{
 \code{\link[base]{Deprecated}}
