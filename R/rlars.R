@@ -163,6 +163,8 @@
 #' @import parallel
 #' @import perry
 #' @importFrom Rcpp evalCpp
+#' @useDynLib robustHD, .registration = TRUE
+
 
 rlars <- function(x, ...) UseMethod("rlars")
 

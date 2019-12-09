@@ -28,18 +28,18 @@ addIntercept <- function(x, check = FALSE) {
 # }
 
 ## call C++ back end
-#' @useDynLib robustHD
-#' @importFrom Rcpp evalCpp
-callBackend <- function(..., PACKAGE) {
-  # check the platfrom and if the RcppEigen back end is available
-  # (RcppEigen back end does not work with 32-bit Windows)
-  if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") &&
-       exists(".CallSparseLTSEigen")) {
-    # RcppEigen back end from package sparseLTSEigen
-    callFun <- get(".CallSparseLTSEigen")
-    callFun(...)
-  } else .Call(..., PACKAGE="robustHD")  # RcppArmadillo back end
-}
+## @useDynLib robustHD, .registration = TRUE
+## @importFrom Rcpp evalCpp
+# callBackend <- function(..., PACKAGE) {
+#   # check the platfrom and if the RcppEigen back end is available
+#   # (RcppEigen back end does not work with 32-bit Windows)
+#   if(!isTRUE(.Platform$OS.type == "windows" && .Platform$r_arch == "i386") &&
+#        exists(".CallSparseLTSEigen")) {
+#     # RcppEigen back end from package sparseLTSEigen
+#     callFun <- get(".CallSparseLTSEigen")
+#     callFun(...)
+#   } else .Call(..., PACKAGE="robustHD")  # RcppArmadillo back end
+# }
 
 ## check the number of predictors to sequence for robust and groupwise LARS
 ## sequence predictors as long as there are twice as many observations
@@ -144,7 +144,8 @@ fitBlocks <- function(x, y, h = 1, p = 2, intercept = FALSE) {
 ## find indices of h smallest observations
 findSmallest <- function(x, h) {
   # call C++ function
-  callBackend("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h))
+  .Call("R_findSmallest", R_x=as.numeric(x), R_h=as.integer(h),
+        PACKAGE = "robustHD")
 }
 
 ## compute coefficients of hyperplane through data points
@@ -172,13 +173,15 @@ newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
 ## find indices of h smallest observations
 partialOrder <- function(x, h) {
   # call C++ function
-  callBackend("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h))
+  .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h),
+        PACKAGE = "robustHD")
 }
 
 # ## find indices of h smallest observations
 # partialSort <- function(x, h) {
 #   # call C++ function
-#   callBackend("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h))
+#   .Call("R_partialSort", R_x=as.numeric(x), R_h=as.integer(h),
+#         PACKAGE = "robustHD")
 # }
 
 ## remove intercept column from design matrix

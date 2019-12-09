@@ -217,14 +217,12 @@ Compute least trimmed squares regression with an \eqn{L_{1}}{L1} penalty on
 the regression coefficients, which allows for sparse model estimates.
 }
 \note{
-Package \pkg{robustHD} has a built-in back end for sparse least
-trimmed squares using the C++ library Armadillo.  Another back end is
-available through package \pkg{sparseLTSEigen}, which uses the C++ library
-Eigen.  The latter is faster, currently does not work on 32-bit \R for
-Windows.
+The underlying C++ code uses the C++ library Armadillo.  From package
+version 0.6.0, the back end for sparse least trimmed squares from package
+\pkg{sparseLTSEigen}, which uses the C++ library Eigen, is no longer
+supported and can no longer be used.
 
-For both C++ back ends, parallel computing is implemented via OpenMP
-(\url{http://openmp.org/}).
+Parallel computing is implemented via OpenMP (\url{http://openmp.org/}).
 }
 \examples{
 ## generate data

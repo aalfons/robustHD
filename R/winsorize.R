@@ -85,6 +85,7 @@
 #'
 #' @export
 #' @importFrom Rcpp evalCpp
+#' @useDynLib robustHD, .registration = TRUE
 
 winsorize <- function(x, ...) UseMethod("winsorize")
 

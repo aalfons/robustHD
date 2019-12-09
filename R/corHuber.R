@@ -88,6 +88,7 @@
 #'
 #' @export
 #' @importFrom Rcpp evalCpp
+#' @useDynLib robustHD, .registration = TRUE
 
 
 # robust correlation based on winsorization

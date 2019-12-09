@@ -176,14 +176,12 @@
 #'   \item{\code{call}}{the matched function call.}
 #' }
 #'
-#' @note Package \pkg{robustHD} has a built-in back end for sparse least
-#' trimmed squares using the C++ library Armadillo.  Another back end is
-#' available through package \pkg{sparseLTSEigen}, which uses the C++ library
-#' Eigen.  The latter is faster, currently does not work on 32-bit \R for
-#' Windows.
+#' @note The underlying C++ code uses the C++ library Armadillo.  From package
+#' version 0.6.0, the back end for sparse least trimmed squares from package
+#' \pkg{sparseLTSEigen}, which uses the C++ library Eigen, is no longer
+#' supported and can no longer be used.
 #'
-#' For both C++ back ends, parallel computing is implemented via OpenMP
-#' (\url{http://openmp.org/}).
+#' Parallel computing is implemented via OpenMP (\url{http://openmp.org/}).
 #'
 #' @author Andreas Alfons
 #'
@@ -208,6 +206,7 @@
 #' @import parallel
 #' @import perry
 #' @importFrom Rcpp evalCpp
+#' @useDynLib robustHD, .registration = TRUE
 
 sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 
@@ -530,10 +529,11 @@ fastSparseLTS <- function(lambda, x, y, h, nsamp = c(500, 10),
                              eps=eps, use.Gram=use.Gram)
   }
   # call C++ function
-  fit <- callBackend("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda,
-                     R_initial=initial, R_normalize=normalize,
-                     R_intercept=intercept, R_ncstep=ncstep, R_nkeep=nsamp[2],
-                     R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores)
+  fit <- .Call("R_fastSparseLTS", R_x=x, R_y=y, R_lambda=lambda,
+               R_initial=initial, R_normalize=normalize,
+               R_intercept=intercept, R_ncstep=ncstep, R_nkeep=nsamp[2],
+               R_tol=tol, R_eps=eps, R_useGram=use.Gram, R_ncores=ncores,
+               PACKAGE = "robustHD")
   if(drop) {
     # drop the dimension of selected components
     which <- c("best", "coefficients", "residuals")

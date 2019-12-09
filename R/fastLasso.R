@@ -14,9 +14,10 @@ fastLasso <- function(x, y, lambda, subset = NULL, normalize = TRUE,
   # compute lasso
   if(raw) {
     # call C++ function
-    fit <- callBackend("R_testLasso", R_x=x, R_y=y, R_lambda=lambda,
-                       R_initial=seq_along(y), R_intercept=intercept,
-                       R_eps=eps, R_useGram=use.Gram)
+    fit <- .Call("R_testLasso", R_x=x, R_y=y, R_lambda=lambda,
+                 R_initial=seq_along(y), R_intercept=intercept,
+                 R_eps=eps, R_useGram=use.Gram,
+                 PACKAGE = "robustHD")
 
     # prepare object for raw lasso fit
     coef <- fit$coefficients
@@ -37,10 +38,11 @@ fastLasso <- function(x, y, lambda, subset = NULL, normalize = TRUE,
       subset <- integer()
     } else useSubset <- TRUE
     # call C++ function
-    fit <- callBackend("R_fastLasso", R_x=x, R_y=y, R_lambda=lambda,
-                       R_useSubset=useSubset, R_subset=subset,
-                       R_normalize=normalize, R_intercept=intercept,
-                       R_eps=eps, R_useGram=use.Gram)
+    fit <- .Call("R_fastLasso", R_x=x, R_y=y, R_lambda=lambda,
+                 R_useSubset=useSubset, R_subset=subset,
+                 R_normalize=normalize, R_intercept=intercept,
+                 R_eps=eps, R_useGram=use.Gram,
+                 PACKAGE = "robustHD")
     if(drop) fit <- lapply(fit, drop)  # drop the dimension of the components
   }
   # return lasso fit

@@ -43,7 +43,8 @@ sparseSubsets <- function(x, y, lambda, h, nsamp = 500, normalize = TRUE,
   subsets <- randomSubsets(n, 3, nsamp)
   # call C++ function to compute lasso fits and find observations with
   # smallest absolute residuals
-  subsets <- callBackend("R_sparseSubsets", R_x=x, R_y=y, R_lambda=lambda,
-                         R_h=h, R_subsets=subsets, R_normalize=normalize,
-                         R_intercept=intercept, R_eps=eps, R_useGram=use.Gram)
+  subsets <- .Call("R_sparseSubsets", R_x=x, R_y=y, R_lambda=lambda,
+                   R_h=h, R_subsets=subsets, R_normalize=normalize,
+                   R_intercept=intercept, R_eps=eps, R_useGram=use.Gram,
+                   PACKAGE = "robustHD")
 }
