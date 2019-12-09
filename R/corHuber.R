@@ -87,6 +87,7 @@
 #' @keywords multivariate robust
 #'
 #' @export
+#' @importFrom Rcpp evalCpp
 
 
 # robust correlation based on winsorization

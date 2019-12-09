@@ -84,6 +84,7 @@
 #' @keywords robust
 #'
 #' @export
+#' @importFrom Rcpp evalCpp
 
 winsorize <- function(x, ...) UseMethod("winsorize")
 

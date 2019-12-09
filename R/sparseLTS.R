@@ -207,6 +207,7 @@
 #' @export
 #' @import parallel
 #' @import perry
+#' @importFrom Rcpp evalCpp
 
 sparseLTS <- function(x, ...) UseMethod("sparseLTS")
 

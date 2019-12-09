@@ -162,6 +162,7 @@
 #' @export
 #' @import parallel
 #' @import perry
+#' @importFrom Rcpp evalCpp
 
 rlars <- function(x, ...) UseMethod("rlars")
 

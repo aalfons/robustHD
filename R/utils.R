@@ -29,6 +29,7 @@ addIntercept <- function(x, check = FALSE) {
 
 ## call C++ back end
 #' @useDynLib robustHD
+#' @importFrom Rcpp evalCpp
 callBackend <- function(..., PACKAGE) {
   # check the platfrom and if the RcppEigen back end is available
   # (RcppEigen back end does not work with 32-bit Windows)
