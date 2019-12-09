@@ -1,7 +1,7 @@
 Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
-Version: 0.5.2
+Version: 0.6.0
 Date: 2019-12-09
 Depends:
     R (>= 3.2.0),
@@ -10,7 +10,7 @@ Depends:
     robustbase (>= 0.9-5)
 Imports:
     MASS,
-    Rcpp,
+    Rcpp (>= 0.9.10),
     grDevices,
     parallel,
     stats,

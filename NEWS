@@ -1,7 +1,13 @@
-Changes in robustHD version 0.5.2
+Changes in robustHD version 0.6.0
 
     + Method for function weights() is now used to retrieve robustness weights
       from objects of class "sparseLTS" (with argument type = "robustness").
+
+    + C++ functions are now properly registered.
+
+    + The alternative back end for sparse least trimmed squares from package
+      sparseLTSEigen is no longer supported and can no longer be used.
+
 
 
 Changes in robustHD version 0.5.1
