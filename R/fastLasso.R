@@ -15,8 +15,8 @@ fastLasso <- function(x, y, lambda, subset = NULL, normalize = TRUE,
   if(raw) {
     # call C++ function
     fit <- .Call("R_testLasso", R_x=x, R_y=y, R_lambda=lambda,
-                 R_initial=seq_along(y), R_intercept=intercept,
-                 R_eps=eps, R_useGram=use.Gram,
+                 R_initial=seq_along(y), R_normalize=normalize,
+                 R_intercept=intercept, R_eps=eps, R_useGram=use.Gram,
                  PACKAGE = "robustHD")
 
     # prepare object for raw lasso fit

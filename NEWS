@@ -1,3 +1,8 @@
+Changes in robustHD version 0.6.1
+
+    + Internal C++ functions for testing are now properly registered.
+
+
 Changes in robustHD version 0.6.0
 
     + Method for function weights() is now used to retrieve robustness weights

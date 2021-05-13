@@ -15,9 +15,9 @@ extern SEXP R_fastSparseLTS(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP
 extern SEXP R_findSmallest(SEXP, SEXP);
 extern SEXP R_partialOrder(SEXP, SEXP);
 extern SEXP R_sparseSubsets(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
-extern SEXP R_testCStep(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP R_testCStep(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 extern SEXP R_testKeepBest(SEXP, SEXP, SEXP);
-extern SEXP R_testLasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
+extern SEXP R_testLasso(SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP, SEXP);
 
 static const R_CallMethodDef CallEntries[] = {
   {"R_corHuberAdj",   (DL_FUNC) &R_corHuberAdj,    3},
@@ -31,9 +31,9 @@ static const R_CallMethodDef CallEntries[] = {
   {"R_findSmallest",  (DL_FUNC) &R_findSmallest,   2},
   {"R_partialOrder",  (DL_FUNC) &R_partialOrder,   2},
   {"R_sparseSubsets", (DL_FUNC) &R_sparseSubsets,  9},
-  {"R_testCStep",     (DL_FUNC) &R_testCStep,      8},
+  {"R_testCStep",     (DL_FUNC) &R_testCStep,      9},
   {"R_testKeepBest",  (DL_FUNC) &R_testKeepBest,   3},
-  {"R_testLasso",     (DL_FUNC) &R_testLasso,      7},
+  {"R_testLasso",     (DL_FUNC) &R_testLasso,      8},
   {NULL, NULL, 0}
 };
 
