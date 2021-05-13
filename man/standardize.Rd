@@ -7,8 +7,14 @@
 \usage{
 standardize(x, centerFun = mean, scaleFun = sd)
 
-robStandardize(x, centerFun = median, scaleFun = mad,
-  fallback = FALSE, eps = .Machine$double.eps, ...)
+robStandardize(
+  x,
+  centerFun = median,
+  scaleFun = mad,
+  fallback = FALSE,
+  eps = .Machine$double.eps,
+  ...
+)
 }
 \arguments{
 \item{x}{a numeric vector, matrix or data frame to be standardized.}

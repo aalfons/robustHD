@@ -29,4 +29,4 @@ Authors@R: person("Andreas", "Alfons",
 Author: Andreas Alfons [aut, cre]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1

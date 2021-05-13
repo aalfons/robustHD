@@ -6,11 +6,16 @@
 \alias{fortify.sparseLTS}
 \title{Convert a sequence of regression models into a data frame for plotting}
 \usage{
-\method{fortify}{seqModel}(model, data, s = NA, covArgs = list(...),
-  ...)
+\method{fortify}{seqModel}(model, data, s = NA, covArgs = list(...), ...)
 
-\method{fortify}{sparseLTS}(model, data, s = NA, fit = c("reweighted",
-  "raw", "both"), covArgs = list(...), ...)
+\method{fortify}{sparseLTS}(
+  model,
+  data,
+  s = NA,
+  fit = c("reweighted", "raw", "both"),
+  covArgs = list(...),
+  ...
+)
 }
 \arguments{
 \item{model}{the model fit to be converted.}

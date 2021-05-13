@@ -20,11 +20,9 @@ critPlot(x, ...)
 
 \method{critPlot}{tslars}(x, p, ...)
 
-\method{critPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"),
-  size = c(0.5, 2), ...)
+\method{critPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"), size = c(0.5, 2), ...)
 
-\method{critPlot}{perrySparseLTS}(x, fit = c("reweighted", "raw",
-  "both"), ...)
+\method{critPlot}{perrySparseLTS}(x, fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
 \item{x}{the model fit to be plotted.}

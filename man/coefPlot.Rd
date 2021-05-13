@@ -12,14 +12,28 @@
 \usage{
 coefPlot(x, ...)
 
-\method{coefPlot}{seqModel}(x, abscissa = c("step", "df"),
-  zeros = FALSE, size = c(0.5, 2, 4), labels, offset = 1, ...)
+\method{coefPlot}{seqModel}(
+  x,
+  abscissa = c("step", "df"),
+  zeros = FALSE,
+  size = c(0.5, 2, 4),
+  labels,
+  offset = 1,
+  ...
+)
 
 \method{coefPlot}{tslars}(x, p, ...)
 
-\method{coefPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"),
-  abscissa = c("step", "df"), zeros = FALSE, size = c(0.5, 2, 4),
-  labels, offset = 1, ...)
+\method{coefPlot}{sparseLTS}(
+  x,
+  fit = c("reweighted", "raw", "both"),
+  abscissa = c("step", "df"),
+  zeros = FALSE,
+  size = c(0.5, 2, 4),
+  labels,
+  offset = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{the model fit to be plotted.}

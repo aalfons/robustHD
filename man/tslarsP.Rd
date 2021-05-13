@@ -14,20 +14,48 @@ tslarsP(x, ...)
 
 \method{tslarsP}{formula}(formula, data, ...)
 
-\method{tslarsP}{default}(x, y, h = 1, p = 2, sMax = NA,
-  fit = TRUE, s = c(0, sMax), crit = "BIC", ncores = 1,
-  cl = NULL, model = TRUE, ...)
+\method{tslarsP}{default}(
+  x,
+  y,
+  h = 1,
+  p = 2,
+  sMax = NA,
+  fit = TRUE,
+  s = c(0, sMax),
+  crit = "BIC",
+  ncores = 1,
+  cl = NULL,
+  model = TRUE,
+  ...
+)
 
 rtslarsP(x, ...)
 
 \method{rtslarsP}{formula}(formula, data, ...)
 
-\method{rtslarsP}{default}(x, y, h = 1, p = 2, sMax = NA,
-  centerFun = median, scaleFun = mad, regFun = lmrob,
-  regArgs = list(), combine = c("min", "euclidean", "mahalanobis"),
-  winsorize = FALSE, const = 2, prob = 0.95, fit = TRUE, s = c(0,
-  sMax), crit = "BIC", ncores = 1, cl = NULL, seed = NULL,
-  model = TRUE, ...)
+\method{rtslarsP}{default}(
+  x,
+  y,
+  h = 1,
+  p = 2,
+  sMax = NA,
+  centerFun = median,
+  scaleFun = mad,
+  regFun = lmrob,
+  regArgs = list(),
+  combine = c("min", "euclidean", "mahalanobis"),
+  winsorize = FALSE,
+  const = 2,
+  prob = 0.95,
+  fit = TRUE,
+  s = c(0, sMax),
+  crit = "BIC",
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  model = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{a numeric matrix or data frame containing the candidate predictor

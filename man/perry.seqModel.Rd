@@ -6,12 +6,26 @@
 \alias{perry.sparseLTS}
 \title{Resampling-based prediction error for a sequential regression model}
 \usage{
-\method{perry}{seqModel}(object, splits = foldControl(), cost,
-  ncores = 1, cl = NULL, seed = NULL, ...)
+\method{perry}{seqModel}(
+  object,
+  splits = foldControl(),
+  cost,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  ...
+)
 
-\method{perry}{sparseLTS}(object, splits = foldControl(),
-  fit = c("reweighted", "raw", "both"), cost = rtmspe, ncores = 1,
-  cl = NULL, seed = NULL, ...)
+\method{perry}{sparseLTS}(
+  object,
+  splits = foldControl(),
+  fit = c("reweighted", "raw", "both"),
+  cost = rtmspe,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  ...
+)
 }
 \arguments{
 \item{object}{the model fit for which to estimate the prediction error.}

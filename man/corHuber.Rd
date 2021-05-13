@@ -4,9 +4,18 @@
 \alias{corHuber}
 \title{Robust correlation based on winsorization.}
 \usage{
-corHuber(x, y, type = c("bivariate", "adjusted", "univariate"),
-  standardized = FALSE, centerFun = median, scaleFun = mad,
-  const = 2, prob = 0.95, tol = .Machine$double.eps^0.5, ...)
+corHuber(
+  x,
+  y,
+  type = c("bivariate", "adjusted", "univariate"),
+  standardized = FALSE,
+  centerFun = median,
+  scaleFun = mad,
+  const = 2,
+  prob = 0.95,
+  tol = .Machine$double.eps^0.5,
+  ...
+)
 }
 \arguments{
 \item{x}{a numeric vector.}

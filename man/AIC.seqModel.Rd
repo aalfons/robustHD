@@ -9,8 +9,7 @@
 \usage{
 \method{AIC}{seqModel}(object, ..., k = 2)
 
-\method{AIC}{sparseLTS}(object, ..., fit = c("reweighted", "raw",
-  "both"), k = 2)
+\method{AIC}{sparseLTS}(object, ..., fit = c("reweighted", "raw", "both"), k = 2)
 
 \method{BIC}{seqModel}(object, ...)
 

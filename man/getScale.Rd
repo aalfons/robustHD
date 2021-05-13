@@ -10,8 +10,7 @@ getScale(x, ...)
 
 \method{getScale}{seqModel}(x, s = NA, ...)
 
-\method{getScale}{sparseLTS}(x, s = NA, fit = c("reweighted", "raw",
-  "both"), ...)
+\method{getScale}{sparseLTS}(x, s = NA, fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
 \item{x}{the model fit from which to extract the robust residual scale

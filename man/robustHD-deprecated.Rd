@@ -13,8 +13,7 @@ sparseLTSGrid(x, ...)
 
 \method{sparseLTSGrid}{formula}(formula, data, ...)
 
-\method{sparseLTSGrid}{default}(x, y, lambda, mode = c("lambda",
-  "fraction"), ...)
+\method{sparseLTSGrid}{default}(x, y, lambda, mode = c("lambda", "fraction"), ...)
 
 wt(object, ...)
 

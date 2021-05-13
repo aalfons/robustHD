@@ -13,8 +13,13 @@
 
 \method{fitted}{tslars}(object, p, ...)
 
-\method{fitted}{sparseLTS}(object, s = NA, fit = c("reweighted", "raw",
-  "both"), drop = !is.null(s), ...)
+\method{fitted}{sparseLTS}(
+  object,
+  s = NA,
+  fit = c("reweighted", "raw", "both"),
+  drop = !is.null(s),
+  ...
+)
 }
 \arguments{
 \item{object}{the model fit from which to extract fitted values.}

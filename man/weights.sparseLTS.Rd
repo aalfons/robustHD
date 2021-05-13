@@ -4,8 +4,14 @@
 \alias{weights.sparseLTS}
 \title{Extract outlier weights from sparse LTS regression models}
 \usage{
-\method{weights}{sparseLTS}(object, type = "robustness", s = NA,
-  fit = c("reweighted", "raw", "both"), drop = !is.null(s), ...)
+\method{weights}{sparseLTS}(
+  object,
+  type = "robustness",
+  s = NA,
+  fit = c("reweighted", "raw", "both"),
+  drop = !is.null(s),
+  ...
+)
 }
 \arguments{
 \item{object}{the model fit from which to extract outlier weights.}

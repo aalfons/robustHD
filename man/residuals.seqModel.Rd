@@ -9,13 +9,18 @@
 \alias{residuals.sparseLTS}
 \title{Extract residuals from a sequence of regression models}
 \usage{
-\method{residuals}{seqModel}(object, s = NA, standardized = FALSE,
-  drop = !is.null(s), ...)
+\method{residuals}{seqModel}(object, s = NA, standardized = FALSE, drop = !is.null(s), ...)
 
 \method{residuals}{tslars}(object, p, ...)
 
-\method{residuals}{sparseLTS}(object, s = NA, fit = c("reweighted",
-  "raw", "both"), standardized = FALSE, drop = !is.null(s), ...)
+\method{residuals}{sparseLTS}(
+  object,
+  s = NA,
+  fit = c("reweighted", "raw", "both"),
+  standardized = FALSE,
+  drop = !is.null(s),
+  ...
+)
 }
 \arguments{
 \item{object}{the model fit from which to extract residuals.}

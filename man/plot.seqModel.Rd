@@ -11,16 +11,13 @@
 \alias{plot.perrySparseLTS}
 \title{Plot a sequence of regression models}
 \usage{
-\method{plot}{seqModel}(x, method = c("coefficients", "crit",
-  "diagnostic"), ...)
+\method{plot}{seqModel}(x, method = c("coefficients", "crit", "diagnostic"), ...)
 
 \method{plot}{perrySeqModel}(x, method = c("crit", "diagnostic"), ...)
 
-\method{plot}{tslars}(x, p, method = c("coefficients", "crit",
-  "diagnostic"), ...)
+\method{plot}{tslars}(x, p, method = c("coefficients", "crit", "diagnostic"), ...)
 
-\method{plot}{sparseLTS}(x, method = c("coefficients", "crit",
-  "diagnostic"), ...)
+\method{plot}{sparseLTS}(x, method = c("coefficients", "crit", "diagnostic"), ...)
 
 \method{plot}{perrySparseLTS}(x, method = c("crit", "diagnostic"), ...)
 }

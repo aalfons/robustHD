@@ -18,11 +18,25 @@ grplars(x, ...)
 
 \method{grplars}{data.frame}(x, y, ...)
 
-\method{grplars}{default}(x, y, sMax = NA, assign, fit = TRUE,
-  s = c(0, sMax), crit = c("BIC", "PE"), splits = foldControl(),
-  cost = rmspe, costArgs = list(), selectBest = c("hastie", "min"),
-  seFactor = 1, ncores = 1, cl = NULL, seed = NULL, model = TRUE,
-  ...)
+\method{grplars}{default}(
+  x,
+  y,
+  sMax = NA,
+  assign,
+  fit = TRUE,
+  s = c(0, sMax),
+  crit = c("BIC", "PE"),
+  splits = foldControl(),
+  cost = rmspe,
+  costArgs = list(),
+  selectBest = c("hastie", "min"),
+  seFactor = 1,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  model = TRUE,
+  ...
+)
 
 rgrplars(x, ...)
 
@@ -30,13 +44,32 @@ rgrplars(x, ...)
 
 \method{rgrplars}{data.frame}(x, y, ...)
 
-\method{rgrplars}{default}(x, y, sMax = NA, assign, centerFun = median,
-  scaleFun = mad, regFun = lmrob, regArgs = list(),
-  combine = c("min", "euclidean", "mahalanobis"), const = 2,
-  prob = 0.95, fit = TRUE, s = c(0, sMax), crit = c("BIC", "PE"),
-  splits = foldControl(), cost = rtmspe, costArgs = list(),
-  selectBest = c("hastie", "min"), seFactor = 1, ncores = 1,
-  cl = NULL, seed = NULL, model = TRUE, ...)
+\method{rgrplars}{default}(
+  x,
+  y,
+  sMax = NA,
+  assign,
+  centerFun = median,
+  scaleFun = mad,
+  regFun = lmrob,
+  regArgs = list(),
+  combine = c("min", "euclidean", "mahalanobis"),
+  const = 2,
+  prob = 0.95,
+  fit = TRUE,
+  s = c(0, sMax),
+  crit = c("BIC", "PE"),
+  splits = foldControl(),
+  cost = rtmspe,
+  costArgs = list(),
+  selectBest = c("hastie", "min"),
+  seFactor = 1,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  model = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{a matrix or data frame containing the candidate predictors.}

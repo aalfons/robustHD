@@ -11,13 +11,32 @@ rlars(x, ...)
 
 \method{rlars}{formula}(formula, data, ...)
 
-\method{rlars}{default}(x, y, sMax = NA, centerFun = median,
-  scaleFun = mad, winsorize = FALSE, const = 2, prob = 0.95,
-  fit = TRUE, s = c(0, sMax), regFun = lmrob, regArgs = list(),
-  crit = c("BIC", "PE"), splits = foldControl(), cost = rtmspe,
-  costArgs = list(), selectBest = c("hastie", "min"), seFactor = 1,
-  ncores = 1, cl = NULL, seed = NULL, model = TRUE,
-  tol = .Machine$double.eps^0.5, ...)
+\method{rlars}{default}(
+  x,
+  y,
+  sMax = NA,
+  centerFun = median,
+  scaleFun = mad,
+  winsorize = FALSE,
+  const = 2,
+  prob = 0.95,
+  fit = TRUE,
+  s = c(0, sMax),
+  regFun = lmrob,
+  regArgs = list(),
+  crit = c("BIC", "PE"),
+  splits = foldControl(),
+  cost = rtmspe,
+  costArgs = list(),
+  selectBest = c("hastie", "min"),
+  seFactor = 1,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  model = TRUE,
+  tol = .Machine$double.eps^0.5,
+  ...
+)
 }
 \arguments{
 \item{x}{a matrix or data frame containing the candidate predictors.}

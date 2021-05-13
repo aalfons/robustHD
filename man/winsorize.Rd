@@ -9,13 +9,27 @@
 \usage{
 winsorize(x, ...)
 
-\method{winsorize}{default}(x, standardized = FALSE,
-  centerFun = median, scaleFun = mad, const = 2, return = c("data",
-  "weights"), ...)
+\method{winsorize}{default}(
+  x,
+  standardized = FALSE,
+  centerFun = median,
+  scaleFun = mad,
+  const = 2,
+  return = c("data", "weights"),
+  ...
+)
 
-\method{winsorize}{matrix}(x, standardized = FALSE, centerFun = median,
-  scaleFun = mad, const = 2, prob = 0.95,
-  tol = .Machine$double.eps^0.5, return = c("data", "weights"), ...)
+\method{winsorize}{matrix}(
+  x,
+  standardized = FALSE,
+  centerFun = median,
+  scaleFun = mad,
+  const = 2,
+  prob = 0.95,
+  tol = .Machine$double.eps^0.5,
+  return = c("data", "weights"),
+  ...
+)
 
 \method{winsorize}{data.frame}(x, ...)
 }

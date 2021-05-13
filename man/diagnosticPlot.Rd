@@ -21,14 +21,25 @@ diagnosticPlot(x, ...)
 
 \method{diagnosticPlot}{tslars}(x, p, ...)
 
-\method{diagnosticPlot}{sparseLTS}(x, s = NA, fit = c("reweighted",
-  "raw", "both"), covArgs = list(), ...)
+\method{diagnosticPlot}{sparseLTS}(
+  x,
+  s = NA,
+  fit = c("reweighted", "raw", "both"),
+  covArgs = list(),
+  ...
+)
 
 \method{diagnosticPlot}{perrySparseLTS}(x, ...)
 
-\method{diagnosticPlot}{default}(x, which = c("all", "rqq", "rindex",
-  "rfit", "rdiag"), ask = (which == "all"), facets = attr(x, "facets"),
-  size = c(2, 4), id.n = NULL, ...)
+\method{diagnosticPlot}{default}(
+  x,
+  which = c("all", "rqq", "rindex", "rfit", "rdiag"),
+  ask = (which == "all"),
+  facets = attr(x, "facets"),
+  size = c(2, 4),
+  id.n = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{the model fit for which to produce diagnostic plots, or a data

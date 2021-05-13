@@ -15,8 +15,7 @@
 
 \method{predict}{tslars}(object, newdata, p, ...)
 
-\method{predict}{sparseLTS}(object, newdata, s = NA,
-  fit = c("reweighted", "raw", "both"), ...)
+\method{predict}{sparseLTS}(object, newdata, s = NA, fit = c("reweighted", "raw", "both"), ...)
 }
 \arguments{
 \item{object}{the model fit from which to make predictions.}

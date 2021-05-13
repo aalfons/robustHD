@@ -4,9 +4,17 @@
 \alias{lambda0}
 \title{Penalty parameter for sparse LTS regression}
 \usage{
-lambda0(x, y, normalize = TRUE, intercept = TRUE, const = 2,
-  prob = 0.95, tol = .Machine$double.eps^0.5,
-  eps = .Machine$double.eps, ...)
+lambda0(
+  x,
+  y,
+  normalize = TRUE,
+  intercept = TRUE,
+  const = 2,
+  prob = 0.95,
+  tol = .Machine$double.eps^0.5,
+  eps = .Machine$double.eps,
+  ...
+)
 }
 \arguments{
 \item{x}{a numeric matrix containing the predictor variables.}

@@ -11,14 +11,33 @@ sparseLTS(x, ...)
 
 \method{sparseLTS}{formula}(formula, data, ...)
 
-\method{sparseLTS}{default}(x, y, lambda, mode = c("lambda", "fraction"),
-  alpha = 0.75, normalize = TRUE, intercept = TRUE, nsamp = c(500,
-  10), initial = c("sparse", "hyperplane", "random"), ncstep = 2,
-  use.correction = TRUE, tol = .Machine$double.eps^0.5,
-  eps = .Machine$double.eps, use.Gram, crit = c("BIC", "PE"),
-  splits = foldControl(), cost = rtmspe, costArgs = list(),
-  selectBest = c("hastie", "min"), seFactor = 1, ncores = 1,
-  cl = NULL, seed = NULL, model = TRUE, ...)
+\method{sparseLTS}{default}(
+  x,
+  y,
+  lambda,
+  mode = c("lambda", "fraction"),
+  alpha = 0.75,
+  normalize = TRUE,
+  intercept = TRUE,
+  nsamp = c(500, 10),
+  initial = c("sparse", "hyperplane", "random"),
+  ncstep = 2,
+  use.correction = TRUE,
+  tol = .Machine$double.eps^0.5,
+  eps = .Machine$double.eps,
+  use.Gram,
+  crit = c("BIC", "PE"),
+  splits = foldControl(),
+  cost = rtmspe,
+  costArgs = list(),
+  selectBest = c("hastie", "min"),
+  seFactor = 1,
+  ncores = 1,
+  cl = NULL,
+  seed = NULL,
+  model = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{a numeric matrix containing the predictor variables.}
