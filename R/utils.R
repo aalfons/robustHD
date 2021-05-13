@@ -170,12 +170,63 @@ newdataBlocks <- function(x, y, h = 1, p = 2, intercept = TRUE) {
   tsBlocks(x, y, p=p, subset=(n-h-p+2):n, intercept=intercept)
 }
 
-## find indices of h smallest observations
-partialOrder <- function(x, h) {
+# ## find indices of h smallest observations
+# partialOrder <- function(x, h) {
+#   # call C++ function
+#   .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h),
+#         PACKAGE = "robustHD")
+# }
+
+
+#' Find partial order of smallest or largest values
+#'
+#' Obtain a partial permutation that rearranges the smallest (largest) elements
+#' of a vector into ascending (descending) order.
+#'
+#' @param x  a numeric vector of which to find the order of the smallest or
+#' largest elements.
+#' @param h  an integer specifying how many (smallest or largest) elements to
+#' order.
+#' @param decreasing  a logical indicating whether the sort order should be
+#' increasing (\code{FALSE}; the default) or decreasing (\code{TRUE}).
+#'
+#' @return An integer vector containing the indices of the \code{h} smallest or
+#' largest elements of \code{x}.
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso \code{\link{order}}
+#'
+#' @examples
+#' # randomly draw some values
+#' values <- rnorm(10)
+#' values
+#'
+#' # find largest observations
+#' partialOrder(values, 5, decreasing = TRUE)
+#'
+#' @keywords utilities
+#'
+#' @export
+
+partialOrder <- function(x, h, decreasing = FALSE) {
+  # initializations
+  x <- as.numeric(x)
+  n <- length(x)
+  if (n == 0L) return(integer())
+  else if (any(is.na(x))) stop("NAs in 'x' are not supported")
+  h <- as.integer(h)
+  if (length(h) == 0L) h <- n
+  else if (length(h) > 1L) h <- h[1L]
+  if (!is.finite(h) || h > n) h <- n
+  decreasing <- isTRUE(decreasing)
   # call C++ function
-  .Call("R_partialOrder", R_x=as.numeric(x), R_h=as.integer(h),
-        PACKAGE = "robustHD")
+  if (decreasing) {
+    out <- .Call("R_partialOrder", R_x = -x, R_h = h, PACKAGE = "robustHD")
+  } else out <- .Call("R_partialOrder", R_x = x, R_h = h, PACKAGE = "robustHD")
+  as.integer(out)  # Rcpp's wrap() returns type "double", not "integer"
 }
+
 
 # ## find indices of h smallest observations
 # partialSort <- function(x, h) {

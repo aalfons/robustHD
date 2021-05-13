@@ -1,3 +1,10 @@
+Changes in robustHD version 0.7.0
+
+    + Function partialOrder() for finding the order of the smallest or largest
+      values of a vector is now exported.
+
+
+
 Changes in robustHD version 0.6.1
 
     + Internal C++ functions for testing are now properly registered.
