@@ -6,27 +6,38 @@
 \alias{critPlot.grplars}
 \alias{critPlot.tslarsP}
 \alias{critPlot.seqModel}
-\alias{critPlot.perrySeqModel}
 \alias{critPlot.tslars}
 \alias{critPlot.sparseLTS}
+\alias{critPlot.perrySeqModel}
 \alias{critPlot.perrySparseLTS}
+\alias{critPlot.setupCritPlot}
 \title{Optimality criterion plot of a sequence of regression models}
 \usage{
-critPlot(x, ...)
+critPlot(object, ...)
 
-\method{critPlot}{seqModel}(x, size = c(0.5, 2), ...)
-
-\method{critPlot}{perrySeqModel}(x, ...)
+\method{critPlot}{seqModel}(object, which = c("line", "dot"), ...)
 
 \method{critPlot}{tslars}(x, p, ...)
 
-\method{critPlot}{sparseLTS}(x, fit = c("reweighted", "raw", "both"), size = c(0.5, 2), ...)
+\method{critPlot}{sparseLTS}(
+  object,
+  which = c("line", "dot"),
+  fit = c("reweighted", "raw", "both"),
+  ...
+)
 
-\method{critPlot}{perrySparseLTS}(x, fit = c("reweighted", "raw", "both"), ...)
+\method{critPlot}{perrySeqModel}(object, which = c("line", "dot", "box", "density"), ...)
+
+\method{critPlot}{perrySparseLTS}(
+  object,
+  which = c("line", "dot", "box", "density"),
+  fit = c("reweighted", "raw", "both"),
+  ...
+)
+
+\method{critPlot}{setupCritPlot}(object, ...)
 }
 \arguments{
-\item{x}{the model fit to be plotted.}
-
 \item{\dots}{for the generic function, additional arguments to be passed
 down to methods.  For the \code{"tslars"} method, additional arguments
 to be passed down to the \code{"seqModel"} method.  For the
@@ -37,8 +48,7 @@ to be passed down to \code{\link[ggplot2]{geom_line}} and
 to the \code{\link[perry:perryPlot]{plot}} method for the prediction error
 results.}
 
-\item{size}{a numeric vector of length two giving the line width and the
-point size, respectively.}
+\item{x}{the model fit to be plotted.}
 
 \item{p}{an integer giving the lag length for which to produce the plot
 (the default is to use the optimal lag length).}
@@ -47,6 +57,9 @@ point size, respectively.}
 plot.  Possible values are \code{"reweighted"} (the default) for the
 reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both
 estimators.}
+
+\item{size}{a numeric vector of length two giving the line width and the
+point size, respectively.}
 }
 \value{
 An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).

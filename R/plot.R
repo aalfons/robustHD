@@ -454,47 +454,18 @@ ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
 #'
 #' @export
 
-critPlot <- function(x, ...) UseMethod("critPlot")
+critPlot <- function(object, ...) UseMethod("critPlot")
 
 
 #' @rdname critPlot
 #' @method critPlot seqModel
 #' @export
 
-critPlot.seqModel <- function(x, size = c(0.5, 2), ...) {
-  ## extract information from object
-  crit <- x$crit
-  if(is.null(crit)) stop("optimality criterion data not available")
-  ## construct data frame for ggplot2 graphics
-  critData <- fortify(crit, data=data.frame(step=x$s))
-  ## call workhorse function
-  ggCritPlot(critData, abscissa="step", size=size, ...)
-}
-
-
-#' @rdname critPlot
-#' @method critPlot perrySeqModel
-#' @export
-
-critPlot.perrySeqModel <- function(x, ...) {
-  ## local plot function for prediction error results to override defaults
-  localPlot <- function(x, method = c("line", "dot", "box", "density"),
-                        xlab = "Step", ...) {
-    # initializations
-    if(x$splits$R == 1) {
-      choices <- eval(formals()[["method"]])
-      if(identical(method, choices)) method <- "line"
-      else method <- match.arg(method, c("line", "dot"))
-    } else method <- match.arg(method)
-    # call perryPlot() for prediction error results
-    p <- perryPlot(x, method=method, xlab=xlab, ...)
-    if(method != "density") {
-      p <- p + scale_x_continuous(minor_breaks=fits(x))
-    }
-    p
-  }
-  ## call local plot function
-  localPlot(x, ...)
+critPlot.seqModel <- function(object, which = c("line", "dot"), ...) {
+  # extract all information required for plotting
+  setup <- setupCritPlot(object, which = which)
+  # call method for object with all information required for plotting
+  critPlot(setup, ...)
 }
 
 
@@ -503,22 +474,11 @@ critPlot.perrySeqModel <- function(x, ...) {
 #' @export
 
 critPlot.tslars <- function(x, p, ...) {
-  ## check lag length
-  if(missing(p) || !is.numeric(p) || length(p) == 0) p <- x$pOpt
-  if(length(p) > 1) {
-    warning("multiple lag lengths not yet supported")
-    p <- p[1]
-  }
-  pMax <- x$pMax
-  if(p < 1) {
-    p <- 1
-    warning("lag length too small, using lag length 1")
-  } else if(p > pMax) {
-    p <- pMax
-    warning(sprintf("lag length too large, using maximum lag length %d", p))
-  }
-  ## call plot function for specified lag length
-  critPlot(x$pFit[[p]], ...)
+  # extract all information required for plotting
+  if (missing(p)) setup <- setupCritPlot(object)
+  else setup <- setupCritPlot(object, p = p)
+  # call method for object with all information required for plotting
+  critPlot(setup, ...)
 }
 
 
@@ -526,22 +486,27 @@ critPlot.tslars <- function(x, p, ...) {
 #' @method critPlot sparseLTS
 #' @export
 
-critPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
-                               size = c(0.5, 2), ...) {
-  ## initializations
-  crit <- x$crit
-  if(is.null(crit)) stop("optimality criterion data not available")
-  fit <- match.arg(fit)
-  select <- if(fit == "both") NULL else fit
-  ## construct data frame for ggplot2 graphics
-  critData <- fortify(crit, data=data.frame(lambda=x$lambda), select=select)
-  ## call workhorse function
-  p <- ggCritPlot(critData, abscissa="lambda", size=size, ...)
-  if(fit == "both") {
-    # split plot into different panels
-    p <- p + facet_grid(. ~ fit)
-  }
-  p
+critPlot.sparseLTS <- function(object, which = c("line", "dot"),
+                               fit = c("reweighted", "raw", "both"),
+                               ...) {
+  # extract all information required for plotting
+  setup <- setupCritPlot(object, which = which, fit = fit)
+  # call method for object with all information required for plotting
+  critPlot(setup, ...)
+}
+
+
+#' @rdname critPlot
+#' @method critPlot perrySeqModel
+#' @export
+
+critPlot.perrySeqModel <- function(object,
+                                   which = c("line", "dot", "box", "density"),
+                                   ...) {
+  # extract all information required for plotting
+  setup <- setupCritPlot(object, which = which)
+  # call method for object with all information required for plotting
+  critPlot(setup, ...)
 }
 
 
@@ -549,66 +514,67 @@ critPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
 #' @method critPlot perrySparseLTS
 #' @export
 
-critPlot.perrySparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
+critPlot.perrySparseLTS <- function(object,
+                                    which = c("line", "dot", "box", "density"),
+                                    fit = c("reweighted", "raw", "both"),
                                     ...) {
-  ## local plot function for prediction error results to override defaults
-  localPlot <- function(x, method = c("line", "dot", "box", "density"),
-                        fit = select, select = "reweighted", xlab = "lambda",
-                        ...) {
-    # initializations
-    if(x$splits$R == 1) {
-      choices <- eval(formals()[["method"]])
-      if(identical(method, choices)) method <- "line"
-      else method <- match.arg(method, c("line", "dot"))
-    } else method <- match.arg(method)
-    # call perryPlot() for prediction error results
-    if(is.null(fit)) p <- perryPlot(x, method=method, xlab=xlab, ...)
-    else {
-      p <- perryPlot(x, method=method, select=fit, facets=NULL, xlab=xlab, ...)
-    }
-    if(method != "density") {
-      p <- p + scale_x_reverse(minor_breaks=x$tuning[, "lambda"])
-    }
-    p
-  }
-  ## call local plot function
-  if(missing(fit)) localPlot(x, ...)
-  else {
-    fit <- match.arg(fit)
-    if(fit == "both") fit <- NULL
-    localPlot(x, fit=fit, ...)
-  }
+  # extract all information required for plotting
+  setup <- setupCritPlot(object, which = which, fit = fit)
+  # call method for object with all information required for plotting
+  critPlot(setup, ...)
 }
 
 
-## workhorse function
-ggCritPlot <- function(data, abscissa = c("index", "step", "lambda"),
-                       size = c(0.5, 2), main = NULL, xlab, ylab, ...,
-                       mapping) {
-  # initializations
-  abscissa <- match.arg(abscissa)
-  crit <- setdiff(names(data), c("fit", "index", "step", "lambda"))
-  size <- as.numeric(size)
-  size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
-  size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
-  # define default axis labels
-  if(missing(xlab)) {
-    xlab <- switch(abscissa, index="Index", step="Step", lambda="lambda")
-  }
-  if(missing(ylab)) ylab <- crit
-  # define aesthetic mapping for plotting coefficients
-  mapping <- aes_string(x=abscissa, y=crit)
-  # draw minor grid lines for each step, but leave
-  # major grid lines and tick marks pretty
-  gridX <- unique(data[, abscissa])
-  # create plot
-  scale_x <- if(abscissa == "lambda") scale_x_reverse else scale_x_continuous
-  ggplot(data, mapping) +
-    geom_line(size=size[1], ...) +
-    geom_point(size=size[2], ...) +
-    scale_x(minor_breaks=gridX) +
-    labs(title=main, x=xlab, y=ylab)
+#' @rdname critPlot
+#' @method critPlot setupCritPlot
+#' @export
+
+critPlot.setupCritPlot <- function(object, ...) {
+  # define x-axis label
+  tuning <- object$tuning
+  useTuning <- !is.null(tuning) && ncol(tuning) == 1
+  xlab <- if (useTuning) names(tuning) else "Step"
+  # make sure y-axis label is correct
+  if (inherits(object, "setupBICPlot")) ylab <- "BIC"
+  else if (inherits(object, "setupPerryPlot")) ylab <- "Prediction error"
+  else ylab <- "Optimality criterion"  # shouldn't happen
+  # initialize plot (this is a bit of a hack)
+  class(object) <- "setupPerryPlot"
+  p <- perryPlot(object, ...) + labs(x = xlab, y = ylab)
+  # reverse x-axis for penalty parameter of sparse LTS
+  if (xlab == "lambda") p <- p + scale_x_reverse()
+  # return plot
+  p
 }
+
+# ## workhorse function for other optimality criteria
+# ggCritPlot <- function(data, abscissa = c("index", "step", "lambda"),
+#                        size = c(0.5, 2), main = NULL, xlab, ylab, ...,
+#                        mapping) {
+#   # initializations
+#   abscissa <- match.arg(abscissa)
+#   crit <- setdiff(names(data), c("fit", "index", "step", "lambda"))
+#   size <- as.numeric(size)
+#   size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+#   size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+#   # define default axis labels
+#   if(missing(xlab)) {
+#     xlab <- switch(abscissa, index="Index", step="Step", lambda="lambda")
+#   }
+#   if(missing(ylab)) ylab <- crit
+#   # define aesthetic mapping for plotting coefficients
+#   mapping <- aes_string(x=abscissa, y=crit)
+#   # draw minor grid lines for each step, but leave
+#   # major grid lines and tick marks pretty
+#   gridX <- unique(data[, abscissa])
+#   # create plot
+#   scale_x <- if(abscissa == "lambda") scale_x_reverse else scale_x_continuous
+#   ggplot(data, mapping) +
+#     geom_line(size=size[1], ...) +
+#     geom_point(size=size[2], ...) +
+#     scale_x(minor_breaks=gridX) +
+#     labs(title=main, x=xlab, y=ylab)
+# }
 
 # ----------------------
 
