@@ -222,6 +222,7 @@ fortifySeqModelStep <- function(s, model, x = NULL, covArgs = list()) {
 fortify.sparseLTS <- function(model, data, s = NA,
                               fit = c("reweighted", "raw", "both"),
                               covArgs = list(...), ...) {
+  .Deprecated("setupDiagnosticPlot")
   ## initializations
   fit <- match.arg(fit)
   # check the scale estimate
@@ -405,4 +406,226 @@ fortifySparseLTSFit <- function(model, s, fit = "reweighted",
   attr(data, "q") <- data.frame(q=max(q, 2.5))
   ## return data frame
   data
+}
+
+
+#' @rdname diagnosticPlot
+#' @method diagnosticPlot default
+#' @export
+
+diagnosticPlot.default <- function(object, which = c("all", "rqq","rindex",
+                                                "rfit", "rdiag"),
+                                   ask = (which == "all"),
+                                   facets = attr(object, "facets"),
+                                   size = c(2, 4), id.n = NULL, ...) {
+  # initializations
+  which <- match.arg(which)
+  size <- as.numeric(size)
+  size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
+  size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+  # call functions for selected plots
+  if(which == "all") {
+    oldAsk <- devAskNewPage(ask)  # ask for new page (if requested)
+    on.exit(devAskNewPage(oldAsk))
+    # residual Q-Q plot
+    p <- try(rqqPlotFortified(object, facets=facets, size=size, id.n=id.n, ...),
+             silent=TRUE)
+    if(inherits(p, "try-error")) {
+      warn <- gsub("Error in", "In", p)
+      warning(warn, call.=FALSE)
+      res <- list()
+    } else {
+      print(p)
+      res <- list(rqq=p)
+    }
+    # residuals vs indices plot
+    p <- try(residualPlotFortified(object, abscissa="index", facets=facets,
+                                   size=size, id.n=id.n, ...), silent=TRUE)
+    if(inherits(p, "try-error")) {
+      warn <- gsub("Error in", "In", p)
+      warning(warn, call.=FALSE)
+    } else {
+      print(p)
+      res$rindex <- p
+    }
+    # residuals vs fitted plot
+    p <- try(residualPlotFortified(object, abscissa="fitted", facets=facets,
+                                   size=size, id.n=id.n, ...), silent=TRUE)
+    if(inherits(p, "try-error")) {
+      warn <- gsub("Error in", "In", p)
+      warning(warn, call.=FALSE)
+    } else {
+      print(p)
+      res$rfit <- p
+    }
+    # regression diagnostic plot
+    p <- try(rdiagPlotFortified(object, facets=facets, size=size,
+                                id.n=id.n, ...),
+             silent=TRUE)
+    if(inherits(p, "try-error")) {
+      warn <- gsub("Error in", "In", p)
+      warning(warn, call.=FALSE)
+    } else {
+      print(p)
+      res$rdiag <- p
+    }
+    invisible(res)
+  } else if(which == "rqq") {
+    # residual Q-Q plot
+    rqqPlotFortified(object, facets=facets, size=size, id.n=id.n, ...)
+  } else if(which == "rindex") {
+    # residuals vs indices plot
+    residualPlotFortified(object, abscissa="index", facets=facets,
+                          size=size, id.n=id.n, ...)
+  } else if(which == "rfit") {
+    # residuals vs fitted plot
+    residualPlotFortified(object, abscissa="fitted", facets=facets,
+                          size=size, id.n=id.n, ...)
+  } else if(which == "rdiag") {
+    # regression diagnostic plot
+    rdiagPlotFortified(object, facets=facets, size=size, id.n=id.n, ...)
+  }
+}
+
+# ----------------------
+
+rqqPlotFortified <- function(data, facets = attr(data, "facets"),
+                             size = c(2, 4), id.n = NULL, main, xlab, ylab,
+                             ..., mapping) {
+  # define aesthetic mapping for Q-Q plot
+  mapping <- aes_string(x="theoretical", y="residual", color="classification")
+  # extract data frame for reference line
+  lineData <- attr(data, "qqLine")
+  # construct data frame for labels
+  labelData <- labelify(data, which="qqd", id.n=id.n)
+  # define default title and axis labels
+  if(missing(main)) main <- "Normal Q-Q plot"
+  if(missing(xlab)) xlab <- "Quantiles of the standard normal distribution"
+  if(missing(ylab)) ylab <- "Standardized residual"
+  # create plot
+  p <- ggplot(data)
+  if(!is.null(lineData)) {
+    # add reference line
+    lineMapping <- aes_string(intercept="intercept", slope="slope")
+    p <- p + geom_abline(lineMapping, lineData, alpha=0.4)
+  }
+  p <- p + geom_point(mapping, size=size[1], ...)
+  if(!is.null(labelData)) {
+    # add labels for observations with largest distances
+    labelMapping <- aes_string(x="theoretical", y="residual", label="index")
+    p <- p + geom_text(labelMapping, data=labelData,
+                       hjust=0, size=size[2], alpha=0.4)
+  }
+  p <- p + labs(title=main, x=xlab, y=ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    else p <- p + facet_grid(facets)
+  }
+  p
+}
+
+# ----------------------
+
+## plot standardized residuals vs indices or fitted values
+
+residualPlotFortified <- function(data, abscissa = c("index", "fitted"),
+                                  facets = attr(data, "facets"),
+                                  size = c(2, 4), id.n = NULL, main,
+                                  xlab, ylab, ..., mapping) {
+  ## initializations
+  abscissa <- match.arg(abscissa)
+  # define aesthetic mapping for residual plot
+  mapping <- aes_string(x=abscissa, y="residual", color="classification")
+  ## construct data frame for labels
+  labelData <- labelify(data, which="residual", id.n=id.n)
+  # define default title and axis labels
+  if(missing(main)) {
+    postfix <- switch(abscissa, index="indices", fitted="fitted values")
+    main <- paste("Residuals vs", postfix)
+  }
+  if(missing(xlab)) {
+    xlab <- switch(abscissa, index="Index", fitted="Fitted value")
+  }
+  if(missing(ylab)) ylab <- "Standardized residual"
+  # ensure that horizontal grid line is drawn at 0
+  breaks <- union(pretty(data[, "residual"]), 0)
+  # create plot
+  p <- ggplot(data) +
+    geom_hline(aes(yintercept=-2.5), alpha=0.4) +
+    geom_hline(aes(yintercept=2.5), alpha=0.4) +
+    geom_point(mapping, size=size[1], ...)
+  if(!is.null(labelData)) {
+    # add labels for observations with largest distances
+    labelMapping <- aes_string(x=abscissa, y="residual", label="index")
+    p <- p + geom_text(labelMapping, data=labelData,
+                       hjust=0, size=size[2], alpha=0.4)
+  }
+  p <- p + scale_y_continuous(breaks=breaks) +
+    labs(title=main, x=xlab, y=ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    else p <- p + facet_grid(facets)
+  }
+  p
+}
+
+# ----------------------
+
+## plot robust distances (regression diagnostic plot)
+
+rdiagPlotFortified <- function(data, facets = attr(data, "facets"),
+                               size = c(2, 4), id.n = NULL, main,
+                               xlab, ylab, ..., mapping) {
+  ## initializations
+  # extract data frame for vertical reference line
+  lineData <- attr(data, "q")
+  # check if robust distances are available
+  msg <- "robust distances not available"
+  by <- intersect(c("step", "fit"), names(data))
+  if(length(by) > 0) {
+    indices <- split(seq_len(nrow(data)), data[, by, drop=FALSE])
+    onlyNA <- sapply(indices, function(i) all(is.na(data[i, "rd"])))
+    if(all(onlyNA)) stop(msg)
+    if(any(onlyNA)) {
+      indices <- do.call(c, unname(indices[onlyNA]))
+      data <- data[-indices, , drop=FALSE]
+      lineData <- lineData[!onlyNA, , drop=FALSE]
+      warning(msg, " for some submodels")
+    }
+  } else {
+    onlyNA <- all(is.na(data[, "rd"]))
+    if(onlyNA) stop(msg)
+  }
+  # define aesthetic mapping for regression diagnostic plot
+  mapping <- aes_string(x="rd", y="residual", color="classification")
+  ## construct data frame for labels
+  labelData <- labelify(data, which="xyd", id.n=id.n)
+  # define default title and axis labels
+  if(missing(main)) main <- "Regression diagnostic plot"
+  if(missing(xlab)) xlab <- "Robust distance computed by MCD"
+  if(missing(ylab)) ylab <- "Standardized residual"
+  # create plot
+  p <- ggplot(data) +
+    geom_hline(aes(yintercept=-2.5), alpha=0.4) +
+    geom_hline(aes(yintercept=2.5), alpha=0.4)
+  if(!is.null(lineData)) {
+    # add reference line
+    p <- p + geom_vline(aes_string(xintercept="q"), lineData, alpha=0.4)
+  }
+  p <- p + geom_point(mapping, size=size[1], ...)
+  if(!is.null(labelData)) {
+    # add labels for observations with largest distances
+    labelMapping <- aes_string(x="rd", y="residual", label="index")
+    p <- p + geom_text(labelMapping, data=labelData,
+                       hjust=0, size=size[2], alpha=0.4)
+  }
+  p <- p + labs(title=main, x=xlab, y=ylab)
+  if(!is.null(facets)) {
+    # split plot into different panels
+    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    else p <- p + facet_grid(facets)
+  }
+  p
 }

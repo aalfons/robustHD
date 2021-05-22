@@ -757,16 +757,16 @@ labelify <- function(data, which, id.n = NULL) {
 #' @import robustbase
 #' @importFrom grDevices devAskNewPage
 
-diagnosticPlot <- function(x, ...) UseMethod("diagnosticPlot")
+diagnosticPlot <- function(object, ...) UseMethod("diagnosticPlot")
 
 
 #' @rdname diagnosticPlot
 #' @method diagnosticPlot seqModel
 #' @export
 
-diagnosticPlot.seqModel <- function(x, s = NA, covArgs = list(), ...) {
+diagnosticPlot.seqModel <- function(object, s = NA, covArgs = list(), ...) {
   # call default method with all information required for plotting
-  diagnosticPlot(fortify(x, s=s, covArgs=covArgs), ...)
+  diagnosticPlot(fortify(object, s=s, covArgs=covArgs), ...)
 }
 
 
@@ -774,9 +774,9 @@ diagnosticPlot.seqModel <- function(x, s = NA, covArgs = list(), ...) {
 #' @method diagnosticPlot perrySeqModel
 #' @export
 
-diagnosticPlot.perrySeqModel <- function(x, ...) {
+diagnosticPlot.perrySeqModel <- function(object, ...) {
   # call method for component 'finalModel'
-  diagnosticPlot(x$finalModel, ...)
+  diagnosticPlot(object$finalModel, ...)
 }
 
 
@@ -784,14 +784,14 @@ diagnosticPlot.perrySeqModel <- function(x, ...) {
 #' @method diagnosticPlot tslars
 #' @export
 
-diagnosticPlot.tslars <- function(x, p, ...) {
+diagnosticPlot.tslars <- function(object, p, ...) {
   ## check lag length
-  if(missing(p) || !is.numeric(p) || length(p) == 0) p <- x$pOpt
+  if(missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
   if(length(p) > 1) {
     warning("multiple lag lengths not yet supported")
     p <- p[1]
   }
-  pMax <- x$pMax
+  pMax <- object$pMax
   if(p < 1) {
     p <- 1
     warning("lag length too small, using lag length 1")
@@ -800,7 +800,7 @@ diagnosticPlot.tslars <- function(x, p, ...) {
     warning(sprintf("lag length too large, using maximum lag length %d", p))
   }
   ## call plot function for specified lag length
-  diagnosticPlot(x$pFit[[p]], ...)
+  diagnosticPlot(object$pFit[[p]], ...)
 }
 
 
@@ -808,11 +808,13 @@ diagnosticPlot.tslars <- function(x, p, ...) {
 #' @method diagnosticPlot sparseLTS
 #' @export
 
-diagnosticPlot.sparseLTS <- function(x, s = NA,
+diagnosticPlot.sparseLTS <- function(object, s = NA,
                                      fit = c("reweighted", "raw", "both"),
                                      covArgs = list(), ...) {
-  # call default method with all information required for plotting
-  diagnosticPlot(fortify(x, s=s, fit=fit, covArgs=covArgs), ...)
+  # extract all information required for plotting
+  setup <- setupDiagnosticPlot(object, s = s, fit = fit, covArgs = covArgs)
+  # call method for object with all information required for plotting
+  diagnosticPlot(setup, ...)
 }
 
 
@@ -820,121 +822,128 @@ diagnosticPlot.sparseLTS <- function(x, s = NA,
 #' @method diagnosticPlot perrySparseLTS
 #' @export
 
-diagnosticPlot.perrySparseLTS <- function(x, ...) {
+diagnosticPlot.perrySparseLTS <- function(object, ...) {
   # call method for component 'finalModel'
-  diagnosticPlot(x$finalModel, ...)
+  diagnosticPlot(object$finalModel, ...)
 }
 
 
 #' @rdname diagnosticPlot
-#' @method diagnosticPlot default
+#' @method diagnosticPlot setupDiagnosticPlot
 #' @export
 
-diagnosticPlot.default <- function(x, which = c("all", "rqq","rindex",
-                                                "rfit", "rdiag"),
-                                   ask = (which == "all"),
-                                   facets = attr(x, "facets"),
-                                   size = c(2, 4), id.n = NULL, ...) {
+diagnosticPlot.setupDiagnosticPlot <- function(object,
+                                               which = c("all", "rqq",
+                                                         "rindex", "rfit",
+                                                         "rdiag"),
+                                               ask = (which == "all"),
+                                               facets = object$facets,
+                                               size = c(2, 4), id.n = NULL,
+                                               ...) {
   # initializations
   which <- match.arg(which)
   size <- as.numeric(size)
   size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
   size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
   # call functions for selected plots
-  if(which == "all") {
+  if (which == "all") {
     oldAsk <- devAskNewPage(ask)  # ask for new page (if requested)
     on.exit(devAskNewPage(oldAsk))
     # residual Q-Q plot
-    p <- try(rqqPlot(x, facets=facets, size=size, id.n=id.n, ...),
-             silent=TRUE)
-    if(inherits(p, "try-error")) {
+    p <- try(rqqPlot(object, facets = facets, size = size, id.n = id.n, ...),
+             silent = TRUE)
+    if (inherits(p, "try-error")) {
       warn <- gsub("Error in", "In", p)
-      warning(warn, call.=FALSE)
+      warning(warn, call. = FALSE)
       res <- list()
     } else {
       print(p)
-      res <- list(rqq=p)
+      res <- list(rqq = p)
     }
     # residuals vs indices plot
-    p <- try(residualPlot(x, abscissa="index", facets=facets,
-                          size=size, id.n=id.n, ...), silent=TRUE)
-    if(inherits(p, "try-error")) {
+    p <- try(residualPlot(object, abscissa = "index", facets = facets,
+                          size = size, id.n = id.n, ...),
+             silent = TRUE)
+    if (inherits(p, "try-error")) {
       warn <- gsub("Error in", "In", p)
-      warning(warn, call.=FALSE)
+      warning(warn, call. = FALSE)
     } else {
       print(p)
       res$rindex <- p
     }
     # residuals vs fitted plot
-    p <- try(residualPlot(x, abscissa="fitted", facets=facets,
-                          size=size, id.n=id.n, ...), silent=TRUE)
-    if(inherits(p, "try-error")) {
+    p <- try(residualPlot(object, abscissa = "fitted", facets = facets,
+                          size = size, id.n = id.n, ...),
+             silent = TRUE)
+    if (inherits(p, "try-error")) {
       warn <- gsub("Error in", "In", p)
-      warning(warn, call.=FALSE)
+      warning(warn, call. = FALSE)
     } else {
       print(p)
       res$rfit <- p
     }
     # regression diagnostic plot
-    p <- try(rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...),
-             silent=TRUE)
-    if(inherits(p, "try-error")) {
+    p <- try(rdiagPlot(object, facets = facets, size = size, id.n = id.n, ...),
+             silent = TRUE)
+    if (inherits(p, "try-error")) {
       warn <- gsub("Error in", "In", p)
-      warning(warn, call.=FALSE)
+      warning(warn, call. = FALSE)
     } else {
       print(p)
       res$rdiag <- p
     }
     invisible(res)
-  } else if(which == "rqq") {
+  } else if (which == "rqq") {
     # residual Q-Q plot
-    rqqPlot(x, facets=facets, size=size, id.n=id.n, ...)
-  } else if(which == "rindex") {
+    rqqPlot(object, facets = facets, size = size, id.n = id.n, ...)
+  } else if (which == "rindex") {
     # residuals vs indices plot
-    residualPlot(x, abscissa="index", facets=facets,
-                 size=size, id.n=id.n, ...)
-  } else if(which == "rfit") {
+    residualPlot(object, abscissa = "index", facets = facets,
+                 size = size, id.n = id.n, ...)
+  } else if (which == "rfit") {
     # residuals vs fitted plot
-    residualPlot(x, abscissa="fitted", facets=facets,
-                 size=size, id.n=id.n, ...)
-  } else if(which == "rdiag") {
+    residualPlot(object, abscissa = "fitted", facets = facets,
+                 size = size, id.n = id.n, ...)
+  } else if (which == "rdiag") {
     # regression diagnostic plot
-    rdiagPlot(x, facets=facets, size=size, id.n=id.n, ...)
+    rdiagPlot(object, facets = facets, size = size, id.n = id.n, ...)
   }
 }
 
 # ----------------------
 
-rqqPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4),
-                    id.n = NULL, main, xlab, ylab, ..., mapping) {
+rqqPlot <- function(object, facets = object$facets, size = c(2, 4),
+                    id.n = NULL, ..., mapping) {
   # define aesthetic mapping for Q-Q plot
-  mapping <- aes_string(x="theoretical", y="residual", color="classification")
+  mapping <- aes_string(x = "theoretical", y = "residual",
+                        color = "Diagnostics")
   # extract data frame for reference line
-  lineData <- attr(data, "qqLine")
+  lineData <- object$qqLine
   # construct data frame for labels
-  labelData <- labelify(data, which="qqd", id.n=id.n)
+  labelData <- labelify(object$data, which = "qqd", id.n = id.n)
   # define default title and axis labels
-  if(missing(main)) main <- "Normal Q-Q plot"
-  if(missing(xlab)) xlab <- "Quantiles of the standard normal distribution"
-  if(missing(ylab)) ylab <- "Standardized residual"
+  main <- "Normal Q-Q plot"
+  xlab <- "Quantiles of the standard normal distribution"
+  ylab <- "Standardized residual"
   # create plot
-  p <- ggplot(data)
-  if(!is.null(lineData)) {
+  p <- ggplot(object$data)
+  if (!is.null(lineData)) {
     # add reference line
-    lineMapping <- aes_string(intercept="intercept", slope="slope")
-    p <- p + geom_abline(lineMapping, lineData, alpha=0.4)
+    lineMapping <- aes_string(intercept = "intercept", slope = "slope")
+    p <- p + geom_abline(lineMapping, lineData, alpha = 0.4)
   }
-  p <- p + geom_point(mapping, size=size[1], ...)
+  p <- p + geom_point(mapping, size = size[1], ...)
   if(!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x="theoretical", y="residual", label="index")
-    p <- p + geom_text(labelMapping, data=labelData,
-                       hjust=0, size=size[2], alpha=0.4)
+    labelMapping <- aes_string(x = "theoretical", y = "residual",
+                               label = "index")
+    p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
+                       size = size[2], alpha = 0.4)
   }
-  p <- p + labs(title=main, x=xlab, y=ylab)
-  if(!is.null(facets)) {
+  p <- p + labs(title = main, x = xlab, y = ylab)
+  if (!is.null(facets)) {
     # split plot into different panels
-    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    if (length(facets) == 2) p <- p + facet_wrap(facets)
     else p <- p + facet_grid(facets)
   }
   p
@@ -962,42 +971,38 @@ qqLine <- function(y) {
 
 ## plot standardized residuals vs indices or fitted values
 
-residualPlot <- function(data, abscissa = c("index", "fitted"),
-                         facets = attr(data, "facets"), size = c(2, 4),
-                         id.n = NULL, main, xlab, ylab, ..., mapping) {
+residualPlot <- function(object, abscissa = c("index", "fitted"),
+                         facets = object$facets, size = c(2, 4),
+                         id.n = NULL, ..., mapping) {
   ## initializations
   abscissa <- match.arg(abscissa)
   # define aesthetic mapping for residual plot
-  mapping <- aes_string(x=abscissa, y="residual", color="classification")
+  mapping <- aes_string(x = abscissa, y = "residual", color = "Diagnostics")
   ## construct data frame for labels
-  labelData <- labelify(data, which="residual", id.n=id.n)
+  labelData <- labelify(object$data, which = "residual", id.n = id.n)
   # define default title and axis labels
-  if(missing(main)) {
-    postfix <- switch(abscissa, index="indices", fitted="fitted values")
-    main <- paste("Residuals vs", postfix)
-  }
-  if(missing(xlab)) {
-    xlab <- switch(abscissa, index="Index", fitted="Fitted value")
-  }
-  if(missing(ylab)) ylab <- "Standardized residual"
+  postfix <- switch(abscissa, index = "indices", fitted = "fitted values")
+  main <- paste("Residuals vs", postfix)
+  xlab <- switch(abscissa, index = "Index", fitted = "Fitted value")
+  ylab <- "Standardized residual"
   # ensure that horizontal grid line is drawn at 0
-  breaks <- union(pretty(data[, "residual"]), 0)
+  breaks <- union(pretty(object$data[, "residual"]), 0)
   # create plot
-  p <- ggplot(data) +
-    geom_hline(aes(yintercept=-2.5), alpha=0.4) +
-    geom_hline(aes(yintercept=2.5), alpha=0.4) +
-    geom_point(mapping, size=size[1], ...)
-  if(!is.null(labelData)) {
+  p <- ggplot(object$data) +
+    geom_hline(aes(yintercept = -2.5), alpha = 0.4) +
+    geom_hline(aes(yintercept = 2.5), alpha = 0.4) +
+    geom_point(mapping, size = size[1], ...)
+  if (!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x=abscissa, y="residual", label="index")
-    p <- p + geom_text(labelMapping, data=labelData,
-                       hjust=0, size=size[2], alpha=0.4)
+    labelMapping <- aes_string(x = abscissa, y = "residual", label = "index")
+    p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
+                       size = size[2], alpha = 0.4)
   }
-  p <- p + scale_y_continuous(breaks=breaks) +
-    labs(title=main, x=xlab, y=ylab)
-  if(!is.null(facets)) {
+  p <- p + scale_y_continuous(breaks = breaks) +
+    labs(title = main, x = xlab, y = ylab)
+  if (!is.null(facets)) {
     # split plot into different panels
-    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    if (length(facets) == 2) p <- p + facet_wrap(facets)
     else p <- p + facet_grid(facets)
   }
   p
@@ -1007,55 +1012,57 @@ residualPlot <- function(data, abscissa = c("index", "fitted"),
 
 ## plot robust distances (regression diagnostic plot)
 
-rdiagPlot <- function(data, facets = attr(data, "facets"), size = c(2, 4),
-                      id.n = NULL, main, xlab, ylab, ..., mapping) {
+rdiagPlot <- function(object, facets = object$facets, size = c(2, 4),
+                      id.n = NULL, ..., mapping) {
   ## initializations
+  # extract data frame with main information
+  data <- object$data
   # extract data frame for vertical reference line
-  lineData <- attr(data, "q")
+  lineData <- object$q
   # check if robust distances are available
   msg <- "robust distances not available"
   by <- intersect(c("step", "fit"), names(data))
-  if(length(by) > 0) {
-    indices <- split(seq_len(nrow(data)), data[, by, drop=FALSE])
+  if (length(by) > 0) {
+    indices <- split(seq_len(nrow(data)), data[, by, drop = FALSE])
     onlyNA <- sapply(indices, function(i) all(is.na(data[i, "rd"])))
-    if(all(onlyNA)) stop(msg)
-    if(any(onlyNA)) {
+    if (all(onlyNA)) stop(msg)
+    if (any(onlyNA)) {
       indices <- do.call(c, unname(indices[onlyNA]))
-      data <- data[-indices, , drop=FALSE]
-      lineData <- lineData[!onlyNA, , drop=FALSE]
+      data <- data[-indices, , drop = FALSE]
+      lineData <- lineData[!onlyNA, , drop = FALSE]
       warning(msg, " for some submodels")
     }
   } else {
     onlyNA <- all(is.na(data[, "rd"]))
-    if(onlyNA) stop(msg)
+    if (onlyNA) stop(msg)
   }
   # define aesthetic mapping for regression diagnostic plot
-  mapping <- aes_string(x="rd", y="residual", color="classification")
+  mapping <- aes_string(x = "rd", y = "residual", color = "Diagnostics")
   ## construct data frame for labels
-  labelData <- labelify(data, which="xyd", id.n=id.n)
+  labelData <- labelify(data, which = "xyd", id.n = id.n)
   # define default title and axis labels
-  if(missing(main)) main <- "Regression diagnostic plot"
-  if(missing(xlab)) xlab <- "Robust distance computed by MCD"
-  if(missing(ylab)) ylab <- "Standardized residual"
+  main <- "Regression diagnostic plot"
+  xlab <- "Robust distance computed by MCD"
+  ylab <- "Standardized residual"
   # create plot
   p <- ggplot(data) +
-    geom_hline(aes(yintercept=-2.5), alpha=0.4) +
-    geom_hline(aes(yintercept=2.5), alpha=0.4)
+    geom_hline(aes(yintercept = -2.5), alpha = 0.4) +
+    geom_hline(aes(yintercept = 2.5), alpha = 0.4)
   if(!is.null(lineData)) {
     # add reference line
-    p <- p + geom_vline(aes_string(xintercept="q"), lineData, alpha=0.4)
+    p <- p + geom_vline(aes_string(xintercept = "q"), lineData, alpha = 0.4)
   }
-  p <- p + geom_point(mapping, size=size[1], ...)
-  if(!is.null(labelData)) {
+  p <- p + geom_point(mapping, size = size[1], ...)
+  if (!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x="rd", y="residual", label="index")
-    p <- p + geom_text(labelMapping, data=labelData,
-                       hjust=0, size=size[2], alpha=0.4)
+    labelMapping <- aes_string(x = "rd", y = "residual", label = "index")
+    p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
+                       size = size[2], alpha = 0.4)
   }
-  p <- p + labs(title=main, x=xlab, y=ylab)
-  if(!is.null(facets)) {
+  p <- p + labs(title = main, x = xlab, y =  ylab)
+  if (!is.null(facets)) {
     # split plot into different panels
-    if(length(facets) == 2) p <- p + facet_wrap(facets)
+    if (length(facets) == 2) p <- p + facet_wrap(facets)
     else p <- p + facet_grid(facets)
   }
   p

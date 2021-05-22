@@ -83,8 +83,8 @@ setupDiagnosticPlot.sparseLTS <- function(object, s = NA,
     q <- cbind(step = rep.int(s, sapply(q_list, nrow)),
                do.call(rbind, q_list))
     ## construct return object
-    out <- list(data = data, facets = if(fit == "both") step ~ fit else ~step,
-                qqLine = qql, q = q)
+    facets <- if (fit == "both") step ~ fit else ~step
+    out <- list(data = data, facets = facets, qqLine = qql, q = q)
     class(out) <- "setupDiagnosticPlot"
   } else {
     # extract the information from the selected step
@@ -200,13 +200,13 @@ setupDiagnosticPlotSparseLTSFit <- function(object, s, fit = "reweighted",
   ## construct indicator variables for leverage points
   leverage <- rd > q
   ## classify data points
-  labs <- c("potential outlier", "regular observation")
+  labs <- c("Potential outlier", "Regular observation")
   class <- ifelse(wt == 0, labs[1], labs[2])
   class <- factor(class, levels = labs)
   ## construct data frame containing main information
   data <- data.frame(index = seq_len(n), fitted = fitted, residual = residuals,
                      theoretical = theoretical, qqd = qqd, rd = rd, xyd = xyd,
-                     weight = wt, leverage = leverage, diagnostics = class)
+                     weight = wt, leverage = leverage, Diagnostics = class)
   ## construct return object
   out <- list(data = data, qqLine = as.data.frame(qql),
               q = data.frame(q = max(q, 2.5)))
