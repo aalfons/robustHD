@@ -4,11 +4,87 @@
 # --------------------------------------
 
 
+#' Set up an optimality criterion plot of a sequence of regression models
+#'
+#' Extract the relevent information for a plot of the values of the optimality
+#' criterion for a sequence of regression models, such as submodels along a
+#' robust or groupwise least angle regression sequence, or sparse least trimmed
+#' squares regression models for a grid of values for the penalty parameter.
+#'
+#' @aliases setupCritPlot.rlars setupCritPlot.grplars setupCritPlot.tslarsP
+#'
+#' @param object  the model fit from which to extract information.
+#' @param which  a character string specifying the type of plot.  Possible
+#' values are \code{"line"} (the default) to plot the (average) results for
+#' each model as a connected line, \code{"dot"} to create a dot plot,
+#' \code{"box"} to create a box plot, or \code{"density"} to create a smooth
+#' density plot.  Note that the last two plots are only available in case of
+#' prediction error estimation via repeated resampling.
+#' @param p  an integer giving the lag length for which to extract information
+#' (the default is to use the optimal lag length).
+#' @param fit  a character string specifying for which estimator to extract
+#' information.  Possible values are \code{"reweighted"} (the default) for
+#' the reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for
+#' both estimators.
+#' @param \dots  additional arguments to be passed down.
+#'
+#' @return  An object inheriting from class \code{"setupCritPlot"} with the
+#' following components:
+#' \describe{
+#'   \item{\code{data}}{a data frame containing the following columns:
+#'   \describe{
+#'     \item{\code{Fit}}{a vector or factor containing the identifiers of the
+#'     models along the sequence.}
+#'     \item{\code{Name}}{a factor specifying the estimator for which the
+#'     optimality criterion was estimated (\code{"reweighted"} or \code{"raw"};
+#'     only returned if both are requested in the \code{"sparseLTS"} or
+#'     \code{"perrySparseLTS"} methods).}
+#'     \item{\code{PE}}{the estimated prediction errors (only returned if
+#'     applicable).}
+#'     \item{\code{BIC}}{the estimated values of the Bayesian information
+#'     criterion (only returned if applicable).}
+#'     \item{\code{Lower}}{the lower end points of the error bars (only
+#'     returned if possible to compute).}
+#'     \item{\code{Upper}}{the upper end points of the error bars (only
+#'     returned if possible to compute).}
+#'   }
+#'   }
+#'   \item{\code{which}}{a character string specifying the type of plot.}
+#'   \item{\code{grouped}}{a logical indicating whether density plots should
+#'   be grouped due to multiple model fits along the sequence (only returned
+#'   in case of density plots for the \code{"perrySeqModel"} and
+#'   \code{"perrySparseLTS"} methods).}
+#'   \item{\code{includeSE}}{a logical indicating whether error bars based on
+#'   standard errors are available (only returned in case of line plots or dot
+#'   plots).}
+#'   \item{\code{mapping}}{default aesthetic mapping for the plots.}
+#'   \item{\code{facets}}{default faceting formula for the plots (only
+#'   returned if both estimators are requested in the \code{"sparseLTS"}
+#'   or \code{"perrySparseLTS"} methods).}
+#'   \item{\code{tuning}}{a data frame containing the grid of tuning parameter
+#'   values for which the optimality criterion was estimated (only returned for
+#'   the \code{"sparseLTS"} and \code{"perrySparseLTS"} methods).}
+#' }
+#'
+#' @author Andreas Alfons
+#'
+#' @seealso \code{\link{critPlot}}, \code{\link{rlars}},
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
+#' \code{\link{sparseLTS}}
+#'
+#' @example inst/doc/examples/example-setupCritPlot.R
+#'
+#' @keywords utilities
+#'
 #' @export
+
 setupCritPlot <- function(object, ...) UseMethod("setupCritPlot")
 
 
+#' @rdname setupCritPlot
 #' @export
+
 setupCritPlot.seqModel <- function(object, which = c("line", "dot"), ...) {
   ## extract optimality criterion
   crit <- object$crit
@@ -19,7 +95,9 @@ setupCritPlot.seqModel <- function(object, which = c("line", "dot"), ...) {
 }
 
 
+#' @rdname setupCritPlot
 #' @export
+
 setupCritPlot.tslars <- function(object, p, ...) {
   ## check lag length
   if (missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
@@ -35,12 +113,14 @@ setupCritPlot.tslars <- function(object, p, ...) {
     p <- pMax
     warning(sprintf("lag length too large, using maximum lag length %d", p))
   }
-  ## call plot function for specified lag length
+  ## call method for specified lag length
   setupCritPlot(object$pFit[[p]], ...)
 }
 
 
+#' @rdname setupCritPlot
 #' @export
+
 setupCritPlot.sparseLTS <- function(object, which = c("line", "dot"),
                                     fit = c("reweighted", "raw", "both"),
                                     ...) {
@@ -107,7 +187,9 @@ setupCritPlot.bicSelect <- function(object, which = "line", s = NULL,
 }
 
 
+#' @rdname setupCritPlot
 #' @export
+
 setupCritPlot.perrySeqModel <- function(object,
                                         which = c("line", "dot",
                                                   "box", "density"),
@@ -126,7 +208,9 @@ setupCritPlot.perrySeqModel <- function(object,
 }
 
 
+#' @rdname setupCritPlot
 #' @export
+
 setupCritPlot.perrySparseLTS <- function(object,
                                          which = c("line", "dot",
                                                    "box", "density"),
