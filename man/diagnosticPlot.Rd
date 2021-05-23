@@ -19,7 +19,7 @@ diagnosticPlot(object, ...)
 
 \method{diagnosticPlot}{perrySeqModel}(object, covArgs = list(), ...)
 
-\method{diagnosticPlot}{tslars}(x, p, s = NA, covArgs = list(), ...)
+\method{diagnosticPlot}{tslars}(object, p, s = NA, covArgs = list(), ...)
 
 \method{diagnosticPlot}{sparseLTS}(
   object,

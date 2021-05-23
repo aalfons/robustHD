@@ -479,7 +479,7 @@ critPlot.seqModel <- function(object, which = c("line", "dot"), ...) {
 #' @method critPlot tslars
 #' @export
 
-critPlot.tslars <- function(x, p, ...) {
+critPlot.tslars <- function(object, p, ...) {
   # extract all information required for plotting
   if (missing(p)) setup <- setupCritPlot(object)
   else setup <- setupCritPlot(object, p = p)
@@ -754,7 +754,7 @@ diagnosticPlot.perrySeqModel <- function(object, covArgs = list(), ...) {
 #' @method diagnosticPlot tslars
 #' @export
 
-diagnosticPlot.tslars <- function(x, p, s = NA, covArgs = list(), ...) {
+diagnosticPlot.tslars <- function(object, p, s = NA, covArgs = list(), ...) {
   # extract all information required for plotting
   if (missing(p)) setup <- setupDiagnosticPlot(object, s = s, covArgs = covArgs)
   else setup <- setupDiagnosticPlot(object, p = p, s = s, covArgs = covArgs)
