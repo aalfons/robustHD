@@ -4,13 +4,21 @@
 \alias{setupDiagnosticPlot}
 \alias{setupDiagnosticPlot.rlars}
 \alias{setupDiagnosticPlot.grplars}
+\alias{setupDiagnosticPlot.tslarsP}
 \alias{setupDiagnosticPlot.seqModel}
+\alias{setupDiagnosticPlot.perrySeqModel}
+\alias{setupDiagnosticPlot.tslars}
 \alias{setupDiagnosticPlot.sparseLTS}
+\alias{setupDiagnosticPlot.perrySparseLTS}
 \title{Set up a diagnostic plot for a sequence of regression models}
 \usage{
 setupDiagnosticPlot(object, ...)
 
 \method{setupDiagnosticPlot}{seqModel}(object, s = NA, covArgs = list(...), ...)
+
+\method{setupDiagnosticPlot}{perrySeqModel}(object, ...)
+
+\method{setupDiagnosticPlot}{tslars}(object, p, ...)
 
 \method{setupDiagnosticPlot}{sparseLTS}(
   object,
@@ -19,6 +27,8 @@ setupDiagnosticPlot(object, ...)
   covArgs = list(...),
   ...
 )
+
+\method{setupDiagnosticPlot}{perrySparseLTS}(object, ...)
 }
 \arguments{
 \item{object}{the model fit from which to extract information.}
@@ -35,6 +45,9 @@ vector giving the indices of the models from which to extract information
 
 \item{covArgs}{a list of arguments to be passed to
 \code{\link[robustbase]{covMcd}} for computing robust Mahalanobis distances.}
+
+\item{p}{an integer giving the lag length for which to extract information
+(the default is to use the optimal lag length).}
 
 \item{fit}{a character string specifying from which fit to extract
 information.  Possible values are \code{"reweighted"} (the default) to
@@ -122,7 +135,9 @@ setup2 <- setupDiagnosticPlot(fitSparseLTS, fit = "both")
 diagnosticPlot(setup2)
 }
 \seealso{
-\code{\link{diagnosticPlot}}, \code{\link{sparseLTS}},
+\code{\link{diagnosticPlot}}, \code{\link{rlars}},
+\code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
+\code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
 \code{\link{sparseLTS}}
 }
 \author{

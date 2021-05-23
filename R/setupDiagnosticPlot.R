@@ -12,6 +12,7 @@
 #' plots.
 #'
 #' @aliases setupDiagnosticPlot.rlars setupDiagnosticPlot.grplars
+#' setupDiagnosticPlot.tslarsP
 #'
 #' @param object  the model fit from which to extract information.
 #' @param s  for the \code{"seqModel"} method, an integer vector giving the
@@ -19,6 +20,8 @@
 #' use the optimal submodel).  For the \code{"sparseLTS"} method, an integer
 #' vector giving the indices of the models from which to extract information
 #' (the default is to use the optimal model for each of the requested fits).
+#' @param p  an integer giving the lag length for which to extract information
+#' (the default is to use the optimal lag length).
 #' @param fit  a character string specifying from which fit to extract
 #' information.  Possible values are \code{"reweighted"} (the default) to
 #' convert the reweighted fit, \code{"raw"} to convert the raw fit, or
@@ -68,7 +71,9 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link{diagnosticPlot}}, \code{\link{sparseLTS}},
+#' @seealso \code{\link{diagnosticPlot}}, \code{\link{rlars}},
+#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
+#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
 #' \code{\link{sparseLTS}}
 #'
 #' @example inst/doc/examples/example-setupDiagnosticPlot.R
@@ -83,6 +88,7 @@ setupDiagnosticPlot <- function(object, ...) UseMethod("setupDiagnosticPlot")
 #' @rdname setupDiagnosticPlot
 #' @export
 #'
+
 setupDiagnosticPlot.seqModel <- function(object, s = NA, covArgs = list(...),
                                          ...) {
   ## initializations
@@ -197,6 +203,38 @@ setupDiagnosticPlotSeqModelStep <- function(s, object, x = NULL,
               q = data.frame(q = max(q, 2.5)))
   class(out) <- "setupDiagnosticPlot"
   out
+}
+
+
+#' @rdname setupDiagnosticPlot
+#' @export
+
+setupDiagnosticPlot.perrySeqModel <- function(object, ...) {
+  # call method for component 'finalModel'
+  setupDiagnosticPlot(object$finalModel, ...)
+}
+
+
+#' @rdname setupDiagnosticPlot
+#' @export
+
+setupDiagnosticPlot.tslars <- function(object, p, ...) {
+  ## check lag length
+  if (missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
+  if (length(p) > 1) {
+    warning("multiple lag lengths not yet supported")
+    p <- p[1]
+  }
+  pMax <- object$pMax
+  if (p < 1) {
+    p <- 1
+    warning("lag length too small, using lag length 1")
+  } else if (p > pMax) {
+    p <- pMax
+    warning(sprintf("lag length too large, using maximum lag length %d", p))
+  }
+  ## call method for specified lag length
+  setupDiagnosticPlot(object$pFit[[p]], ...)
 }
 
 
@@ -407,4 +445,13 @@ setupDiagnosticPlotSparseLTSFit <- function(object, s, fit = "reweighted",
               q = data.frame(q = max(q, 2.5)))
   class(out) <- "setupDiagnosticPlot"
   out
+}
+
+
+#' @rdname setupDiagnosticPlot
+#' @export
+
+setupDiagnosticPlot.perrySparseLTS <- function(object, ...) {
+  # call method for component 'finalModel'
+  setupDiagnosticPlot(object$finalModel, ...)
 }

@@ -17,9 +17,9 @@ diagnosticPlot(object, ...)
 
 \method{diagnosticPlot}{seqModel}(object, s = NA, covArgs = list(), ...)
 
-\method{diagnosticPlot}{perrySeqModel}(object, ...)
+\method{diagnosticPlot}{perrySeqModel}(object, covArgs = list(), ...)
 
-\method{diagnosticPlot}{tslars}(object, p, ...)
+\method{diagnosticPlot}{tslars}(x, p, s = NA, covArgs = list(), ...)
 
 \method{diagnosticPlot}{sparseLTS}(
   object,
@@ -29,7 +29,12 @@ diagnosticPlot(object, ...)
   ...
 )
 
-\method{diagnosticPlot}{perrySparseLTS}(object, ...)
+\method{diagnosticPlot}{perrySparseLTS}(
+  object,
+  fit = c("reweighted", "raw", "both"),
+  covArgs = list(),
+  ...
+)
 
 \method{diagnosticPlot}{setupDiagnosticPlot}(
   object,

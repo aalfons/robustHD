@@ -742,9 +742,11 @@ diagnosticPlot.seqModel <- function(object, s = NA, covArgs = list(), ...) {
 #' @method diagnosticPlot perrySeqModel
 #' @export
 
-diagnosticPlot.perrySeqModel <- function(object, ...) {
-  # call method for component 'finalModel'
-  diagnosticPlot(object$finalModel, ...)
+diagnosticPlot.perrySeqModel <- function(object, covArgs = list(), ...) {
+  # extract all information required for plotting
+  setup <- setupDiagnosticPlot(object, covArgs = covArgs)
+  # call method for object with all information required for plotting
+  diagnosticPlot(setup, ...)
 }
 
 
@@ -752,23 +754,12 @@ diagnosticPlot.perrySeqModel <- function(object, ...) {
 #' @method diagnosticPlot tslars
 #' @export
 
-diagnosticPlot.tslars <- function(object, p, ...) {
-  ## check lag length
-  if(missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
-  if(length(p) > 1) {
-    warning("multiple lag lengths not yet supported")
-    p <- p[1]
-  }
-  pMax <- object$pMax
-  if(p < 1) {
-    p <- 1
-    warning("lag length too small, using lag length 1")
-  } else if(p > pMax) {
-    p <- pMax
-    warning(sprintf("lag length too large, using maximum lag length %d", p))
-  }
-  ## call plot function for specified lag length
-  diagnosticPlot(object$pFit[[p]], ...)
+diagnosticPlot.tslars <- function(x, p, s = NA, covArgs = list(), ...) {
+  # extract all information required for plotting
+  if (missing(p)) setup <- setupDiagnosticPlot(object, s = s, covArgs = covArgs)
+  else setup <- setupDiagnosticPlot(object, p = p, s = s, covArgs = covArgs)
+  # call method for object with all information required for plotting
+  diagnosticPlot(setup, ...)
 }
 
 
@@ -790,9 +781,13 @@ diagnosticPlot.sparseLTS <- function(object, s = NA,
 #' @method diagnosticPlot perrySparseLTS
 #' @export
 
-diagnosticPlot.perrySparseLTS <- function(object, ...) {
-  # call method for component 'finalModel'
-  diagnosticPlot(object$finalModel, ...)
+diagnosticPlot.perrySparseLTS <- function(object,
+                                          fit = c("reweighted", "raw", "both"),
+                                          covArgs = list(), ...) {
+  # extract all information required for plotting
+  setup <- setupDiagnosticPlot(object, fit = fit, covArgs = covArgs)
+  # call method for object with all information required for plotting
+  diagnosticPlot(setup, ...)
 }
 
 
