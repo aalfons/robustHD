@@ -116,32 +116,32 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 
 coefify <- function(model, ...) UseMethod("coefify")
 
-coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
-  # prepare coefficients and labels
-  coef <- removeIntercept(t(coef(model, s=NULL)))
-  sigmaX <- model$sigmaX
-  if(!isTRUE(zeros)) {
-    keep <- apply(coef != 0, 2, any)
-    coef <- coef[, keep, drop=FALSE]
-    sigmaX <- sigmaX[keep]
-    if(!is.null(labels)) labels <- labels[keep]
-  }
-  # standardize coefficients
-  coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
-  # prepare other information
-  m <- ncol(coef)          # number of variables
-  steps <- model$s         # step numbers
-  nsteps <- length(steps)  # number of steps
-  df <- model$df           # degrees of freedom
-  vn <- colnames(coef)     # variable names
-  # build data frame
-  coefData <- data.frame(step=rep.int(steps, m),
-                         df=rep.int(df, m), coefficient=as.numeric(coef),
-                         variable=factor(rep(vn, each=nsteps), levels=vn))
-  if(!is.null(labels))
-    coefData$label <- rep(as.character(labels), each=nsteps)
-  coefData
-}
+# coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
+#   # prepare coefficients and labels
+#   coef <- removeIntercept(t(coef(model, s=NULL)))
+#   sigmaX <- model$sigmaX
+#   if(!isTRUE(zeros)) {
+#     keep <- apply(coef != 0, 2, any)
+#     coef <- coef[, keep, drop=FALSE]
+#     sigmaX <- sigmaX[keep]
+#     if(!is.null(labels)) labels <- labels[keep]
+#   }
+#   # standardize coefficients
+#   coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
+#   # prepare other information
+#   m <- ncol(coef)          # number of variables
+#   steps <- model$s         # step numbers
+#   nsteps <- length(steps)  # number of steps
+#   df <- model$df           # degrees of freedom
+#   vn <- colnames(coef)     # variable names
+#   # build data frame
+#   coefData <- data.frame(step=rep.int(steps, m),
+#                          df=rep.int(df, m), coefficient=as.numeric(coef),
+#                          variable=factor(rep(vn, each=nsteps), levels=vn))
+#   if(!is.null(labels))
+#     coefData$label <- rep(as.character(labels), each=nsteps)
+#   coefData
+# }
 
 coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
                               zeros = FALSE, labels, ...) {
@@ -294,25 +294,32 @@ coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
 #' @export
 #' @importFrom utils head tail
 
-coefPlot <- function(x, ...) UseMethod("coefPlot")
+coefPlot <- function(object, ...) UseMethod("coefPlot")
 
 
 #' @rdname coefPlot
 #' @method coefPlot seqModel
 #' @export
 
-coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE,
-                              size = c(0.5, 2, 4), labels, offset = 1, ...) {
-  ## initializations
-  if(missing(labels)) labels <- defaultLabels(x)  # default labels
-  ## extract coefficient data extended with other information
-  coefData <- coefify(x, zeros=zeros, labels=labels)
-  ## construct data frame for labels
-  maxStep <- max(coefData$step)
-  labelData <- coefData[coefData$step == maxStep, ]
-  ## call workhorse function
-  ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size,
-             offset=offset, ...)
+# coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE,
+#                               size = c(0.5, 2, 4), labels, offset = 1, ...) {
+#   ## initializations
+#   if(missing(labels)) labels <- defaultLabels(x)  # default labels
+#   ## extract coefficient data extended with other information
+#   coefData <- coefify(x, zeros=zeros, labels=labels)
+#   ## construct data frame for labels
+#   maxStep <- max(coefData$step)
+#   labelData <- coefData[coefData$step == maxStep, ]
+#   ## call workhorse function
+#   ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size,
+#              offset=offset, ...)
+# }
+
+coefPlot.seqModel <- function(object, zeros = FALSE, labels = NULL, ...) {
+  # extract all information required for plotting
+  setup <- setupCoefPlot(object, zeros = zeros, labels = labels)
+  # call method for object with all information required for plotting
+  coefPlot(setup, ...)
 }
 
 
@@ -371,6 +378,52 @@ coefPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
     # split plot into different panels
     p <- p + facet_grid(. ~ fit)
   }
+  p
+}
+
+
+#' @rdname coefPlot
+#' @method coefPlot setupCoefPlot
+#' @export
+
+coefPlot.setupCoefPlot <- function(object, abscissa = c("step", "df"),
+                                   size = c(0.5, 2, 4), offset = 1,
+                                   facets = object$facets, ...) {
+  # initializations
+  abscissa <- match.arg(abscissa)
+  size <- as.numeric(size)
+  size <- c(size, rep.int(NA, max(0, 3-length(size))))[1:3]  # ensure length 3
+  size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
+  # define default axis labels
+  xlab <- switch(abscissa, step = "Step", df = "Degrees of freedom")
+  ylab <- "Standardized coefficients"
+  # define aesthetic mapping for plotting coefficients
+  coefMapping <- aes_string(x = abscissa, y = "coefficient",
+                            color = "variable")
+  # define aesthetic mapping for plotting x-axis grid and labels
+  offset <- paste(rep.int(" ", offset), collapse = "")  # whitespace
+  labelData <- object$labels
+  labelData$label <- paste(offset, labelData$label, sep = "")
+  labelMapping <- aes_string(x = abscissa, y = "coefficient",
+                             label = "label")
+  # # draw minor grid lines for each step, but leave
+  # # major grid lines and tick marks pretty
+  # gridX <- switch(abscissa, step = object$steps, df = object$df)
+  # create plot
+  p <- ggplot() +
+    geom_line(coefMapping, data = object$coefficients, size = size[1], ...) +
+    geom_point(coefMapping, data = object$coefficients, size = size[2], ...) +
+    geom_text(labelMapping, data = labelData, hjust = 0,
+              size = size[3], alpha = 0.4) +
+    # scale_x_continuous(minor_breaks = gridX) +
+    theme(legend.position = "none") +
+    labs(x = xlab, y = ylab)
+  if (!is.null(facets)) {
+    # split plot into different panels
+    if (length(facets) == 2) p <- p + facet_wrap(facets)
+    else p <- p + facet_grid(facets)
+  }
+  # return plot
   p
 }
 
