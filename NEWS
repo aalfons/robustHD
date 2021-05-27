@@ -1,9 +1,13 @@
 Changes in robustHD version 0.7.0
 
+    + Re-implemented plots and added functions setupCoefPlot(),
+      setupCritPlot(), and setupDiagnosticPlot() to extract all
+      the relevant information.
+
     + Removed deprecated functions.
 
-    + Function partialOrder() for finding the order of the smallest or largest
-      values of a vector is now exported.
+    + Function partialOrder() for finding the order of the smallest or
+      largest values of a vector is now exported.
 
 
 
