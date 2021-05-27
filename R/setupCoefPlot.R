@@ -162,8 +162,8 @@ setupCoefPlot.tslars <- function(object, p, ...) {
   ## check lag length
   if (missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
   if (length(p) > 1) {
-    warning("multiple lag lengths not yet supported")
     p <- p[1]
+    warning(sprintf("multiple lag lengths not yet supported; using p = %d", p))
   }
   pMax <- object$pMax
   if (p < 1) {

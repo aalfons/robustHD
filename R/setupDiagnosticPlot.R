@@ -92,7 +92,9 @@ setupDiagnosticPlot <- function(object, ...) UseMethod("setupDiagnosticPlot")
 setupDiagnosticPlot.seqModel <- function(object, s = NA, covArgs = list(...),
                                          ...) {
   ## initializations
-  if (!object$robust) stop("not implemented yet")
+  if (!object$robust) {
+    stop("diagnostic plots not yet implemented for nonrobust methods")
+  }
   # check the scale estimate
   scale <- getComponent(object, "scale", s = s)
   if (any(scale <= 0)) stop("residual scale equal to 0")
@@ -222,8 +224,8 @@ setupDiagnosticPlot.tslars <- function(object, p, ...) {
   ## check lag length
   if (missing(p) || !is.numeric(p) || length(p) == 0) p <- object$pOpt
   if (length(p) > 1) {
-    warning("multiple lag lengths not yet supported")
     p <- p[1]
+    warning(sprintf("multiple lag lengths not yet supported; using p = %d", p))
   }
   pMax <- object$pMax
   if (p < 1) {
