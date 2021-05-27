@@ -35,11 +35,10 @@ coefPlot(object, ...)
 )
 }
 \arguments{
-\item{\dots}{for the generic function, additional arguments to be passed
-down to methods.  For the \code{"tslars"} method, additional arguments to be
-passed down to the \code{"seqModel"} method.  For the other methods,
-additional arguments to be passed down to \code{\link[ggplot2]{geom_line}}
-and \code{\link[ggplot2]{geom_point}}.}
+\item{object}{the model fit to be plotted.}
+
+\item{\dots}{additional arguments to be passed down, eventually to
+\code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.}
 
 \item{zeros}{a logical indicating whether predictors that never enter the
 model and thus have zero coefficients should be included in the plot
@@ -49,7 +48,7 @@ which case many coefficients are never nonzero.}
 
 \item{labels}{an optional character vector containing labels for the
 predictors.  Plotting labels can be suppressed by setting this to
-\code{NULL}.}
+\code{NA}.}
 
 \item{p}{an integer giving the lag length for which to produce the plot
 (the default is to use the optimal lag length).}
@@ -60,8 +59,11 @@ reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both
 estimators.}
 
 \item{abscissa}{a character string specifying what to plot on the
-\eqn{x}-axis.  Possible values are \code{"step"} for the step number (the
-default), or \code{"df"} for the degrees of freedom.}
+\eqn{x}-axis.  For objects inheriting from class \code{"seqModel"}, possible
+values are \code{"step"} for the step number (the default), or \code{"df"}
+for the degrees of freedom.  For code{"sparseLTS"} objects, possible values
+are code{"lambda"} for the value of the penalty parameter (the default), or
+\code{"step"} for the step number.}
 
 \item{size}{a numeric vector of length three giving the line width, the
 point size and the label size, respectively.}
@@ -70,7 +72,10 @@ point size and the label size, respectively.}
 corresponding coefficient values from the last step (i.e., the number of
 blank characters to be prepended to the label).}
 
-\item{x}{the model fit to be plotted.}
+\item{facets}{a faceting formula to override the default behavior.  If
+supplied, \code{\link[ggplot2]{facet_wrap}} or
+\code{\link[ggplot2]{facet_grid}} is called depending on whether the formula
+is one-sided or two-sided.}
 }
 \value{
 An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).

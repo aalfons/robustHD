@@ -121,16 +121,13 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 #'
 #' @aliases coefPlot.rlars coefPlot.grplars coefPlot.tslarsP
 #'
-#' @param x  the model fit to be plotted.
-#' @param p  an integer giving the lag length for which to produce the plot
-#' (the default is to use the optimal lag length).
-#' @param fit  a character string specifying for which estimator to produce the
-#' plot.  Possible values are \code{"reweighted"} (the default) for the
-#' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both
-#' estimators.
+#' @param object  the model fit to be plotted.
 #' @param abscissa  a character string specifying what to plot on the
-#' \eqn{x}-axis.  Possible values are \code{"step"} for the step number (the
-#' default), or \code{"df"} for the degrees of freedom.
+#' \eqn{x}-axis.  For objects inheriting from class \code{"seqModel"}, possible
+#' values are \code{"step"} for the step number (the default), or \code{"df"}
+#' for the degrees of freedom.  For code{"sparseLTS"} objects, possible values
+#' are code{"lambda"} for the value of the penalty parameter (the default), or
+#' \code{"step"} for the step number.
 #' @param zeros  a logical indicating whether predictors that never enter the
 #' model and thus have zero coefficients should be included in the plot
 #' (\code{TRUE}) or omitted (\code{FALSE}, the default).  This is useful if the
@@ -140,15 +137,22 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 #' point size and the label size, respectively.
 #' @param labels  an optional character vector containing labels for the
 #' predictors.  Plotting labels can be suppressed by setting this to
-#' \code{NULL}.
+#' \code{NA}.
 #' @param offset   an integer giving the offset of the labels from the
 #' corresponding coefficient values from the last step (i.e., the number of
 #' blank characters to be prepended to the label).
-#' @param \dots  for the generic function, additional arguments to be passed
-#' down to methods.  For the \code{"tslars"} method, additional arguments to be
-#' passed down to the \code{"seqModel"} method.  For the other methods,
-#' additional arguments to be passed down to \code{\link[ggplot2]{geom_line}}
-#' and \code{\link[ggplot2]{geom_point}}.
+#' @param p  an integer giving the lag length for which to produce the plot
+#' (the default is to use the optimal lag length).
+#' @param fit  a character string specifying for which estimator to produce the
+#' plot.  Possible values are \code{"reweighted"} (the default) for the
+#' reweighted fits, \code{"raw"} for the raw fits, or \code{"both"} for both
+#' estimators.
+#' @param facets  a faceting formula to override the default behavior.  If
+#' supplied, \code{\link[ggplot2]{facet_wrap}} or
+#' \code{\link[ggplot2]{facet_grid}} is called depending on whether the formula
+#' is one-sided or two-sided.
+#' @param \dots  additional arguments to be passed down, eventually to
+#' \code{\link[ggplot2]{geom_line}} and \code{\link[ggplot2]{geom_point}}.
 #'
 #' @return
 #' An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).
@@ -229,19 +233,25 @@ coefPlot.setupCoefPlot <- function(object, abscissa = NULL,
   coefMapping <- aes_string(x = abscissa, y = "coefficient",
                             color = "variable")
   # define aesthetic mapping for plotting x-axis grid and labels
-  offset <- paste(rep.int(" ", offset), collapse = "")  # whitespace
-  labelData <- object$labels
-  labelData$label <- paste(offset, labelData$label, sep = "")
-  labelMapping <- aes_string(x = abscissa, y = "coefficient",
-                             label = "label")
+  if (object$includeLabels) {
+    offset <- paste(rep.int(" ", offset), collapse = "")  # whitespace
+    labelData <- object$labels
+    labelData$label <- paste(offset, labelData$label, sep = "")
+    labelMapping <- aes_string(x = abscissa, y = "coefficient",
+                               label = "label")
+  }
   # create plot
   p <- ggplot() +
-    geom_line(coefMapping, data = object$coefficients, size = size[1], ...) +
-    geom_point(coefMapping, data = object$coefficients, size = size[2], ...) +
-    geom_text(labelMapping, data = labelData, hjust = 0,
-              size = size[3], alpha = 0.4) +
-    # scale_x_continuous(minor_breaks = gridX) +
-    theme(legend.position = "none") +
+    local_geom_line(coefMapping, data = object$coefficients,
+                    size = size[1], ...) +
+    local_geom_point(coefMapping, data = object$coefficients,
+                     size = size[2], ...)
+  if (object$includeLabels) {
+    p <- p +
+      geom_text(labelMapping, data = labelData, hjust = 0,
+                size = size[3], alpha = 0.4)
+  }
+  p <- p +
     labs(x = xlab, y = ylab)
   if (abscissa == "lambda") p <- p + scale_x_reverse()
   if (!is.null(facets)) {
@@ -251,6 +261,17 @@ coefPlot.setupCoefPlot <- function(object, abscissa = NULL,
   }
   # return plot
   p
+}
+
+
+# local geoms to override defaults
+
+local_geom_line <- function(..., show.legend = FALSE) {
+  geom_line(..., show.legend = show.legend)
+}
+
+local_geom_point <- function(..., show.legend = FALSE) {
+  geom_point(..., show.legend = show.legend)
 }
 
 
@@ -486,20 +507,20 @@ getLabelData <- function(data, which, id.n = NULL) {
 #' @param object  the model fit for which to produce diagnostic plots, or an
 #' object containing all necessary information for plotting (as generated
 #' by \code{\link{setupDiagnosticPlot}}).
-#' @param p  an integer giving the lag length for which to produce the plot
-#' (the default is to use the optimal lag length).
 #' @param s  for the \code{"seqModel"} method, an integer vector giving
 #' the steps of the submodels  for which to produce diagnostic plots (the
 #' default is to use the optimal submodel).  For the \code{"sparseLTS"} method,
 #' an integer vector giving the indices of the models for which to produce
 #' diagnostic plots (the default is to use the optimal model for each of the
 #' requested fits).
+#' @param covArgs  a list of arguments to be passed to
+#' \code{\link[robustbase]{covMcd}} for the regression diagnostic plot (see
+#' @param p  an integer giving the lag length for which to produce the plot
+#' (the default is to use the optimal lag length).
 #' @param fit  a character string specifying for which fit to produce
 #' diagnostic plots.  Possible values are \code{"reweighted"} (the default) for
 #' diagnostic plots for the reweighted fit, \code{"raw"} for diagnostic plots
 #' for the raw fit, or \code{"both"} for diagnostic plots for both fits.
-#' @param covArgs  a list of arguments to be passed to
-#' \code{\link[robustbase]{covMcd}} for the regression diagnostic plot (see
 #' \dQuote{Details}).
 #' @param which  a character string indicating which plot to show.  Possible
 #' values are \code{"all"} (the default) for all of the following, \code{"rqq"}

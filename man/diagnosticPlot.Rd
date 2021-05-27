@@ -62,8 +62,7 @@ diagnostic plots (the default is to use the optimal model for each of the
 requested fits).}
 
 \item{covArgs}{a list of arguments to be passed to
-\code{\link[robustbase]{covMcd}} for the regression diagnostic plot (see
-\dQuote{Details}).}
+\code{\link[robustbase]{covMcd}} for the regression diagnostic plot (see}
 
 \item{p}{an integer giving the lag length for which to produce the plot
 (the default is to use the optimal lag length).}
@@ -71,7 +70,8 @@ requested fits).}
 \item{fit}{a character string specifying for which fit to produce
 diagnostic plots.  Possible values are \code{"reweighted"} (the default) for
 diagnostic plots for the reweighted fit, \code{"raw"} for diagnostic plots
-for the raw fit, or \code{"both"} for diagnostic plots for both fits.}
+for the raw fit, or \code{"both"} for diagnostic plots for both fits.
+\dQuote{Details}).}
 
 \item{which}{a character string indicating which plot to show.  Possible
 values are \code{"all"} (the default) for all of the following, \code{"rqq"}
