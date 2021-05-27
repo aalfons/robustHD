@@ -61,12 +61,12 @@
 #'     (potential regression outliers) and \code{"Regular observation"} (data
 #'     points following the model).}
 #'   }}
-#'   \item{\code{facets}}{default faceting formula for the diagnostic plots
-#'   (only returned where applicable).}
 #'   \item{\code{qqLine}}{a data frame containing the intercepts and slopes of
 #'   the respective reference lines to be displayed in residual Q-Q plots.}
 #'   \item{\code{q}}{a data frame containing the quantiles of the Mahalanobis
 #'   distribution used as cutoff points for detecting leverage points.}
+#'   \item{\code{facets}}{default faceting formula for the diagnostic plots
+#'   (only returned where applicable).}
 #' }
 #'
 #' @author Andreas Alfons
@@ -131,7 +131,7 @@ setupDiagnosticPlot.seqModel <- function(object, s = NA, covArgs = list(...),
     q <- cbind(step = rep.int(s, sapply(q_list, nrow)),
                do.call(rbind, q_list))
     ## construct return object
-    out <- list(data = data, facets = ~step, qqLine = qql, q = q)
+    out <- list(data = data, qqLine = qql, q = q, facets = ~step)
     class(out) <- "setupDiagnosticPlot"
   } else {
     # extract the information from the selected step
@@ -299,7 +299,7 @@ setupDiagnosticPlot.sparseLTS <- function(object, s = NA,
                        rbind(reweighted$data, raw$data),
                        row.names = NULL)
     ## construct return object
-    out <- list(data = data, facets = . ~ fit, qqLine = qql, q = q)
+    out <- list(data = data, qqLine = qql, q = q, facets = . ~ fit)
     class(out) <- "setupDiagnosticPlot"
   } else if (length(s) > 1) {
     ## extract the information from each requested step
@@ -317,7 +317,7 @@ setupDiagnosticPlot.sparseLTS <- function(object, s = NA,
                do.call(rbind, q_list))
     ## construct return object
     facets <- if (fit == "both") step ~ fit else ~step
-    out <- list(data = data, facets = facets, qqLine = qql, q = q)
+    out <- list(data = data, qqLine = qql, q = q, facets = facets)
     class(out) <- "setupDiagnosticPlot"
   } else {
     # extract the information from the selected step
@@ -356,7 +356,7 @@ setupDiagnosticPlotSparseLTSStep <- function(s, object, fit = "reweighted",
     data <- data.frame(fit = rep.int(factor(fits, levels = fits), n),
                        rbind(reweighted$data, raw$data), row.names = NULL)
     ## construct return object
-    out <- list(data = data, facets = . ~ fit, qqLine = qql, q = q)
+    out <- list(data = data, qqLine = qql, q = q, facets = . ~ fit)
     class(out) <- "setupDiagnosticPlot"
   } else {
     out <- setupDiagnosticPlotSparseLTSFit(object, s = s, fit = fit, x = x,

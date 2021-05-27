@@ -84,12 +84,12 @@ components:
     (potential regression outliers) and \code{"Regular observation"} (data
     points following the model).}
   }}
-  \item{\code{facets}}{default faceting formula for the diagnostic plots
-  (only returned where applicable).}
   \item{\code{qqLine}}{a data frame containing the intercepts and slopes of
   the respective reference lines to be displayed in residual Q-Q plots.}
   \item{\code{q}}{a data frame containing the quantiles of the Mahalanobis
   distribution used as cutoff points for detecting leverage points.}
+  \item{\code{facets}}{default faceting formula for the diagnostic plots
+  (only returned where applicable).}
 }
 }
 \description{
