@@ -15,22 +15,19 @@ coefPlot(object, ...)
 
 \method{coefPlot}{seqModel}(object, zeros = FALSE, labels = NULL, ...)
 
-\method{coefPlot}{tslars}(x, p, ...)
+\method{coefPlot}{tslars}(object, p, zeros = FALSE, labels = NULL, ...)
 
 \method{coefPlot}{sparseLTS}(
-  x,
+  object,
   fit = c("reweighted", "raw", "both"),
-  abscissa = c("step", "df"),
   zeros = FALSE,
-  size = c(0.5, 2, 4),
-  labels,
-  offset = 1,
+  labels = NULL,
   ...
 )
 
 \method{coefPlot}{setupCoefPlot}(
   object,
-  abscissa = c("step", "df"),
+  abscissa = NULL,
   size = c(0.5, 2, 4),
   offset = 1,
   facets = object$facets,
@@ -54,8 +51,6 @@ which case many coefficients are never nonzero.}
 predictors.  Plotting labels can be suppressed by setting this to
 \code{NULL}.}
 
-\item{x}{the model fit to be plotted.}
-
 \item{p}{an integer giving the lag length for which to produce the plot
 (the default is to use the optimal lag length).}
 
@@ -74,6 +69,8 @@ point size and the label size, respectively.}
 \item{offset}{an integer giving the offset of the labels from the
 corresponding coefficient values from the last step (i.e., the number of
 blank characters to be prepended to the label).}
+
+\item{x}{the model fit to be plotted.}
 }
 \value{
 An object of class \code{"ggplot"} (see \code{\link[ggplot2]{ggplot}}).

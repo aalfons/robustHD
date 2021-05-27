@@ -17,7 +17,7 @@ critPlot(object, ...)
 
 \method{critPlot}{seqModel}(object, which = c("line", "dot"), ...)
 
-\method{critPlot}{tslars}(object, p, ...)
+\method{critPlot}{tslars}(object, p, which = c("line", "dot"), ...)
 
 \method{critPlot}{sparseLTS}(
   object,

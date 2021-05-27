@@ -660,3 +660,9 @@ rdiagPlotFortified <- function(data, facets = attr(data, "facets"),
   }
   p
 }
+
+# ----------------------
+
+# utility functions
+
+labelify <- getLabelData

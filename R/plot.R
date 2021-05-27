@@ -111,133 +111,6 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 
 # ----------------------
 
-## supplement the coefficients in a model with other useful information
-## returns a data frame suitable for plotting with ggplot2
-
-coefify <- function(model, ...) UseMethod("coefify")
-
-# coefify.seqModel <- function(model, zeros = FALSE, labels, ...) {
-#   # prepare coefficients and labels
-#   coef <- removeIntercept(t(coef(model, s=NULL)))
-#   sigmaX <- model$sigmaX
-#   if(!isTRUE(zeros)) {
-#     keep <- apply(coef != 0, 2, any)
-#     coef <- coef[, keep, drop=FALSE]
-#     sigmaX <- sigmaX[keep]
-#     if(!is.null(labels)) labels <- labels[keep]
-#   }
-#   # standardize coefficients
-#   coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
-#   # prepare other information
-#   m <- ncol(coef)          # number of variables
-#   steps <- model$s         # step numbers
-#   nsteps <- length(steps)  # number of steps
-#   df <- model$df           # degrees of freedom
-#   vn <- colnames(coef)     # variable names
-#   # build data frame
-#   coefData <- data.frame(step=rep.int(steps, m),
-#                          df=rep.int(df, m), coefficient=as.numeric(coef),
-#                          variable=factor(rep(vn, each=nsteps), levels=vn))
-#   if(!is.null(labels))
-#     coefData$label <- rep(as.character(labels), each=nsteps)
-#   coefData
-# }
-
-coefify.sparseLTS <- function(model, fit = c("reweighted", "raw", "both"),
-                              zeros = FALSE, labels, ...) {
-  # initializations
-  fit <- match.arg(fit)
-  zeros <- isTRUE(zeros)
-  coef <- removeIntercept(t(coef(model, s=NULL, fit=fit)))
-  df <- getComponent(model, "df", s=NULL, fit=fit)
-  # prepare coefficients and labels
-  if(!zeros) {
-    keep <- apply(coef != 0, 2, any)
-    coef <- coef[, keep, drop=FALSE]
-    if(!is.null(labels)) labels <- labels[keep]
-  }
-  # check if predictor data is available to compute scale estimates
-  if(is.null(x <- model$x)) {
-    x <- try(model.matrix(model$terms), silent=TRUE)
-    if(inherits(x, "try-error"))
-      stop("scale estimates of predictor variables not available")
-  }
-  x <- removeIntercept(x)
-  if(!zeros) x <- x[, keep, drop=FALSE]
-#   # obtain scale estimates for predictors
-#   lambda <- model$lambda      # tuning parameters
-#   steps <- seq_along(lambda)  # step numbers
-#   if(fit %in% c("reweighted", "both")) {
-#     cdelta <- model$cnp2
-#     wt <- as.matrix(weights(model, type="robustness", s=NULL, fit="raw"))
-#     sigmaX <- do.call(rbind,
-#                       lapply(steps, function(s) {
-#                         xOk <- x[wt[, s] == 1, , drop=FALSE]
-#                         apply(xOk, 2, sd) * cdelta[s]
-#                       }))
-#   } else sigmaX <- NULL
-#   if(fit %in% c("raw", "both")) {
-#     cdelta <- model$raw.cnp2
-#     best <- as.matrix(model$best)
-#     raw.sigmaX <- do.call(rbind,
-#                           lapply(steps, function(s) {
-#                             xBest <- x[best[, s], , drop=FALSE]
-#                             apply(xBest, 2, sd) * cdelta
-#                           }))
-#   } else raw.sigmaX <- NULL
-#   sigmaX <- rbind(sigmaX, raw.sigmaX)
-#   # standardize coeffients
-#   coef <- coef / sigmaX
-#   # prepare other information
-#   m <- ncol(coef)        # number of variables
-#   sMax <- length(steps)  # number of steps
-#   vn <- colnames(coef)   # variable names
-#   obtain scale estimates for predictors
-  n <- nrow(x)
-  sigmaX <- apply(x, 2, function(x) {
-    # standardize data
-    xs <- robStandardize(x, fallback=TRUE)
-    # detect good data points
-    ok <- which(abs(xs) < qnorm(0.9875))
-    nOk <- length(ok)
-    # compute consistency factor
-    if(nOk < n) {
-      qn <- qnorm((nOk+n)/ (2*n))  # quantile for consistency factor
-      cdelta <- 1 / sqrt(1-(2*n)/(nOk/qn)*dnorm(qn))
-    } else cdelta <- 1  # consistency factor not necessary
-    # compute standard deviation of good data points and multiply with
-    # consistency factor
-    sd(x[ok]) * cdelta
-  })
-  # standardize coeffients
-  coef <- sweep(coef, 2, sigmaX, "/", check.margin=FALSE)
-  # prepare other information
-  m <- ncol(coef)             # number of variables
-  lambda <- model$lambda      # tuning parameters
-  steps <- seq_along(lambda)  # step numbers
-  sMax <- length(steps)       # number of steps
-  vn <- colnames(coef)        # variable names
-  # build data frame
-  if(fit == "both") {
-    fits <- c("reweighted", "raw")
-    coefData <- data.frame(
-      fit=rep.int(factor(rep(fits, each=sMax), levels=fits), m),
-      lambda=rep.int(lambda, 2*m), step=rep.int(steps, 2*m),
-      df=rep.int(df, m), coefficient=as.numeric(coef),
-      variable=factor(rep(vn, each=2*sMax), levels=vn))
-    if(!is.null(labels))
-      coefData$label <- rep(as.character(labels), each=2*sMax)
-  } else {
-    coefData <- data.frame(
-      lambda=rep.int(lambda, m), step=rep.int(steps, m),
-      df=rep.int(df, m), coefficient=as.numeric(coef),
-      variable=factor(rep(vn, each=sMax), levels=vn))
-    if(!is.null(labels))
-      coefData$label <- rep(as.character(labels), each=sMax)
-  }
-  coefData
-}
-
 
 #' Coefficient plot of a sequence of regression models
 #'
@@ -301,20 +174,6 @@ coefPlot <- function(object, ...) UseMethod("coefPlot")
 #' @method coefPlot seqModel
 #' @export
 
-# coefPlot.seqModel <- function(x, abscissa = c("step", "df"), zeros = FALSE,
-#                               size = c(0.5, 2, 4), labels, offset = 1, ...) {
-#   ## initializations
-#   if(missing(labels)) labels <- defaultLabels(x)  # default labels
-#   ## extract coefficient data extended with other information
-#   coefData <- coefify(x, zeros=zeros, labels=labels)
-#   ## construct data frame for labels
-#   maxStep <- max(coefData$step)
-#   labelData <- coefData[coefData$step == maxStep, ]
-#   ## call workhorse function
-#   ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size,
-#              offset=offset, ...)
-# }
-
 coefPlot.seqModel <- function(object, zeros = FALSE, labels = NULL, ...) {
   # extract all information required for plotting
   setup <- setupCoefPlot(object, zeros = zeros, labels = labels)
@@ -327,23 +186,12 @@ coefPlot.seqModel <- function(object, zeros = FALSE, labels = NULL, ...) {
 #' @method coefPlot tslars
 #' @export
 
-coefPlot.tslars <- function(x, p, ...) {
-  ## check lag length
-  if(missing(p) || !is.numeric(p) || length(p) == 0) p <- x$pOpt
-  if(length(p) > 1) {
-    warning("multiple lag lengths not yet supported")
-    p <- p[1]
-  }
-  pMax <- x$pMax
-  if(p < 1) {
-    p <- 1
-    warning("lag length too small, using lag length 1")
-  } else if(p > pMax) {
-    p <- pMax
-    warning(sprintf("lag length too large, using maximum lag length %d", p))
-  }
-  ## call plot function for specified lag length
-  coefPlot(x$pFit[[p]], ...)
+coefPlot.tslars <- function(object, p, zeros = FALSE, labels = NULL, ...) {
+  # extract all information required for plotting
+  if (missing(p)) setup <- setupCoefPlot(object, zeros = zeros, labels = labels)
+  else setup <- setupCoefPlot(object, p = p, zeros = zeros, labels = labels)
+  # call method for object with all information required for plotting
+  coefPlot(setup, ...)
 }
 
 
@@ -351,34 +199,12 @@ coefPlot.tslars <- function(x, p, ...) {
 #' @method coefPlot sparseLTS
 #' @export
 
-coefPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
-                               abscissa = c("step", "df"), zeros = FALSE,
-                               size = c(0.5, 2, 4), labels, offset = 1, ...) {
-  ## initializations
-  fit <- match.arg(fit)
-  abscissa <- match.arg(abscissa)
-  if(missing(labels)) labels <- defaultLabels(x)  # default labels
-  ## extract coefficient data extended with other information
-  coefData <- coefify(x, fit=fit, zeros=zeros, labels=labels)
-  ## construct data frame for labels
-  maxX <- max(coefData[, abscissa])
-  labelData <- coefData[coefData[, abscissa] == maxX, ]
-  if(abscissa == "df") {
-    # maximum degree of freedom may occur in more than one step
-    # ensure that label is only drawn once for largest step number
-    by <- if(fit == "both") c("fit", "variable") else "variable"
-    keep <- split(rownames(labelData), labelData[, by])
-    keep <- sapply(keep, tail, 1)
-    labelData <- labelData[keep, ]
-  }
-  ## call workhorse function
-  p <- ggCoefPlot(coefData, labelData, abscissa=abscissa, size=size,
-                  offset=offset, ...)
-  if(fit == "both") {
-    # split plot into different panels
-    p <- p + facet_grid(. ~ fit)
-  }
-  p
+coefPlot.sparseLTS <- function(object, fit = c("reweighted", "raw", "both"),
+                               zeros = FALSE, labels = NULL, ...) {
+  # extract all information required for plotting
+  setup <- setupCoefPlot(object, fit = fit, zeros = zeros, labels = labels)
+  # call method for object with all information required for plotting
+  coefPlot(setup, ...)
 }
 
 
@@ -386,16 +212,18 @@ coefPlot.sparseLTS <- function(x, fit = c("reweighted", "raw", "both"),
 #' @method coefPlot setupCoefPlot
 #' @export
 
-coefPlot.setupCoefPlot <- function(object, abscissa = c("step", "df"),
+coefPlot.setupCoefPlot <- function(object, abscissa = NULL,
                                    size = c(0.5, 2, 4), offset = 1,
                                    facets = object$facets, ...) {
   # initializations
-  abscissa <- match.arg(abscissa)
+  if (is.null(abscissa)) abscissa <- object$abscissa[1]
+  else abscissa <- match.arg(abscissa, choices = object$abscissa)
   size <- as.numeric(size)
   size <- c(size, rep.int(NA, max(0, 3-length(size))))[1:3]  # ensure length 3
   size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
   # define default axis labels
-  xlab <- switch(abscissa, step = "Step", df = "Degrees of freedom")
+  xlab <- switch(abscissa, step = "Step", lambda = "lambda",
+                 df = "Degrees of freedom")
   ylab <- "Standardized coefficients"
   # define aesthetic mapping for plotting coefficients
   coefMapping <- aes_string(x = abscissa, y = "coefficient",
@@ -406,9 +234,6 @@ coefPlot.setupCoefPlot <- function(object, abscissa = c("step", "df"),
   labelData$label <- paste(offset, labelData$label, sep = "")
   labelMapping <- aes_string(x = abscissa, y = "coefficient",
                              label = "label")
-  # # draw minor grid lines for each step, but leave
-  # # major grid lines and tick marks pretty
-  # gridX <- switch(abscissa, step = object$steps, df = object$df)
   # create plot
   p <- ggplot() +
     geom_line(coefMapping, data = object$coefficients, size = size[1], ...) +
@@ -418,6 +243,7 @@ coefPlot.setupCoefPlot <- function(object, abscissa = c("step", "df"),
     # scale_x_continuous(minor_breaks = gridX) +
     theme(legend.position = "none") +
     labs(x = xlab, y = ylab)
+  if (abscissa == "lambda") p <- p + scale_x_reverse()
   if (!is.null(facets)) {
     # split plot into different panels
     if (length(facets) == 2) p <- p + facet_wrap(facets)
@@ -428,40 +254,8 @@ coefPlot.setupCoefPlot <- function(object, abscissa = c("step", "df"),
 }
 
 
-## workhorse function
-ggCoefPlot <- function(coefData, labelData, abscissa = c("step", "df"),
-                       zeros = FALSE, size = c(0.5, 2, 4), labels, offset = 1,
-                       main = NULL, xlab, ylab, ..., mapping, data) {
-  # initializations
-  abscissa <- match.arg(abscissa)
-  size <- as.numeric(size)
-  size <- c(size, rep.int(NA, max(0, 3-length(size))))[1:3]  # ensure length 3
-  size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
-  # define default axis labels
-  if(missing(xlab))
-    xlab <- switch(abscissa, step="Step", df="Degrees of freedom")
-  if(missing(ylab)) ylab <- "Standardized coefficients"
-  # define aesthetic mapping for plotting coefficients
-  coefMapping <- aes_string(x=abscissa, y="coefficient", color="variable")
-  # define aesthetic mapping for plotting x-axis grid and labels
-  offset <- paste(rep.int(" ", offset), collapse="")  # whitespace
-  labelData$label <- paste(offset, labelData$label, sep="")
-  labelMapping <- aes_string(x=abscissa, y="coefficient", label="label")
-  # draw minor grid lines for each step, but leave
-  # major grid lines and tick marks pretty
-  gridX <- unique(coefData[, abscissa])
-  # create plot
-  ggplot(coefData) +
-    geom_line(coefMapping, size=size[1], ...) +
-    geom_point(coefMapping, size=size[2], ...) +
-    geom_text(labelMapping, data=labelData,
-              hjust=0, size=size[3], alpha=0.4) +
-    scale_x_continuous(minor_breaks=gridX) +
-    theme(legend.position="none") +
-    labs(title=main, x=xlab, y=ylab)
-}
-
 # ----------------------
+
 
 #' Optimality criterion plot of a sequence of regression models
 #'
@@ -532,10 +326,10 @@ critPlot.seqModel <- function(object, which = c("line", "dot"), ...) {
 #' @method critPlot tslars
 #' @export
 
-critPlot.tslars <- function(object, p, ...) {
+critPlot.tslars <- function(object, p, which = c("line", "dot"), ...) {
   # extract all information required for plotting
-  if (missing(p)) setup <- setupCritPlot(object)
-  else setup <- setupCritPlot(object, p = p)
+  if (missing(p)) setup <- setupCritPlot(object, which = which)
+  else setup <- setupCritPlot(object, p = p, which = which)
   # call method for object with all information required for plotting
   critPlot(setup, ...)
 }
@@ -606,39 +400,12 @@ critPlot.setupCritPlot <- function(object, ...) {
   p
 }
 
-# ## workhorse function for other optimality criteria
-# ggCritPlot <- function(data, abscissa = c("index", "step", "lambda"),
-#                        size = c(0.5, 2), main = NULL, xlab, ylab, ...,
-#                        mapping) {
-#   # initializations
-#   abscissa <- match.arg(abscissa)
-#   crit <- setdiff(names(data), c("fit", "index", "step", "lambda"))
-#   size <- as.numeric(size)
-#   size <- c(size, rep.int(NA, max(0, 2-length(size))))[1:2]  # ensure length 2
-#   size <- ifelse(is.na(size), eval(formals()$size), size)    # fill NA's
-#   # define default axis labels
-#   if(missing(xlab)) {
-#     xlab <- switch(abscissa, index="Index", step="Step", lambda="lambda")
-#   }
-#   if(missing(ylab)) ylab <- crit
-#   # define aesthetic mapping for plotting coefficients
-#   mapping <- aes_string(x=abscissa, y=crit)
-#   # draw minor grid lines for each step, but leave
-#   # major grid lines and tick marks pretty
-#   gridX <- unique(data[, abscissa])
-#   # create plot
-#   scale_x <- if(abscissa == "lambda") scale_x_reverse else scale_x_continuous
-#   ggplot(data, mapping) +
-#     geom_line(size=size[1], ...) +
-#     geom_point(size=size[2], ...) +
-#     scale_x(minor_breaks=gridX) +
-#     labs(title=main, x=xlab, y=ylab)
-# }
 
 # ----------------------
 
+
 ## construct data frame for labels based on some order
-labelify <- function(data, which, id.n = NULL) {
+getLabelData <- function(data, which, id.n = NULL) {
   # initializations
   if(isTRUE(id.n < 1)) return(NULL)
   by <- intersect(c("step", "fit"), names(data))
@@ -936,7 +703,7 @@ rqqPlot <- function(object, facets = object$facets, size = c(2, 4),
   # extract data frame for reference line
   lineData <- object$qqLine
   # construct data frame for labels
-  labelData <- labelify(object$data, which = "qqd", id.n = id.n)
+  labelData <- getLabelData(object$data, which = "qqd", id.n = id.n)
   # define default title and axis labels
   main <- "Normal Q-Q plot"
   xlab <- "Quantiles of the standard normal distribution"
@@ -995,7 +762,7 @@ residualPlot <- function(object, abscissa = c("index", "fitted"),
   # define aesthetic mapping for residual plot
   mapping <- aes_string(x = abscissa, y = "residual", color = "Diagnostics")
   ## construct data frame for labels
-  labelData <- labelify(object$data, which = "residual", id.n = id.n)
+  labelData <- getLabelData(object$data, which = "residual", id.n = id.n)
   # define default title and axis labels
   postfix <- switch(abscissa, index = "indices", fitted = "fitted values")
   main <- paste("Residuals vs", postfix)
@@ -1055,7 +822,7 @@ rdiagPlot <- function(object, facets = object$facets, size = c(2, 4),
   # define aesthetic mapping for regression diagnostic plot
   mapping <- aes_string(x = "rd", y = "residual", color = "Diagnostics")
   ## construct data frame for labels
-  labelData <- labelify(data, which = "xyd", id.n = id.n)
+  labelData <- getLabelData(data, which = "xyd", id.n = id.n)
   # define default title and axis labels
   main <- "Regression diagnostic plot"
   xlab <- "Robust distance computed by MCD"
