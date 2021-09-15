@@ -1,5 +1,7 @@
 \name{nci60}
 \alias{nci60}
+\alias{protein}
+\alias{X}
 \docType{data}
 \title{
 NCI-60 cancer cell panel
