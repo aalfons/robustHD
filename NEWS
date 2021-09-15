@@ -9,6 +9,8 @@ Changes in robustHD version 0.7.0
     + Function partialOrder() for finding the order of the smallest or
       largest values of a vector is now exported.
 
+    + Added NCI-60 cancer cell panel data.
+
 
 
 Changes in robustHD version 0.6.1
