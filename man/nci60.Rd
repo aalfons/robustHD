@@ -1,7 +1,7 @@
 \name{nci60}
 \alias{nci60}
 \alias{protein}
-\alias{X}
+\alias{gene}
 \docType{data}
 \title{
 NCI-60 cancer cell panel
@@ -19,9 +19,9 @@ in the gene expression data were missing.
     \item{\code{protein}}{a matrix containing protein expressions based on
     antibodies (162 variables), acquired via reverse-phase protein lysate
     arrays and log2 transformed.}
-    \item{\code{X}}{a matrix containing gene expression data (22283 variables),
-    obtained with an Affymetrix HG-U133A chip and normalized with the GCRMA
-    method.}
+    \item{\code{gene}}{a matrix containing gene expression data (22283
+    variables), obtained with an Affymetrix HG-U133A chip and normalized
+    with the GCRMA method.}
   }
 }
 \source{
@@ -36,9 +36,9 @@ data("nci60")
 # define response variable
 y <- protein[, 92]
 # screen most correlated predictor variables
-correlations <- apply(X, 2, corHuber, y)
+correlations <- apply(gene, 2, corHuber, y)
 keep <- partialOrder(abs(correlations), 100, decreasing = TRUE)
-X <- X[, keep]
+X <- gene[, keep]
 }
 \references{
 Reinhold, W.C., Sunshine, M., Liu, H., Varma, S., Kohn, K.W., Morris, J.,
