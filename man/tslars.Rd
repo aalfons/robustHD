@@ -181,8 +181,9 @@ The predictor group of lagged values of the response is indicated by
 the index 0.
 }
 \references{
-Gelper, S. and Croux, C. (2010) Time series least angle regression for
-selecting predictive economic sentiment series. Working paper.
+Alfons, A., Croux, C. and Gelper, S. (2016) Robust groupwise least angle
+regression. \emph{Computational Statistics & Data Analysis}, \bold{93},
+421--435.
 }
 \seealso{
 \code{\link[=coef.tslars]{coef}},
