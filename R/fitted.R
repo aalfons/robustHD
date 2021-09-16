@@ -81,6 +81,16 @@ fitted.tslars <- function(object, p, ...) {
 
 
 #' @rdname fitted.seqModel
+#' @method fitted perrySeqModel
+#' @export
+fitted.perrySeqModel <- function(object, ...) {
+  finalModel <- object$finalModel
+  if(is.null(finalModel)) stop("final model not available")
+  fitted(finalModel, ...)
+}
+
+
+#' @rdname fitted.seqModel
 #' @method fitted sparseLTS
 #' @export
 

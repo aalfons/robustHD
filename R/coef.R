@@ -95,6 +95,16 @@ coef.tslars <- function(object, p, ...) {
 
 
 #' @rdname coef.seqModel
+#' @method coef perrySeqModel
+#' @export
+coef.perrySeqModel <- function(object, ...) {
+  finalModel <- object$finalModel
+  if(is.null(finalModel)) stop("final model not available")
+  coef(finalModel, ...)
+}
+
+
+#' @rdname coef.seqModel
 #' @method coef sparseLTS
 #' @export
 

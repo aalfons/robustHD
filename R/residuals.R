@@ -135,6 +135,16 @@ residuals.tslars <- function(object, p, ...) {
 
 
 #' @rdname residuals.seqModel
+#' @method residuals perrySeqModel
+#' @export
+residuals.perrySeqModel <- function(object, ...) {
+  finalModel <- object$finalModel
+  if(is.null(finalModel)) stop("final model not available")
+  residuals(finalModel, ...)
+}
+
+
+#' @rdname residuals.seqModel
 #' @method residuals sparseLTS
 #' @export
 

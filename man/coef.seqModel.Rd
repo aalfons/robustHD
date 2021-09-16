@@ -6,12 +6,15 @@
 \alias{coef.grplars}
 \alias{coef.tslarsP}
 \alias{coef.tslars}
+\alias{coef.perrySeqModel}
 \alias{coef.sparseLTS}
 \title{Extract coefficients from a sequence of regression models}
 \usage{
 \method{coef}{seqModel}(object, s = NA, zeros = TRUE, drop = !is.null(s), ...)
 
 \method{coef}{tslars}(object, p, ...)
+
+\method{coef}{perrySeqModel}(object, ...)
 
 \method{coef}{sparseLTS}(
   object,

@@ -6,12 +6,15 @@
 \alias{fitted.grplars}
 \alias{fitted.tslarsP}
 \alias{fitted.tslars}
+\alias{fitted.perrySeqModel}
 \alias{fitted.sparseLTS}
 \title{Extract fitted values from a sequence of regression models}
 \usage{
 \method{fitted}{seqModel}(object, s = NA, drop = !is.null(s), ...)
 
 \method{fitted}{tslars}(object, p, ...)
+
+\method{fitted}{perrySeqModel}(object, ...)
 
 \method{fitted}{sparseLTS}(
   object,

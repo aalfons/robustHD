@@ -6,12 +6,15 @@
 \alias{residuals.grplars}
 \alias{residuals.tslarsP}
 \alias{residuals.tslars}
+\alias{residuals.perrySeqModel}
 \alias{residuals.sparseLTS}
 \title{Extract residuals from a sequence of regression models}
 \usage{
 \method{residuals}{seqModel}(object, s = NA, standardized = FALSE, drop = !is.null(s), ...)
 
 \method{residuals}{tslars}(object, p, ...)
+
+\method{residuals}{perrySeqModel}(object, ...)
 
 \method{residuals}{sparseLTS}(
   object,
