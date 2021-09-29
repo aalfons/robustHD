@@ -2,7 +2,7 @@
 % Please edit documentation in R/corHuber.R
 \name{corHuber}
 \alias{corHuber}
-\title{Robust correlation based on winsorization.}
+\title{Robust correlation based on winsorization}
 \usage{
 corHuber(
   x,

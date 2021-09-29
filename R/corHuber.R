@@ -6,7 +6,7 @@
 # code by Jafar A. Khan, Stefan Van Aelst and Ruben H. Zamar
 # ------------------------------------------------------------
 
-#' Robust correlation based on winsorization.
+#' Robust correlation based on winsorization
 #'
 #' Compute a robust correlation estimate based on winsorization, i.e., by
 #' shrinking outlying observations to the border of the main part of the data.
