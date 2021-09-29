@@ -147,10 +147,10 @@ which here consists of 17 genes (with non-zero coefficients).
 
 When selecting the optimal model fit by estimating the prediction error, the 
 final model estimate on the full data is computed only with the optimal value 
-of the penalty parameter instead of the full grid.  For visual inspection of 
-the results, function `critPlot()` produces a plot of the values of the 
-optimality criterion (in this example, the root trimmed mean squared error) 
-against the values of the penalty parameter.  Moreover, function 
+of the regularization parameter instead of the full grid.  For visual 
+inspection of the results, function `critPlot()` produces a plot of the values 
+of the optimality criterion (in this example, the root trimmed mean squared 
+error) against the values of the regularization parameter.  Moreover, function 
 `diagnosticPlot()` allows to produce various diagnostic plots for the optimal 
 model fit.  Examples of these plots are shown in \autoref{fig:sparseLTS}.
 
