@@ -58,8 +58,8 @@ dimensions.  In particular, it provided the first generalization of the popular
 lasso regression estimator that is robust against all types of outliers (that 
 is, including outliers in the predictor space).  Since then, `robustHD` has 
 been used in many benchmarking studies in the statistical literature 
-[e.g., @smucler17; @kurnaz18; @chang18; @cohenfreue19], as well as in empirical 
-research [e.g., @stadlbauer20; @antczakorlewska21].
+[e.g., @chang18; @cohenfreue19; @kurnaz18; @smucler17], as well as in empirical 
+research [e.g., @antczakorlewska21; @stadlbauer20].
 
 # Example: Sparse least trimmed squares regression
 
