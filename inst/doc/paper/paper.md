@@ -6,7 +6,7 @@ tags:
 - outliers
 - regression
 - variable selection
-date: "06 May 2021"
+date: "29 September 2021"
 output:
   html_document:
     df_print: paged
