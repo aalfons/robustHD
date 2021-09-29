@@ -2,11 +2,11 @@ Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
 Version: 0.7.0
-Date: 2021-09-15
+Date: 2021-09-17
 Depends: 
     R (>= 3.5.0), 
     ggplot2 (>= 0.9.2), 
-    perry (>= 0.2.0), 
+    perry (>= 0.3.0), 
     robustbase (>= 0.9-5)
 Imports: 
     MASS, 

@@ -11,6 +11,11 @@ Changes in robustHD version 0.7.0
 
     + Added NCI-60 cancer cell panel data.
 
+    + Added coef(), fitted(), and residuals() methods for objects of class
+      "perrySeqModel".
+
+    + Updated broken links in documentation.
+
 
 
 Changes in robustHD version 0.6.1

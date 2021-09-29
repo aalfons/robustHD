@@ -31,6 +31,7 @@ obtained from \url{https://github.com/aalfons/nci60}, together with our script
 for pre-processing.
 }
 \examples{
+\dontrun{
 # load data
 data("nci60")
 # define response variable
@@ -39,6 +40,7 @@ y <- protein[, 92]
 correlations <- apply(gene, 2, corHuber, y)
 keep <- partialOrder(abs(correlations), 100, decreasing = TRUE)
 X <- gene[, keep]
+}
 }
 \references{
 Reinhold, W.C., Sunshine, M., Liu, H., Varma, S., Kohn, K.W., Morris, J.,
