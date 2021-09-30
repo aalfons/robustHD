@@ -37,7 +37,11 @@ p3 <- diagnosticPlot(fit, covArgs = list(alpha = 0.8),
 
 ## arrange plots in file
 library("gridExtra")
-pdf(file = "figure_rgrplars.pdf", width = 9.75, height = 3.5)
+# # pdf file
+# pdf(file = "figure_rgrplars.pdf", width = 9.75, height = 3.5)
+# grid.arrange(p1, p2, p3, nrow = 1)
+# dev.off()
+# png file
+png(file = "inst/doc/paper/figure_rgrplars.png", width = 9.75*72, height = 3.5*72)
 grid.arrange(p1, p2, p3, nrow = 1)
-# close file connection
 dev.off()

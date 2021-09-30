@@ -33,7 +33,11 @@ p2 <- diagnosticPlot(fit, which = "rdiag", id.n = 0) +
 
 ## arrange plots in file
 library("gridExtra")
+# pdf file
 pdf(file = "figure_sparseLTS.pdf", width = 6.5, height = 3.5)
 grid.arrange(p1, p2, nrow = 1)
-# close file connection
+dev.off()
+# png file
+png(file = "figure_sparseLTS.png", width = 6.5*72, height = 3.5*72)
+grid.arrange(p1, p2, nrow = 1)
 dev.off()
