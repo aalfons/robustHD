@@ -82,9 +82,10 @@ correlations <- apply(gene, 2, corHuber, y)
 keep <- partialOrder(abs(correlations), 100, decreasing = TRUE)
 X <- gene[, keep]
 ```
+
 Sparse least trimmed squares is a regularized estimator of the linear 
 regression model, whose results depend on a non-negative regularization 
-parameter  [see @alfons13b]. In general, a larger value of this regularization 
+parameter [see @alfons13b]. In general, a larger value of this regularization 
 parameter yields more regression coefficients being set to zero, which can be 
 seen as a form of variable selection for the linear model.
 
