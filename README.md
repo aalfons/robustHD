@@ -165,9 +165,10 @@ root trimmed mean squared error) against the values of the
 regularization parameter. Moreover, function `diagnosticPlot()` allows
 to produce various diagnostic plots for the optimal model fit.
 
-<figure>
-<img src="./inst/doc/paper/figure_sparseLTS.svg" style="width:67.0%" alt="Examples of the optimality criterion plot (left) and the regression diagnostic plot (right) for output of function sparseLTS() in package robustHD." /><figcaption aria-hidden="true">Examples of the optimality criterion plot (<em>left</em>) and the regression diagnostic plot (<em>right</em>) for output of function <code>sparseLTS()</code> in package <code>robustHD</code>.</figcaption>
-</figure>
+<img src="./inst/doc/paper/figure_sparseLTS-1.svg" width="67%" style="display: block; margin: auto;" />
+
+Examples of the optimality criterion plot (*left*) and the regression
+diagnostic plot (*right*) for output of function `sparseLTS()`.
 
 # Example: Robust groupwise least angle regression
 
@@ -248,9 +249,11 @@ coefficient path along the sequence can be produced via the function
 `coefPlot()`. Functions `critPlot()` and `diagnosticPlot()` are again
 available to produce similar plots as in the previous example.
 
-<figure>
-<img src="./inst/doc/paper/figure_rgrplars.svg" style="width:100.0%" alt="Examples of the coefficient plot (left), the optimality criterion plot (center), and the regression diagnostic plot (right) for output of function rgrplars() in package robustHD." /><figcaption aria-hidden="true">Examples of the coefficient plot (<em>left</em>), the optimality criterion plot (<em>center</em>), and the regression diagnostic plot (<em>right</em>) for output of function <code>rgrplars()</code> in package <code>robustHD</code>.</figcaption>
-</figure>
+<img src="./inst/doc/paper/figure_rgrplars-1.svg" width="100%" style="display: block; margin: auto;" />
+
+Examples of the coefficient plot (*left*), the optimality criterion plot
+(*center*), and the regression diagnostic plot (*right*) for output of
+function `rgrplars()`.
 
 ## Community guidelines
 
@@ -263,8 +266,8 @@ problem for feature request has already been discussed.
 
 ### Contribute to the package
 
-In order to contribute to the package, you can fork this repository and
-create a pull request after implementing the desired functionality.
+If you want to contribute to the package, you can fork this repository
+and create a pull request after implementing the desired functionality.
 
 ### Ask for help
 

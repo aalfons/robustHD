@@ -4,7 +4,7 @@ output: github_document
 # robustHD: Robust Methods for High-Dimensional Data
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(highlight = FALSE)
+knitr::opts_chunk$set(highlight = FALSE, fig.path = "./inst/doc/paper/figure_")
 ```
 
 
@@ -84,7 +84,25 @@ Among other information, the output prints the results of the final model fit, w
 
 When selecting the optimal model fit by estimating the prediction error, the final model estimate on the full data is computed only with the optimal value of the regularization parameter instead of the full grid.  For visual inspection of the results, function `critPlot()` produces a plot of the values of the optimality criterion (in this example, the root trimmed mean squared error) against the values of the regularization parameter.  Moreover, function `diagnosticPlot()` allows to produce various diagnostic plots for the optimal model fit.
 
-![Examples of the optimality criterion plot (*left*) and the regression diagnostic plot (*right*) for output of function `sparseLTS()` in package `robustHD`.](./inst/doc/paper/figure_sparseLTS.svg){width=67%}
+```{r, include=FALSE}
+# load additional package
+library("gridExtra")
+
+# create optimality criterion plot
+p1 <- critPlot(fit) +
+  labs(title = "Optimality criterion plot")
+
+# create diagnostic plot of optimal model fit
+p2 <- diagnosticPlot(fit, which = "rdiag", id.n = 0) +
+  labs(title = "Regression diagnostic plot") +
+  theme(legend.position = "top", legend.title = element_blank())
+```
+
+```{r sparseLTS, echo=FALSE, dev="svglite", fig.width=6.5, fig.height=3.5, fig.align="center", out.width="67%"}
+grid.arrange(p1, p2, nrow = 1)
+```
+
+Examples of the optimality criterion plot (*left*) and the regression diagnostic plot (*right*) for output of function `sparseLTS()`.
 
 
 # Example: Robust groupwise least angle regression
@@ -118,7 +136,31 @@ The output prints information on the sequence of predictor groups, as well as th
 
 When the optimal model fit is selected via BIC, each submodel along the sequence is estimated on the full data set. In this case, a plot of the coefficient path along the sequence can be produced via the function `coefPlot()`.  Functions `critPlot()` and `diagnosticPlot()` are again available to produce similar plots as in the previous example.
 
-![Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()` in package `robustHD`.\label{fig:rgrplars}](./inst/doc/paper/figure_rgrplars.svg){width=100%}
+```{r, include=FALSE}
+# load additional package
+library("gridExtra")
+
+# create coefficient plot of sequence of model fits
+p1 <- coefPlot(fit) +
+  labs(title = "Coefficient plot") +
+  scale_x_continuous(expand = expansion(mult = c(0.05, 0.16)))
+
+# create optimality criterion plot
+p2 <- critPlot(fit) +
+  labs(title = "Optimality criterion plot")
+
+# create diagnostic plot of optimal model fit
+p3 <- diagnosticPlot(fit, covArgs = list(alpha = 0.8),
+                     which = "rdiag", id.n = 0) +
+  labs(title = "Regression diagnostic plot") +
+  theme(legend.position = "top", legend.title = element_blank())
+```
+
+```{r rgrplars, echo=FALSE, dev="svglite", fig.width=9.75, fig.height=3.5, fig.align="center", out.width="100%"}
+grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()`.
 
 
 ## Community guidelines
@@ -129,7 +171,7 @@ If you experience any bugs or issues or if you have any suggestions for addition
 
 ### Contribute to the package
 
-In order to contribute to the package, you can fork this repository and create a pull request after implementing the desired functionality.
+If you want to contribute to the package, you can fork this repository and create a pull request after implementing the desired functionality.
 
 ### Ask for help
 
