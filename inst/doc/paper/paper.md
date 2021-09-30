@@ -16,7 +16,7 @@ authors:
   affiliation: 1
 bibliography: paper.bib
 affiliations:
-- name: Erasmus School of Economics, Erasmus University Rotterdam
+- name: Erasmus School of Economics, Erasmus University Rotterdam, Netherlands
   index: 1
 ---
 
