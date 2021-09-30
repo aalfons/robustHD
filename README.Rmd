@@ -84,7 +84,7 @@ Among other information, the output prints the results of the final model fit, w
 
 When selecting the optimal model fit by estimating the prediction error, the final model estimate on the full data is computed only with the optimal value of the regularization parameter instead of the full grid.  For visual inspection of the results, function `critPlot()` produces a plot of the values of the optimality criterion (in this example, the root trimmed mean squared error) against the values of the regularization parameter.  Moreover, function `diagnosticPlot()` allows to produce various diagnostic plots for the optimal model fit.
 
-![Examples of the optimality criterion plot (*left*) and the regression diagnostic plot (*right*) for output of function `sparseLTS()` in package `robustHD`.](./inst/doc/paper/figure_sparseLTS.png){width=67%}
+![Examples of the optimality criterion plot (*left*) and the regression diagnostic plot (*right*) for output of function `sparseLTS()` in package `robustHD`.](./inst/doc/paper/figure_sparseLTS.svg){width=67%}
 
 
 # Example: Robust groupwise least angle regression
@@ -118,7 +118,7 @@ The output prints information on the sequence of predictor groups, as well as th
 
 When the optimal model fit is selected via BIC, each submodel along the sequence is estimated on the full data set. In this case, a plot of the coefficient path along the sequence can be produced via the function `coefPlot()`.  Functions `critPlot()` and `diagnosticPlot()` are again available to produce similar plots as in the previous example.
 
-![Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()` in package `robustHD`.\label{fig:rgrplars}](./inst/doc/paper/figure_rgrplars.png){width=100%}
+![Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()` in package `robustHD`.\label{fig:rgrplars}](./inst/doc/paper/figure_rgrplars.svg){width=100%}
 
 
 ## Community guidelines

@@ -37,7 +37,7 @@ library("gridExtra")
 pdf(file = "figure_sparseLTS.pdf", width = 6.5, height = 3.5)
 grid.arrange(p1, p2, nrow = 1)
 dev.off()
-# png file
-png(file = "figure_sparseLTS.png", width = 6.5*72, height = 3.5*72)
+# svg file
+svglite(file = "figure_sparseLTS.svg", width = 6.5, height = 3.5)
 grid.arrange(p1, p2, nrow = 1)
 dev.off()
