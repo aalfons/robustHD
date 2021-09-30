@@ -165,9 +165,7 @@ root trimmed mean squared error) against the values of the
 regularization parameter. Moreover, function `diagnosticPlot()` allows
 to produce various diagnostic plots for the optimal model fit.
 
-<figure>
-<embed src="inst/doc/paper/figure_sparseLTS.pdf" style="width:67.0%" /><figcaption aria-hidden="true">Examples of the optimality criterion plot (<em>left</em>) and the regression diagnostic plot (<em>right</em>) for output of function <code>sparseLTS()</code> in package <code>robustHD</code>.</figcaption>
-</figure>
+![Examples of the optimality criterion plot (*left*) and the regression diagnostic plot (*right*) for output of function `sparseLTS()` in package `robustHD`.](/inst/doc/paper/figure_sparseLTS.pdf){width=67%}
 
 # Example: Robust groupwise least angle regression
 
@@ -248,9 +246,7 @@ coefficient path along the sequence can be produced via the function
 `coefPlot()`. Functions `critPlot()` and `diagnosticPlot()` are again
 available to produce similar plots as in the previous example.
 
-<figure>
-<embed src="inst/doc/paper/figure_rgrplars.pdf" style="width:100.0%" /><figcaption aria-hidden="true">Examples of the coefficient plot (<em>left</em>), the optimality criterion plot (<em>center</em>), and the regression diagnostic plot (<em>right</em>) for output of function <code>rgrplars()</code> in package <code>robustHD</code>.</figcaption>
-</figure>
+![Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()` in package `robustHD`.\label{fig:rgrplars}](inst/doc/paper/figure_rgrplars.pdf){width=100%}
 
 ## Community guidelines
 
