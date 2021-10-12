@@ -29,18 +29,19 @@ performance by variance reduction, and (iii) increase interpretability of the
 resulting models due to the smaller number of variables.  However, robust 
 methods are necessary to prevent outlying data points from distorting the 
 results.  The add-on package `robustHD` [@robustHD] for the statistical 
-computing environment R [@RCore] provides functionality for robust linear model 
-selection with high-dimensional data.  More specifically, the implemented 
-functionality includes robust least angle regression [@khan07b], robust 
-groupwise least angle regression [@alfons16a], as well as sparse least trimmed 
-squares regression [@alfons13b]. The latter can be seen as a trimmed version of 
-the popular lasso regression estimator [@tibshirani96].  Selecting the optimal 
-model can be done via cross-validation or an information criterion, and various 
-plots are available to illustrate model selection and to evaluate the final 
-model estimates.  Furthermore, the package includes functionality for 
-pre-processing such as robust standardization and winsorization.  Finally, 
-`robustHD` follows a clear object-oriented design and takes advantage of 
-C++ code and parallel computing to reduce computing time. 
+computing environment R [@RCore] provides functionality for robust linear 
+regression and model selection with high-dimensional data.  Specifically, 
+the implemented functionality includes robust least angle regression 
+[@khan07b], robust groupwise least angle regression [@alfons16a], as well 
+as sparse least trimmed squares regression [@alfons13b]. The latter can be 
+seen as a trimmed version of the popular lasso regression estimator 
+[@tibshirani96].  Selecting the optimal model can be done via cross-validation 
+or an information criterion, and various plots are available to illustrate 
+model selection and to evaluate the final model estimates.  Furthermore, 
+the package includes functionality for pre-processing such as robust 
+standardization and winsorization.  Finally, `robustHD` follows a clear 
+object-oriented design and takes advantage of C++ code and parallel computing 
+to reduce computing time. 
 
 
 # Statement of need
