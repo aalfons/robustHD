@@ -88,7 +88,7 @@ TopGear$Price <- log(TopGear$Price)
 As the *Top Gear* data set contains several categorical variables, robust 
 groupwise least angle regression is used.  Through the formula interface, 
 function `rgrplars()` by default takes each categorical variable (`factor`) 
-as a group of dummy variables whereas all remaining variables are taken 
+as a group of dummy variables while all remaining variables are taken 
 individually.  However, the group assignment can be defined by the user 
 through argument `assign`.  The maximum number of candidate predictor groups 
 to be sequenced is determined by argument `sMax`.    Furthermore, with 
