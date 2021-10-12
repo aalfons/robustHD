@@ -10,23 +10,23 @@ interpretability of the resulting models due to the smaller number of
 variables. However, robust methods are necessary to prevent outlying
 data points from distorting the results. The add-on package `robustHD`
 for the statistical computing environment `R` provides functionality for
-robust linear model selection with high-dimensional data. More
-specifically, the implemented functionality includes robust least angle
-regression ([Khan et al.,
+robust linear regression and model selection with high-dimensional data.
+More specifically, the implemented functionality includes robust least
+angle regression ([Khan et al.,
 2007](https://doi.org/10.1198/016214507000000950)), robust groupwise
 least angle regression ([Alfons et al.,
 2016](https://doi.org/10.1016/j.csda.2015.02.007)), as well as sparse
-least trimmed squares regression [Alfons et al.,
-2013](https://doi.org/10.1214/12-AOAS575). The latter can be seen as a
+least trimmed squares regression ([Alfons et al.,
+2013](https://doi.org/10.1214/12-AOAS575)). The latter can be seen as a
 trimmed version of the popular lasso regression estimator ([Tibshirani,
 1996](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x)). Selecting
 the optimal model can be done via cross-validation or an information
 criterion, and various plots are available to illustrate model selection
 and to evaluate the final model estimates. Furthermore, the package
-includes functionality for pre-processing and cleaning the data, such as
-robust standardization and winsorization. Finally, `robustHD` follows a
-clear object-oriented design and takes advantage of C++ code and
-parallel computing to reduce computing time.
+includes functionality for pre-processing such as robust standardization
+and winsorization. Finally, `robustHD` follows a clear object-oriented
+design and takes advantage of C++ code and parallel computing to reduce
+computing time.
 
 ## Main functionality
 
@@ -42,10 +42,11 @@ parallel computing to reduce computing time.
 
 -   `corHuber()`: Robust correlation based on winsorization.
 
--   `winsorize()`: Data cleaning by winsorization.
+-   `winsorize()`: Winsorization of the data.
 
--   `robStandardize()`: Data standardization with given functions for
-    computing center and scale. By default, the median and MAD are used.
+-   `robStandardize()`: Robust standardization of the data with given
+    functions for computing center and scale. By default, the median and
+    MAD are used.
 
 ## Installation
 
@@ -99,16 +100,18 @@ regression model, whose results depend on a non-negative regularization
 parameter \[see [Alfons et al.,
 2013](https://doi.org/10.1214/12-AOAS575)\]. In general, a larger value
 of this regularization parameter yields more regression coefficients
-being set to zero, which can be seen as a form of variable selection for
-the linear model.
+being set to zero, which can be seen as a form of variable selection.
 
 For convenience, `sparseLTS()` can internally estimate the smallest
 value of the regularization parameter that sets all coefficients to
 zero. With `mode = "fraction"`, the values supplied via the argument
 `lambda` are then taken as fractions of this estimated value (i.e., they
 are multiplied with the internally estimated value). In this example,
-the prediction error is estimated via 5-fold cross-validation for
-selecting the optimal value of the regularization parameter, and the
+the optimal value of the the regularization parameter is selected by
+estimating the prediction error (`crit = "PE"`) via 5-fold
+cross-validation with one replication
+(`splits = foldControl(K = 5, R = 1)`). The default prediction loss
+function is the root trimmed mean squared prediction error. Finally, the
 seed of the random number generator is supplied for reproducibility.
 
 ``` text
@@ -154,16 +157,16 @@ fit
     ## Residual scale estimate: 0.62751742
 
 Among other information, the output prints the results of the final
-model fit, which here consists of 17 genes (with non-zero coefficients).
+model fit, which here consists of 17 genes with non-zero coefficients.
 
 When selecting the optimal model fit by estimating the prediction error,
 the final model estimate on the full data is computed only with the
 optimal value of the regularization parameter instead of the full grid.
-For visual inspection of the results, function `critPlot()` produces a
-plot of the values of the optimality criterion (in this example, the
-root trimmed mean squared error) against the values of the
-regularization parameter. Moreover, function `diagnosticPlot()` allows
-to produce various diagnostic plots for the optimal model fit.
+For visual inspection of the results, function `critPlot()` plots the
+values of the optimality criterion (in this example, the root trimmed
+mean squared error) against the values of the regularization parameter.
+Moreover, function `diagnosticPlot()` allows to produce various
+diagnostic plots for the optimal model fit.
 
 <img src="./inst/doc/paper/figure_sparseLTS-1.svg" width="67%" style="display: block; margin: auto;" />
 
@@ -172,17 +175,16 @@ diagnostic plot (*right*) for output of function `sparseLTS()`.
 
 # Example: Robust groupwise least angle regression
 
-Package `robustHD` provides implementations of robust least angle
-regression ([Khan et al.,
+Robust least angle regression ([Khan et al.,
 2007](https://doi.org/10.1198/016214507000000950)) and robust groupwise
 least angle regression ([Alfons et al.,
-2016](https://doi.org/10.1016/j.csda.2015.02.007)). Both methods follow
-a hybrid model selection strategy: first obtain a sequence of important
-candidate predictors, then fit submodels along that sequence via robust
+2016](https://doi.org/10.1016/j.csda.2015.02.007)) follow a hybrid model
+selection strategy: first obtain a sequence of important candidate
+predictors, then fit submodels along that sequence via robust
 regressions. Here, data on cars featured in the popular television show
-*Top Gear* are used to illustrate this functionality..
+*Top Gear* are used to illustrate this functionality.
 
-The response variable is the fuel consumption in miles per gallon (MPG),
+The response variable is fuel consumption in miles per gallon (MPG),
 with all remaining variables used as candidate predictors. Information
 on the car model is first removed from the data set, and the car price
 is log-transformed. In addition, only observations with complete
@@ -200,17 +202,18 @@ TopGear <- TopGear[keep, -(1:3)]
 TopGear$Price <- log(TopGear$Price)
 ```
 
-As the *Top Gear* data set contains several categorical variables (i.e.,
-groups of dummy variables in a linear model), robust groupwise least
-angle regression is used here. Function `rgrplars()` allows to set the
-maximum number of candidate predictor groups to be sequenced via
-argument `sMax`. Note that the formula interface automatically
-transforms categorical variables to groups of dummy variables.
-Furthermore, the optimal submodel along the sequence is selected via the
-Bayesian information criterion (BIC) in this example. The robust
-regression estimator used to estimate the submodels uses an initial
-subsampling of observations, hence the seed of the random number
-generator is supplied for reproducibility.
+As the *Top Gear* data set contains several categorical variables,
+robust groupwise least angle regression is used. Through the formula
+interface, function `rgrplars()` by default takes each categorical
+variable (`factor`) as a group of dummy variables while all remaining
+variables are taken individually. However, the group assignment can be
+defined by the user through argument `assign`. The maximum number of
+candidate predictor groups to be sequenced is determined by argument
+`sMax`. Furthermore, with `crit = "BIC"`, the optimal submodel along the
+sequence is selected via the Bayesian information criterion (BIC). Note
+that each submodel along the sequence is fitted using a robust
+regression estimator with a non-deterministic algorithm, hence the seed
+of the random number generator is supplied for reproducibility.
 
 ``` text
 # fit robust groupwise least angle regression and print results
