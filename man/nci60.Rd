@@ -32,6 +32,7 @@ for pre-processing.
 }
 \examples{
 \dontrun{
+
 # load data
 data("nci60")
 # define response variable
