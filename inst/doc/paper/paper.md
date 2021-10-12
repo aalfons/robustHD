@@ -130,11 +130,10 @@ the results of the final model fit.  Here, 9 predictor groups consisting of 10
 individual covariates are selected into the final model.
 
 Several plots are available for the results: `coefPlot()` visualizes the 
-coefficient path along the sequence of submodels, `critPlot()` produces a 
-plot of the values of the optimality criterion against the step along the 
-sequence, and `diagnosticPlot()` allows to produce various diagnostic plots 
-for the optimal submodel fit.  Examples of these plots are shown 
-in \autoref{fig:rgrplars}.
+coefficient path along the sequence of submodels, `critPlot()` plots the 
+values of the optimality criterion against the step along the sequence, and 
+`diagnosticPlot()` allows to produce various diagnostic plots for the optimal 
+submodel fit.  Examples of these plots are shown in \autoref{fig:rgrplars}.
 
 ![Examples of the coefficient plot (*left*), the optimality criterion plot (*center*), and the regression diagnostic plot (*right*) for output of function `rgrplars()` in package `robustHD`.\label{fig:rgrplars}](figure_rgrplars.pdf){width=100%}
 
