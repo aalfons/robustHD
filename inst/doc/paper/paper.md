@@ -30,7 +30,7 @@ resulting models due to the smaller number of variables.  However, robust
 methods are necessary to prevent outlying data points from distorting the 
 results.  The add-on package `robustHD` [@robustHD] for the statistical 
 computing environment R [@RCore] provides functionality for robust linear 
-regression and model selection with high-dimensional data.  Specifically, 
+regression and model selection with high-dimensional data.  More specifically, 
 the implemented functionality includes robust least angle regression 
 [@khan07b], robust groupwise least angle regression [@alfons16a], as well 
 as sparse least trimmed squares regression [@alfons13b]. The latter can be 
