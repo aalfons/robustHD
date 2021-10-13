@@ -2,4 +2,5 @@
 ^\.Rproj\.user$
 LICENSE
 README.Rmd
+README.md
 inst/doc/paper
