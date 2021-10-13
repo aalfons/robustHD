@@ -2,6 +2,10 @@ Changes in robustHD version 0.7.1
 
     + Unit tests are now run automatically with R CMD check.
 
+    + Help file of sparseLTS() now correctly documents that arguments for
+      selecting the optimal value of the penalty parameter are ignored if
+      only one value of the penalty parameter is supplied.
+
 
 Changes in robustHD version 0.7.0
 

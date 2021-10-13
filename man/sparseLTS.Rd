@@ -126,22 +126,28 @@ subsamples and smaller than 100, and \code{FALSE} otherwise.}
 \item{crit}{a character string specifying the optimality criterion to be
 used for selecting the final model.  Possible values are \code{"BIC"} for
 the Bayes information criterion and \code{"PE"} for resampling-based
-prediction error estimation.}
+prediction error estimation.  This is ignored if \code{lambda} contains
+only one value of the penalty parameter, as selecting the optimal value
+is trivial in that case.}
 
 \item{splits}{an object giving data splits to be used for prediction error
-estimation (see \code{\link[perry]{perryTuning}}).}
+estimation (see \code{\link[perry]{perryTuning}}).  This is only relevant
+if selecting the optimal \code{lambda} via prediction error estimation.}
 
 \item{cost}{a cost function measuring prediction loss (see
 \code{\link[perry]{perryTuning}} for some requirements).  The
 default is to use the root trimmed mean squared prediction error
-(see \code{\link[perry]{cost}}).}
+(see \code{\link[perry]{cost}}).  This is only relevant if selecting
+the optimal \code{lambda} via prediction error estimation.}
 
 \item{costArgs}{a list of additional arguments to be passed to the
-prediction loss function \code{cost}.}
+prediction loss function \code{cost}.  This is only relevant if
+selecting the optimal \code{lambda} via prediction error estimation.}
 
 \item{selectBest, seFactor}{arguments specifying a criterion for selecting
 the best model (see \code{\link[perry]{perryTuning}}).  The default is to
-use a one-standard-error rule.}
+use a one-standard-error rule.  This is only relevant if selecting the
+optimal \code{lambda} via prediction error estimation.}
 
 \item{ncores}{a positive integer giving the number of processor cores to be
 used for parallel computing (the default is 1 for no parallelization).  If
@@ -165,7 +171,8 @@ should be added to the return object.  If \code{intercept} is \code{TRUE},
 a column of ones is added to \code{x} to account for the intercept.}
 }
 \value{
-If \code{crit} is \code{"PE"}, an object of class \code{"perrySparseLTS"}
+If \code{crit} is \code{"PE"} and \code{lambda} contains more than one
+value of the penalty parameter, an object of class \code{"perrySparseLTS"}
 (inheriting from class \code{"perryTuning"}, see
 \code{\link[perry]{perryTuning}}).  It contains information on the
 prediction error criterion, and includes the final model with the optimal
