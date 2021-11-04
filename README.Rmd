@@ -7,12 +7,17 @@ output: github_document
 knitr::opts_chunk$set(highlight = FALSE, fig.path = "./inst/doc/paper/figure_")
 ```
 
+[![CRAN](https://www.R-pkg.org/badges/version/robustHD)](https://CRAN.R-project.org/package=robustHD) [![DOI](https://joss.theoj.org/papers/10.21105/joss.03786/status.svg)](https://doi.org/10.21105/joss.03786)
+
+
+To cite package `robustHD` in publications, please use:
+
+A. Alfons (2021). `robustHD`: An `R` package for robust regression with high-dimensional data. *Journal of Open Source Software*, 6(67), 3786. DOI [10.21105/joss.03786](https://doi.org/10.21105/joss.03786).
+
 
 ## Summary
 
-In regression analysis with high-dimensional data, variable selection is an important step to (i) overcome computational problems, (ii) improve prediction performance by variance reduction, and (iii) increase interpretability of the resulting models due to the smaller number of variables.  However, robust methods are necessary to prevent outlying data points from distorting the results.  The add-on package `robustHD` for the statistical computing environment `R` provides functionality for robust linear 
-regression and model selection with high-dimensional data.  More specifically, 
-the implemented functionality includes robust least angle regression ([Khan et al., 2007](https://doi.org/10.1198/016214507000000950)), robust groupwise least angle regression ([Alfons et al., 2016](https://doi.org/10.1016/j.csda.2015.02.007)), as well as sparse least trimmed squares regression ([Alfons et al., 2013](https://doi.org/10.1214/12-AOAS575)). The latter can be seen as a trimmed version of the popular lasso regression estimator ([Tibshirani, 1996](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x)).  Selecting the optimal model can be done via cross-validation or an information criterion, and various plots are available to illustrate model selection and to evaluate the final model estimates.  Furthermore, the package includes functionality for pre-processing such as robust standardization and winsorization.  Finally, `robustHD` follows a clear object-oriented design and takes advantage of C++ code and parallel computing to reduce computing time.
+In regression analysis with high-dimensional data, variable selection is an important step to (i) overcome computational problems, (ii) improve prediction performance by variance reduction, and (iii) increase interpretability of the resulting models due to the smaller number of variables.  However, robust methods are necessary to prevent outlying data points from distorting the results.  The add-on package `robustHD` for the statistical computing environment `R` provides functionality for robust linear regression and model selection with high-dimensional data.  More specifically, the implemented functionality includes robust least angle regression ([Khan et al., 2007](https://doi.org/10.1198/016214507000000950)), robust groupwise least angle regression ([Alfons et al., 2016](https://doi.org/10.1016/j.csda.2015.02.007)), as well as sparse least trimmed squares regression ([Alfons et al., 2013](https://doi.org/10.1214/12-AOAS575)). The latter can be seen as a trimmed version of the popular lasso regression estimator ([Tibshirani, 1996](https://doi.org/10.1111/j.2517-6161.1996.tb02080.x)).  Selecting the optimal model can be done via cross-validation or an information criterion, and various plots are available to illustrate model selection and to evaluate the final model estimates.  Furthermore, the package includes functionality for pre-processing such as robust standardization and winsorization.  Finally, `robustHD` follows a clear object-oriented design and takes advantage of `C++` code and parallel computing to reduce computing time.
 
 
 ## Main functionality
@@ -177,7 +182,7 @@ If you want to contribute to the package, you can fork this repository and creat
 
 ### Ask for help
 
-If you need help using the package, or if you are interested in collaborations related to this project, please get in touch: alfons at ese dot eur dot nl
+If you need help using the package, or if you are interested in collaborations related to this project, please get in touch with the [package maintainer](https://personal.eur.nl/alfons/).
 
 
 ## References

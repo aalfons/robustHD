@@ -1,3 +1,10 @@
+Changes in robustHD version 0.7.2
+
+    + Added CITATION file.
+
+    + Added reference to JOSS paper in package help file.
+
+
 Changes in robustHD version 0.7.1
 
     + Unit tests are now run automatically with R CMD check.

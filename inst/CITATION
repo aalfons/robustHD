@@ -1,0 +1,18 @@
+citHeader("To cite robustHD in publications use:")
+
+citEntry(entry = "Article",
+  title        = "{robustHD}: An {R} package for robust regression with high-dimensional data",
+  author       = person("Andreas", "Alfons"),
+  journal      = "Journal of Open Source Software",
+  year         = "2021",
+  volume       = "6",
+  number       = "67",
+  pages        = "3786",
+  doi          = "10.21105/joss.03786",
+
+  textVersion  =
+  paste("Andreas Alfons (2021).",
+        "robustHD: An R package for robust regression with high-dimensional data.",
+        "Journal of Open Source Software, 6(67), 3786.",
+        "doi: 10.21105/joss.03786.")
+)

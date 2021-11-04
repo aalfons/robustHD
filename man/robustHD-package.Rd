@@ -14,6 +14,11 @@ The DESCRIPTION file:
 \packageDESCRIPTION{robustHD}
 \packageIndices{robustHD}
 }
+\references{
+Alfons (2021) \pkg{robustHD}: An \R package for robust regression with
+high-dimensional data. \emph{Journal of Open Source Software}, \bold{6}(67),
+3786. \doi{10.21105/joss.03786}.
+}
 \author{
 \packageAuthor{robustHD}
 

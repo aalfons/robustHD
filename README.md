@@ -1,6 +1,15 @@
 
 # robustHD: Robust Methods for High-Dimensional Data
 
+[![CRAN](https://www.R-pkg.org/badges/version/robustHD)](https://CRAN.R-project.org/package=robustHD)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.03786/status.svg)](https://doi.org/10.21105/joss.03786)
+
+To cite package `robustHD` in publications, please use:
+
+A. Alfons (2021). `robustHD`: An `R` package for robust regression with
+high-dimensional data. *Journal of Open Source Software*, 6(67), 3786.
+DOI [10.21105/joss.03786](https://doi.org/10.21105/joss.03786).
+
 ## Summary
 
 In regression analysis with high-dimensional data, variable selection is
@@ -25,8 +34,8 @@ criterion, and various plots are available to illustrate model selection
 and to evaluate the final model estimates. Furthermore, the package
 includes functionality for pre-processing such as robust standardization
 and winsorization. Finally, `robustHD` follows a clear object-oriented
-design and takes advantage of C++ code and parallel computing to reduce
-computing time.
+design and takes advantage of `C++` code and parallel computing to
+reduce computing time.
 
 ## Main functionality
 
@@ -275,8 +284,8 @@ and create a pull request after implementing the desired functionality.
 ### Ask for help
 
 If you need help using the package, or if you are interested in
-collaborations related to this project, please get in touch: alfons at
-ese dot eur dot nl
+collaborations related to this project, please get in touch with the
+[package maintainer](https://personal.eur.nl/alfons/).
 
 ## References
 
