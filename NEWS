@@ -4,6 +4,8 @@ Changes in robustHD version 0.7.2
 
     + Added reference to JOSS paper in package help file.
 
+    + Added URL and BugReports fields to DESCRIPTION file.
+
 
 Changes in robustHD version 0.7.1
 
