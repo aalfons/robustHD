@@ -349,14 +349,16 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
                 "selectBest", "seFactor", "ncores", "cl", "seed")
     remove <- match(remove, names(matchedCall), nomatch=0)
     call <- matchedCall[-remove]
+    # make sure function call is evaluated in the correct environment
+    parentEnv <- parent.frame()
     # call function perryTuning() to perform prediction error estimation
     tuning <- list(lambda=if(mode == "fraction") frac else lambda)
     selectBest <- match.arg(selectBest)
     fit <- perryTuning(call, x=x, y=y, tuning=tuning, splits=splits,
                        predictArgs=list(fit="both"), cost=cost,
                        costArgs=costArgs, selectBest=selectBest,
-                       seFactor=seFactor, ncores=ncores, cl=cl,
-                       seed=seed)
+                       seFactor=seFactor, envir = parentEnv,
+                       ncores=ncores, cl=cl, seed=seed)
     # fit final model
     lambdaOpt <- unique(lambda[fit$best])
     call$x <- matchedCall$x
@@ -364,7 +366,7 @@ sparseLTS.default <- function(x, y, lambda, mode = c("lambda", "fraction"),
     call$lambda <- lambdaOpt
     call$mode <- NULL
     call$ncores <- matchedCall$ncores
-    finalModel <- eval(call)
+    finalModel <- eval(call, envir = parentEnv)
     # if optimal tuning parameter is different for reweighted and raw fit,
     # add information that indicates optimal values
     if(length(lambdaOpt)) {

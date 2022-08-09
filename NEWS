@@ -1,3 +1,10 @@
+Changes in robustHD version 0.7.3
+
+    + Bugfix in sparseLTS(): function calls for fitting the model on training
+      sets (when selecting lambda via prediction error estimation) are now
+      evaluated in the correct environment
+
+
 Changes in robustHD version 0.7.2
 
     + Added CITATION file.

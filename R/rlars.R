@@ -258,12 +258,14 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       call <- matchedCall[-remove]
       call$sMax <- sMax
       call$s <- s
+      # make sure function call is evaluated in the correct environment
+      parentEnv <- parent.frame()
       # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
       selectBest <- match.arg(selectBest)
       out <- perryFit(call, x=x, y=y, splits=splits,
                       predictArgs=list(s=s, recycle=TRUE), cost=cost,
-                      costArgs=costArgs, envir=parent.frame(),
+                      costArgs=costArgs, envir=parentEnv,
                       ncores=ncores, cl=cl, seed=seed)
       out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
       fits(out) <- s
@@ -272,7 +274,7 @@ rlars.default <- function(x, y, sMax = NA, centerFun = median,
       call$y <- matchedCall$y
       call$s <- s[out$best]
       call$ncores <- matchedCall$ncores
-      out$finalModel <- eval(call, envir=parent.frame())
+      out$finalModel <- eval(call, envir=parentEnv)
       out$call <- matchedCall
       # assign class and return object
       class(out) <- c("perrySeqModel", class(out))

@@ -65,13 +65,15 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
       funCall <- call[-remove]
       funCall$sMax <- sMax
       funCall$s <- s
+      # make sure function call is evaluated in the correct environment
+      parentEnv <- parent.frame(2)
       # call function perryFit() to perform prediction error estimation
       s <- seq(from=s[1], to=s[2])
       selectBest <- match.arg(selectBest)
       out <- perryFit(funCall, x=x, y=y, splits=splits,
                       predictArgs=list(s=s, recycle=TRUE), cost=cost,
-                      costArgs=costArgs, envir=parent.frame(2),
-                      ncores=ncores, cl=cl, seed=seed)
+                      costArgs=costArgs, envir=parentEnv, ncores=ncores,
+                      cl=cl, seed=seed)
       out <- perryReshape(out, selectBest=selectBest, seFactor=seFactor)
       fits(out) <- s
       # fit final model
@@ -80,7 +82,7 @@ grouplars <- function(x, y, sMax = NA, assign, robust = FALSE,
       funCall$s <- s[out$best]
       funCall$ncores <- call$ncores
       funCall$cl <- cl
-      out$finalModel <- eval(funCall, envir=parent.frame(2))
+      out$finalModel <- eval(funCall, envir=parentEnv)
       out$call <- call
       # assign class and return object
       class(out) <- c("perrySeqModel", class(out))
