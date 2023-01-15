@@ -140,7 +140,7 @@ SEXP R_testLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
 		// prepend intercept
-		coefficients.insert_rows(0, 1, false);
+		coefficients.insert_rows(0, 1);
 		coefficients(0) = subset.intercept;
 	}
 	return List::create(
@@ -196,7 +196,7 @@ SEXP R_testCStep(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_subset,
 	vec coefficients = subset.coefficients;
 	if(useIntercept) {
 		// prepend intercept
-		coefficients.insert_rows(0, 1, false);
+		coefficients.insert_rows(0, 1);
 		coefficients(0) = subset.intercept;
 	}
 	return List::create(
@@ -422,7 +422,7 @@ SEXP R_fastSparseLTS(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_initial,
 	vec coefficients = best.coefficients;
 	if(useIntercept) {
 		// prepend intercept
-		coefficients.insert_rows(0, 1, false);
+		coefficients.insert_rows(0, 1);
 		coefficients(0) = best.intercept;
 	}
 	return List::create(
