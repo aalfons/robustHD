@@ -300,7 +300,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   				// in case of singularity
   				if(rank == k) {
   					// singularity: drop variable for good
-  					ignores.insert_rows(s, 1);	// do not initialize new memory
+  					ignores.insert_rows(s, 1);
   					ignores(s) = newJ;
   					s++;	// increase number of ignored variables
   					p--;	// decrease number of variables
@@ -310,10 +310,10 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   					}
   				} else {
   					// no singularity: add variable to active set
-  					active.insert_rows(k, 1);	// do not initialize new memory
+  					active.insert_rows(k, 1);
   					active(k) = newJ;
   					// keep track of sign of correlation for new active variable
-  					signs.insert_rows(k, 1);		// do not initialize new memory
+  					signs.insert_rows(k, 1);
   					signs(k) = sign(corY(newJ));
   					k++;	// increase number of active variables
   				}

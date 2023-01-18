@@ -111,7 +111,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         double minGammaMinus, minGammaPlus, gamma;
         minGammaMinus = gammaMinus.min(whichMinus);
         minGammaPlus = gammaPlus.min(whichPlus);
-		signs.insert_rows(k, 1, false);	// do not initialize new memory
+		signs.insert_rows(k, 1);
         if(minGammaMinus < minGammaPlus) {
         	whichMin = whichMinus;
         	gamma = minGammaMinus;
@@ -122,13 +122,13 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         	signs(k) = -1;
         }
         // update correlations
-		r.insert_rows(k, 1, false);			// do not initialize new memory
+		r.insert_rows(k, 1);
         r(k) = r(k-1) - gamma * a;
 		corY.shed_row(whichMin);
 		corU.shed_row(whichMin);
 		corY = corY - gamma * corU;
 		// update active set
-		active.insert_rows(k, 1, false);	// do not initialize new memory
+		active.insert_rows(k, 1);
 		active(k) = inactive(whichMin);
 		// update inactive set
 		inactive.shed_row(whichMin);

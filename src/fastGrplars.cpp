@@ -250,7 +250,7 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
         	}
 			// update correlations (adjustment for unequal group size is taken
         	// care of by update formula)
-			r.insert_rows(k, 1);	// do not initialize new memory
+			r.insert_rows(k, 1);
 			r(k) = (r(k-1) - gamma * a) / sigma;
  			corY.shed_row(whichMin);
 			corU.shed_row(whichMin);
@@ -265,7 +265,7 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 			}
         }
         // update active set
-		active.insert_rows(k, 1);	// do not initialize new memory
+		active.insert_rows(k, 1);
 		active(k) = inactive(whichMin);
 		// update inactive set
 		inactive.shed_row(whichMin);
