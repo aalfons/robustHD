@@ -286,8 +286,8 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   						// correct way
   						// insert row and column without initializing memory
   						// (set_size() and reshape() have strange behavior)
-  						L.insert_rows(k, 1, false);
-  						L.insert_cols(k, 1, false);
+  						L.insert_rows(k, 1);
+  						L.insert_cols(k, 1);
   						// fill new parts of the matrix
   						for(uword j = 0; j < k; j++) {
   							L(k, j) = l(j);
@@ -300,7 +300,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   				// in case of singularity
   				if(rank == k) {
   					// singularity: drop variable for good
-  					ignores.insert_rows(s, 1, false);	// do not initialize new memory
+  					ignores.insert_rows(s, 1);	// do not initialize new memory
   					ignores(s) = newJ;
   					s++;	// increase number of ignored variables
   					p--;	// decrease number of variables
@@ -310,10 +310,10 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   					}
   				} else {
   					// no singularity: add variable to active set
-  					active.insert_rows(k, 1, false);	// do not initialize new memory
+  					active.insert_rows(k, 1);	// do not initialize new memory
   					active(k) = newJ;
   					// keep track of sign of correlation for new active variable
-  					signs.insert_rows(k, 1, false);		// do not initialize new memory
+  					signs.insert_rows(k, 1);		// do not initialize new memory
   					signs(k) = sign(corY(newJ));
   					k++;	// increase number of active variables
   				}
@@ -436,7 +436,7 @@ void fastLasso(const mat& x, const vec& y, const double& lambda,
   			L = symmatu(L);
   			// add dropped variables to inactive set and make sure
   			// coefficients are 0
-  			inactive.insert_rows(m, drops.n_elem, false);
+  			inactive.insert_rows(m, drops.n_elem);
   			for(uword j = 0; j < drops.n_elem; j++) {
   				uword newInactive = active(drops(j));
   				inactive(m + j) = newInactive;
@@ -529,7 +529,7 @@ SEXP R_fastLasso(SEXP R_x, SEXP R_y, SEXP R_lambda, SEXP R_useSubset,
       useGram, false, intercept, coefficients, residuals, crit);
 	if(useIntercept) {
 		// prepend intercept
-		coefficients.insert_rows(0, 1, false);
+		coefficients.insert_rows(0, 1);
 		coefficients(0) = intercept;
 	}
 	return List::create(
