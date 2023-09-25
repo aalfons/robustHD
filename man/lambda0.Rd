@@ -93,14 +93,17 @@ lambda0(x, y)
 \references{
 Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares
 regression for analyzing high-dimensional large data sets. \emph{The Annals
-of Applied Statistics}, \bold{7}(1), 226--248.
+of Applied Statistics}, \bold{7}(1), 226--248. \doi{10.1214/12-AOAS575}
 
 Efron, B., Hastie, T., Johnstone, I. and Tibshirani, R. (2004) Least angle
 regression. \emph{The Annals of Statistics}, \bold{32}(2), 407--499.
+\doi{10.1214/009053604000000067}
+
 
 Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model
 selection based on least angle regression. \emph{Journal of the American
 Statistical Association}, \bold{102}(480), 1289--1299.
+\doi{10.1198/016214507000000950}
 }
 \seealso{
 \code{\link{sparseLTS}}, \code{\link{winsorize}}

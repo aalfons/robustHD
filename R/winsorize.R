@@ -68,6 +68,7 @@
 #' Khan, J.A., Van Aelst, S. and Zamar, R.H. (2007) Robust linear model
 #' selection based on least angle regression. \emph{Journal of the American
 #' Statistical Association}, \bold{102}(480), 1289--1299.
+#' \doi{10.1198/016214507000000950}
 #'
 #' @seealso \code{\link{corHuber}}
 #'

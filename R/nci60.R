@@ -42,10 +42,11 @@
 #' Doroshow, J. and Pommier, Y. (2012) CellMiner: A Web-Based Suite of Genomic
 #' and Pharmacologic Tools to Explore Transcript and Drug Patterns in the
 #' NCI-60 Cell Line Set. \emph{Cancer Research}, \bold{72}(14), 3499--3511.
+#' \doi{10.1158/0008-5472.CAN-12-1370}
 #'
 #' Alfons, A., Croux, C. and Gelper, S. (2013) Sparse least trimmed squares
 #' regression for analyzing high-dimensional large data sets. \emph{The Annals
-#' of Applied Statistics}, \bold{7}(1), 226--248.
+#' of Applied Statistics}, \bold{7}(1), 226--248. \doi{10.1214/12-AOAS575}
 #'
 #' @examples
 #' \dontrun{
