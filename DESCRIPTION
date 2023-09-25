@@ -1,8 +1,8 @@
 Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
-Version: 0.7.4
-Date: 2023-01-18
+Version: 0.8.0
+Date: 2023-09-25
 Depends: 
     R (>= 3.5.0), 
     ggplot2 (>= 0.9.2), 
@@ -22,7 +22,11 @@ Suggests:
     testthat
 Description: Robust methods for high-dimensional data, in particular linear
     model selection techniques based on least angle regression and sparse
-    regression.
+    regression. Specifically, the package implements robust least angle 
+    regression (Khan, Van Aelst & Zamar, 2007; <doi:10.1198/016214507000000950>), 
+    (robust) groupwise least angle regression (Alfons, Croux & Gelper, 2016; 
+    <doi:10.1016/j.csda.2015.02.007>), and sparse least trimmed squares 
+    regression (Alfons, Croux & Gelper, 2013; <doi:10.1214/12-AOAS575>).
 License: GPL (>= 2)
 URL: https://github.com/aalfons/robustHD
 BugReports: https://github.com/aalfons/robustHD/issues

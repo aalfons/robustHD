@@ -66,6 +66,7 @@
 #'
 #' @keywords regression
 #'
+#' @import stats
 #' @export
 
 predict.seqModel <- function(object, newdata, s = NA, ...) {

@@ -40,7 +40,10 @@ correspond to the same value of the penalty parameter for the reweighted and
 the raw estimator.}
 
 \item{standardized}{a logical indicating whether the residuals should be
-standardized (the default is \code{FALSE}).}
+standardized (the default is \code{FALSE}). Note that this argument is
+\bold{deprecated} and may be removed as soon as the next version. Use
+\code{\link[=rstandard.seqModel]{rstandard}} instead to extract standardized
+residuals.}
 
 \item{drop}{a logical indicating whether to reduce the dimension to a
 vector in case of only one step.}
@@ -104,10 +107,11 @@ head(residuals(fitSparseLTS, s = NULL))
 head(residuals(fitSparseLTS, fit = "both", s = NULL))
 }
 \seealso{
-\code{\link[stats]{residuals}}, \code{\link{rlars}},
-\code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
-\code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
-\code{\link{sparseLTS}}
+\code{\link[stats]{residuals}}, \code{\link[=rstandard.seqModel]{rstandard}}
+
+\code{\link{rlars}}, \code{\link{grplars}}, \code{\link{rgrplars}},
+\code{\link{tslarsP}}, \code{\link{rtslarsP}}, \code{\link{tslars}},
+\code{\link{rtslars}}, \code{\link{sparseLTS}}
 }
 \author{
 Andreas Alfons

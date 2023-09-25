@@ -146,6 +146,7 @@
 #' \code{\link[=plot.seqModel]{plot}},
 #' \code{\link[=predict.seqModel]{predict}},
 #' \code{\link[=residuals.seqModel]{residuals}},
+#' \code{\link[=rstandard.seqModel]{rstandard}},
 #' \code{\link{tslars}}, \code{\link[robustbase]{lmrob}}
 #'
 #' @keywords regression robust ts

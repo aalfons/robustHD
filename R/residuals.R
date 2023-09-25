@@ -31,7 +31,10 @@
 #' from the reweighted estimator, \code{"raw"} for the residuals from the raw
 #' estimator, or \code{"both"} for the residuals from both estimators.
 #' @param standardized  a logical indicating whether the residuals should be
-#' standardized (the default is \code{FALSE}).
+#' standardized (the default is \code{FALSE}). Note that this argument is
+#' \bold{deprecated} and may be removed as soon as the next version. Use
+#' \code{\link[=rstandard.seqModel]{rstandard}} instead to extract standardized
+#' residuals.
 #' @param drop  a logical indicating whether to reduce the dimension to a
 #' vector in case of only one step.
 #' @param \dots  for the \code{"tslars"} method, additional arguments to be
@@ -43,71 +46,34 @@
 #'
 #' @author Andreas Alfons
 #'
-#' @seealso \code{\link[stats]{residuals}}, \code{\link{rlars}},
-#' \code{\link{grplars}}, \code{\link{rgrplars}}, \code{\link{tslarsP}},
-#' \code{\link{rtslarsP}}, \code{\link{tslars}}, \code{\link{rtslars}},
-#' \code{\link{sparseLTS}}
+#' @seealso
+#' \code{\link[stats]{residuals}}, \code{\link[=rstandard.seqModel]{rstandard}}
+#'
+#' \code{\link{rlars}}, \code{\link{grplars}}, \code{\link{rgrplars}},
+#' \code{\link{tslarsP}}, \code{\link{rtslarsP}}, \code{\link{tslars}},
+#' \code{\link{rtslars}}, \code{\link{sparseLTS}}
 #'
 #' @example inst/doc/examples/example-residuals.R
 #'
 #' @keywords regression
 #'
+#' @import stats
 #' @export
 
 residuals.seqModel <- function(object, s = NA, standardized = FALSE,
                                drop = !is.null(s), ...) {
-  ## extract residuals
-  residuals <- getComponent(object, "residuals", s=s, drop=FALSE, ...)
-  ## if requested, standardize residuals
+  # check for deprecated argument 'standardized'
   if(isTRUE(standardized)) {
-    if(object$robust) {
-      # extract scale estimates
-      scale <- getComponent(object, "scale", s=s, ...)
-      # standardize selected residuals
-      if(is.null(dim(residuals))) residuals <- residuals / scale
-      else residuals <- sweep(residuals, 2, scale, "/", check.margin=FALSE)
-    } else {
-      # extract predictor matrix
-      terms <- delete.response(object$terms)  # extract terms for model matrix
-      if(is.null(x <- object$x)) {
-        x <- try(model.matrix(terms), silent=TRUE)
-        if(inherits(x, "try-error")) stop("model data not available")
-      }
-      # extract information on sequence and steps
-      active <- object$active
-      s <- getComponent(object, "s", s=s, ...)
-      assign <- object$assign
-      if(is.null(assign)) {
-        # compute degrees of freedom of the submodels along sequence
-        df <- s + 1  # account for intercept
-        # sequenced variables (including intercept)
-        sequenced <- c(1, active[seq_len(max(s))] + 1)
-      } else {
-        # list of column indices for each predictor group
-        assign <- split(seq_along(assign), assign)
-        # compute degrees of freedom of the submodels along sequence
-        firstActive <- active[seq_len(max(s))]
-        p <- sapply(assign[firstActive], length) # number of variables per group
-        df <- cumsum(c(1, unname(p)))[s+1]       # degrees of freedom
-        # groupwise sequenced variables (including intercept)
-        sequenced <- c(1, unlist(assign[firstActive], use.names=FALSE) + 1)
-      }
-      # compute the diagonal of the hat matrix for the selected steps
-      hii <- sapply(df, function(k) {
-        xk <- x[, sequenced[seq_len(k)], drop=FALSE]
-        diag(xk %*% solve(t(xk) %*% xk) %*% t(xk))
-      })
-      # compute residual scale
-      n <- nrow(residuals)
-      scale <- sapply(seq_along(s), function(j) {
-        sqrt((1 - hii[, j]) * sum(residuals[, j]^2) / (n - df[j]))
-      })
-      # standardize residuals
-      residuals <- residuals / scale
-    }
+    warning("Argument 'standardized' is deprecated.\n",
+            "Use the 'rstandard' method instead to extract standardized ",
+            "residuals.")
+    rstandard(object, s = s, drop = drop, ...)
+  } else {
+    # extract residuals
+    residuals <- getComponent(object, "residuals", s = s, drop = FALSE, ...)
+    # drop dimension if requested and return residuals
+    if(isTRUE(drop)) dropCol(residuals) else residuals
   }
-  # drop dimension if requested and return residuals
-  if(isTRUE(drop)) dropCol(residuals) else residuals
 }
 
 
@@ -152,20 +118,14 @@ residuals.sparseLTS <- function(object, s = NA,
                                 fit = c("reweighted", "raw", "both"),
                                 standardized = FALSE, drop = !is.null(s),
                                 ...) {
-  ## extract residuals
-  residuals <- getComponent(object, "residuals", s=s, fit=fit, drop=drop, ...)
-  ## if requested, standardize residuals
+  # check for deprecated argument 'standardized'
   if(isTRUE(standardized)) {
-    # extract center and scale estimates
-    center <- getComponent(object, "center", s=s, fit=fit, ...)
-    scale <- getComponent(object, "scale", s=s, fit=fit, ...)
-    # standardize selected residuals
-    if(is.null(dim(residuals))) residuals <- (residuals - center) / scale
-    else {
-      residuals <- x <- sweep(residuals, 2, center, check.margin=FALSE)
-      residuals <- sweep(residuals, 2, scale, "/", check.margin=FALSE)
-    }
+    warning("Argument 'standardized' is deprecated.\n",
+            "Use the 'rstandard' method instead to extract standardized ",
+            "residuals.")
+    rstandard(object, s = s, fit = fit, drop = drop, ...)
+  } else {
+    # extract residuals
+    getComponent(object, "residuals", s = s, fit = fit, drop = drop, ...)
   }
-  ## return residuals
-  residuals
 }

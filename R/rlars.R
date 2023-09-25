@@ -153,6 +153,7 @@
 #' \code{\link[=plot.seqModel]{plot}},
 #' \code{\link[=predict.seqModel]{predict}},
 #' \code{\link[=residuals.seqModel]{residuals}},
+#' \code{\link[=rstandard.seqModel]{rstandard}},
 #' \code{\link[robustbase]{lmrob}}
 #'
 #' @example inst/doc/examples/example-rlars.R

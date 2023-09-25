@@ -50,6 +50,7 @@
 #'
 #' @keywords regression
 #'
+#' @import stats
 #' @export
 
 fitted.seqModel <- function(object, s = NA, drop = !is.null(s), ...) {

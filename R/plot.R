@@ -39,6 +39,7 @@
 #'
 #' @keywords hplot
 #'
+#' @import ggplot2
 #' @export
 
 plot.seqModel <- function(x, method = c("coefficients", "crit", "diagnostic"),
@@ -168,8 +169,9 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 #'
 #' @keywords hplot
 #'
-#' @export
+#' @import ggplot2
 #' @importFrom utils head tail
+#' @export
 
 coefPlot <- function(object, ...) UseMethod("coefPlot")
 
@@ -560,9 +562,10 @@ getLabelData <- function(data, which, id.n = NULL) {
 #'
 #' @keywords hplot
 #'
-#' @export
+#' @import ggplot2
 #' @import robustbase
 #' @importFrom grDevices devAskNewPage
+#' @export
 
 diagnosticPlot <- function(object, ...) UseMethod("diagnosticPlot")
 

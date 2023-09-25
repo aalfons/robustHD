@@ -52,6 +52,7 @@
 #'
 #' @keywords regression
 #'
+#' @import stats
 #' @export
 
 coef.seqModel <- function(object, s = NA, zeros = TRUE,

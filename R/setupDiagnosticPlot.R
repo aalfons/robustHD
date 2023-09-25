@@ -151,7 +151,7 @@ setupDiagnosticPlotSeqModelStep <- function(s, object, x = NULL,
   ## extract fitted values
   fitted <- fitted(object, s = s)
   ## extract standardized residuals
-  residuals <- residuals(object, s = s, standardized = TRUE)
+  residuals <- rstandard(object, s = s)
   n <- length(residuals)  # number of observations
   ## compute 0/1 outlier weights
   wt <- as.integer(abs(residuals) <= qnorm(0.9875))
@@ -374,7 +374,7 @@ setupDiagnosticPlotSparseLTSFit <- function(object, s, fit = "reweighted",
   ## extract fitted values
   fitted <- fitted(object, s = s, fit = fit)
   ## extract standardized residuals
-  residuals <- residuals(object, s = s, fit = fit, standardized = TRUE)
+  residuals <- rstandard(object, s = s, fit = fit)
   n <- length(residuals)  # number of observations
   ## extract outlier weights
   wt <- weights(object, type = "robustness", s = s, fit = fit)

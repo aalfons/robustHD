@@ -1,3 +1,12 @@
+Changes in robustHD version 0.8.0
+
+    + Removed deprecated functions.
+
+    + Added rstandard() method for standardized residuals rather than
+      residuals(standardize = TRUE).
+
+
+
 Changes in robustHD version 0.7.4
 
     + Bugfix in C++ code: deprecated argument of insert_rows() and
