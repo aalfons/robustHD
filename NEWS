@@ -5,6 +5,8 @@ Changes in robustHD version 0.8.0
     + Added rstandard() method for standardized residuals rather than
       residuals(standardize = TRUE).
 
+    + Added DOI's to references in help files.
+
 
 
 Changes in robustHD version 0.7.4
