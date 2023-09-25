@@ -11,6 +11,19 @@
 #' squares regression models) and other useful information for diagnostic
 #' plots.
 #'
+#' Note that the argument \code{alpha} for controlling the subset size
+#' behaves differently for \code{\link{sparseLTS}} than for
+#' \code{\link[robustbase]{covMcd}}.  For \code{\link{sparseLTS}}, the subset
+#' size \eqn{h} is determined by the fraction \code{alpha} of the number of
+#' observations \eqn{n}.  For \code{\link[robustbase]{covMcd}}, on the other
+#' hand, the subset size also depends on the number of variables \eqn{p} (see
+#' \code{\link[robustbase]{h.alpha.n}}).  However, the \code{"sparseLTS"} and
+#' \code{"perrySparseLTS"} methods attempt to compute the MCD using the same
+#' subset size that is used to compute the sparse least trimmed squares
+#' regressions.  This may not be possible if the number of selected variables
+#' is large compared to the number of observations, in which case a warning is
+#' given and \code{NA}s are returned for the robust Mahalanobis distances.
+#'
 #' @aliases setupDiagnosticPlot.rlars setupDiagnosticPlot.grplars
 #' setupDiagnosticPlot.tslarsP
 #'
@@ -49,8 +62,9 @@
 #'     the standard normal distribution.}
 #'     \item{\code{qqd}}{the absolute distances from a reference line through
 #'     the first and third sample and theoretical quartiles.}
-#'     \item{\code{rd}}{the robust Mahalanobis distances computed via the MCD
-#'     (see \code{\link[robustbase]{covMcd}}).}
+#'     \item{\code{rd}}{the robust Mahalanobis distances computed via the
+#'     minimum covariance determinant (MCD) estimator (see
+#'     \code{\link[robustbase]{covMcd}}).}
 #'     \item{\code{xyd}}{the pairwise maxima of the absolute values of the
 #'     standardized residuals and the robust Mahalanobis distances, divided by
 #'     the respective other outlier detection cutoff point.}
@@ -403,10 +417,13 @@ setupDiagnosticPlotSparseLTSFit <- function(object, s, fit = "reweighted",
     alpha <- pmin((h - 2*n2 + n) / (2 * (n - n2)), 1)
     # check fraction for subset size
     if (alpha < 0.5) {
-      alpha <- 0.5
-      warning(sprintf("cannot compute MCD with h = %d; using h = %d",
-                      object$quan, h.alpha.n(alpha, n, p)))
+      ok <- FALSE
+      msg <- sprintf("cannot compute robust distances based on MCD with h = %d",
+                     object$quan)
+      warning(msg)
     }
+  }
+  if (ok) {
     # compute distances
     rd <- try({
       xs <- x[, selected, drop = FALSE]

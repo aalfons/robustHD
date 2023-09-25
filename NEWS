@@ -7,6 +7,11 @@ Changes in robustHD version 0.8.0
 
     + Added DOI's to references in help files.
 
+    + Minor change in behavior of diagnosticPlot() for the regression
+      diagnostic plot of sparse LTS results when the number of selected
+      variables is large compared to the number of observations. Added
+      clear documentation why this plot may fail in such a situation.
+
 
 
 Changes in robustHD version 0.7.4
