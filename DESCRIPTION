@@ -2,7 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
 Version: 0.8.0
-Date: 2023-09-25
+Date: 2023-09-26
 Depends: 
     R (>= 3.5.0), 
     ggplot2 (>= 0.9.2), 
