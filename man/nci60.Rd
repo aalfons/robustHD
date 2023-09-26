@@ -5,24 +5,55 @@
 \alias{nci60}
 \alias{protein}
 \alias{gene}
+\alias{proteinInfo}
+\alias{geneInfo}
+\alias{cellLineInfo}
 \title{NCI-60 cancer cell panel}
 \format{
 Protein and gene expression data on 59 observations are stored in two
 separate matrices:
 \describe{
   \item{\code{protein}}{a matrix containing protein expressions based on
-  antibodies (162 variables), acquired via reverse-phase protein lysate
+  antibodies (162 columns), acquired via reverse-phase protein lysate
   arrays and log2 transformed.}
   \item{\code{gene}}{a matrix containing gene expression data (22283
-  variables), obtained with an Affymetrix HG-U133A chip and normalized
+  columns), obtained with an Affymetrix HG-U133A chip and normalized
   with the GCRMA method.}
+}
+In addition, meta information on the proteins, genes, and cancer cell lines
+is stored in three separate data frames:
+\describe{
+  \item{\code{proteinInfo}}{a data frame with 162 rows and the following 4
+  columns: \code{Experiment} (the name of the experiment for collecting
+  the data), \code{Probe} (the name of the individual probe), \code{Symbol}
+  (the symbol of the protein in Human Genome Organisation (HUGO)
+  nomenclature), and \code{ID} (identifier of the protein per the National
+  Center for Biotechnology Information (NCBI) Entrez database).  The rows of
+  this data frame correspond to the columns of the matrix \code{protein}.}
+  \item{\code{geneInfo}}{a data frame with 22283 rows and the following 4
+  columns: \code{Experiment} (the name of the experiment for collecting
+  the data), \code{Probe} (the name of the individual probe), \code{Symbol}
+  (the symbol of the gene in Human Genome Organisation (HUGO) nomenclature),
+  and \code{ID} (identifier of the gene per the National Center for
+  Biotechnology Information (NCBI) Entrez database).  The rows of this
+  data frame correspond to the columns of the matrix \code{gene}.}
+  \item{\code{cellLineInfo}}{a data frame with 59 rows and 15 columns
+  containing various information on the cancer cell lines, such as tissue of
+  origin and histology, or age and sex of the patient. The rows of this data
+  frame correspond to the rows of the matrices \code{protein} and
+  \code{gene}.}
 }
 }
 \source{
 The original data were downloaded from
-\url{https://discover.nci.nih.gov/cellminer/} on 2012-01-27.  They can be
-obtained from \url{https://github.com/aalfons/nci60}, together with our
-script for pre-processing.
+\url{https://discover.nci.nih.gov/cellminer/} on 2012-01-27.
+
+The exact version of the data used in Alfons, Croux & Gelper (2013) can be
+obtained from \url{https://github.com/aalfons/nci60}, together with the
+script for pre-processing.  The data in package \pkg{robustHD} differ in
+that the matrix of the gene expressions is called \code{gene} and that they
+include the three data frames with meta information on proteins, genes, and
+cancer cell lines.
 }
 \usage{
 data("nci60")
@@ -33,8 +64,7 @@ used in Alfons, Croux & Gelper (2013).  One observation was removed since
 all values in the gene expression data were missing.
 }
 \examples{
-\dontrun{
-
+\donttest{
 # load data
 data("nci60")
 # define response variable

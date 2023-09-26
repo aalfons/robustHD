@@ -3,4 +3,5 @@
 LICENSE
 README.Rmd
 README.md
-inst/doc/paper
+inst/doc/*
+
