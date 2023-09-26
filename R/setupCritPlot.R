@@ -138,11 +138,16 @@ setupCritPlot.sparseLTS <- function(object, which = c("line", "dot"),
 
 
 ## workhorse function to prepare BIC values for plotting
+## This function is called internally by other methods, it is not expected that
+## the user calls this method directly.  Hence, this method is not included in
+## the documentation of setupCritPlot().
 # object ... object of class "bicSelect"
 # s ........ integer vector of step numbers for the sequence of models
 # tuning ... data frame containing additional information such as values of a
 #            tuning parameter
 # select ... indicates columns of a BIC matrix to keep
+#' @export
+
 setupCritPlot.bicSelect <- function(object, which = "line", s = NULL,
                                     tuning = NULL, select = NULL, ...) {
   # extract BIC values and make sure they are in matrix form

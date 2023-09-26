@@ -24,10 +24,9 @@ getBest.default <- function(x, ...) NULL
 
 getComponent <- function(x, which, ...) UseMethod("getComponent")
 
-getComponent.seqModel <- function(x, component, s = NA,
-                                  drop = !is.null(s), ...) {
+getComponent.seqModel <- function(x, which, s = NA, drop = !is.null(s), ...) {
   # extract component
-  comp <- x[[component]]
+  comp <- x[[which]]
   # check selected steps and extract corresponding parts of the component
   steps <- x$s  # computed steps
   if(length(steps) > 1) {
