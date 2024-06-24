@@ -158,7 +158,18 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
         vec corU(m);
         #pragma omp parallel for num_threads(ncores) schedule(dynamic)
         for(uword j = 0; j < m; j++) {
-        	corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
+          // new version of Armadillo complains about elementwise multiplication
+          // of a column vector and a row vector
+          // -----
+          // corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
+          // -----
+          uword inactiveJ = inactive(j);
+          double corUj = 0;
+          for(uword l = 0; l < k; l++) {
+            corUj += signs(l) * R(inactiveJ, l) * w(l);
+          }
+          corU(j) = corUj;
+          // -----
         }
         // compute step size in equiangular direction
         vec gammaMinus = (r(k-1) - corY) / (a - corU);
