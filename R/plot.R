@@ -126,8 +126,8 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 #' @param abscissa  a character string specifying what to plot on the
 #' \eqn{x}-axis.  For objects inheriting from class \code{"seqModel"}, possible
 #' values are \code{"step"} for the step number (the default), or \code{"df"}
-#' for the degrees of freedom.  For code{"sparseLTS"} objects, possible values
-#' are code{"lambda"} for the value of the penalty parameter (the default), or
+#' for the degrees of freedom.  For \code{"sparseLTS"} objects, possible values
+#' are \code{"lambda"} for the value of the penalty parameter (the default), or
 #' \code{"step"} for the step number.
 #' @param zeros  a logical indicating whether predictors that never enter the
 #' model and thus have zero coefficients should be included in the plot

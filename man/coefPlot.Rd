@@ -61,8 +61,8 @@ estimators.}
 \item{abscissa}{a character string specifying what to plot on the
 \eqn{x}-axis.  For objects inheriting from class \code{"seqModel"}, possible
 values are \code{"step"} for the step number (the default), or \code{"df"}
-for the degrees of freedom.  For code{"sparseLTS"} objects, possible values
-are code{"lambda"} for the value of the penalty parameter (the default), or
+for the degrees of freedom.  For \code{"sparseLTS"} objects, possible values
+are \code{"lambda"} for the value of the penalty parameter (the default), or
 \code{"step"} for the step number.}
 
 \item{size}{a numeric vector of length three giving the line width, the

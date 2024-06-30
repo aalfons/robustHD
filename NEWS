@@ -4,6 +4,8 @@ Changes in robustHD version 0.8.1
       and column vector due to new version of RcppArmadillo being stricter
       regarding dimensions.
 
+    + Minor fix in help file for function coefPlot().
+
 
 Changes in robustHD version 0.8.0
 
