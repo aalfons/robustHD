@@ -5,8 +5,6 @@
 
 #' @name robustHD-package
 #'
-#' @docType package
-#'
 #' @title \packageTitle{robustHD}
 #'
 #' @description \packageDescription{robustHD}
@@ -28,4 +26,4 @@
 #'
 #' @keywords package
 
-NULL
+"_PACKAGE"

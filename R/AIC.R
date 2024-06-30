@@ -135,10 +135,11 @@ BIC.sparseLTS <- function(object, ...) {
 ## internal function returning an object of class "BIC" so that the optimal
 ## model can be retrieved for a sequence of models
 
-# generic function
+## generic function
 bicSelect <- function(object, ...) UseMethod("bicSelect")
 
-# method for a list of models
+## method for a list of models
+#' @noRd
 bicSelect.seqModel <- function(object, ...) {
   # compute BIC values of the submodels
   values <- BIC(object, ...)
@@ -148,7 +149,8 @@ bicSelect.seqModel <- function(object, ...) {
   bic
 }
 
-# method for sparse LTS models
+## method for sparse LTS models
+#' @noRd
 bicSelect.sparseLTS <- function(object, ...) {
   # compute BIC values for different tuning parameters
   values <- BIC(object, ...)

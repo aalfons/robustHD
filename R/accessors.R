@@ -5,15 +5,19 @@
 
 ## get component 'best'
 
+## generic function
 getBest <- function(x, ...) UseMethod("getBest")
 
-# get index of final model according to BIC
+## get index of final model according to BIC
+#' @noRd
 getBest.bicSelect <- function(x, ...) x$best
 
-# get index of best reweighted and raw fit
+## get index of best reweighted and raw fit
+#' @noRd
 getBest.fitSelect <- function(x, ...) x$best
 
-# return NULL by default
+## return NULL by default
+#' @noRd
 getBest.default <- function(x, ...) NULL
 
 
@@ -24,6 +28,7 @@ getBest.default <- function(x, ...) NULL
 
 getComponent <- function(x, which, ...) UseMethod("getComponent")
 
+#' @noRd
 getComponent.seqModel <- function(x, which, s = NA, drop = !is.null(s), ...) {
   # extract component
   comp <- x[[which]]
@@ -43,6 +48,7 @@ getComponent.seqModel <- function(x, which, s = NA, drop = !is.null(s), ...) {
   if(isTRUE(drop)) dropCol(comp) else comp
 }
 
+#' @noRd
 getComponent.sparseLTS <- function(x, which, s = NA,
                                    fit = c("reweighted", "raw", "both"),
                                    drop = !is.null(s), ...) {
@@ -188,12 +194,14 @@ getScale.sparseLTS <- function(x, s = NA,
 
 getSOpt <- function(x, ...) UseMethod("getSOpt")
 
+#' @noRd
 getSOpt.seqModel <- function(x, ...) {
   sOpt <- getBest(x$crit)
   if(!is.null(sOpt)) sOpt <- sOpt + x$s[1] - 1
   sOpt
 }
 
+#' @noRd
 getSOpt.sparseLTS <- function(x, fit = "reweighted", ...) {
   sOpt <- getBest(x$crit)
   if(fit != "both") sOpt <- sOpt[fit]

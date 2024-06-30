@@ -96,10 +96,12 @@ copyNames <- function(from, to, which = "col", target = "row") {
 ## utility function to get default labels for plot
 defaultLabels <- function(x) UseMethod("defaultLabels")
 
+#' @noRd
 defaultLabels.seqModel <- defaultLabels.sparseLTS <- function(x) {
   as.character(seq_along(removeIntercept(coef(x))))
 }
 
+#' @noRd
 defaultLabels.grplars <- function(x) {
   assign <- x$assign
   labels <- split(as.character(assign), assign)

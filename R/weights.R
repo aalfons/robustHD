@@ -3,10 +3,14 @@
 #         Erasmus Universiteit Rotterdam
 # --------------------------------------
 
+
+#' @noRd
 weights.lmrob <- function(object, ...) object$rweights
 
+#' @noRd
 weights.lts <- function(object, ...) object$raw.weights
 
+#' @noRd
 weights.rlm <- function(object, ...) object$w
 
 

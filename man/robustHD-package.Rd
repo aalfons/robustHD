@@ -2,6 +2,7 @@
 % Please edit documentation in R/robustHD-package.R
 \docType{package}
 \name{robustHD-package}
+\alias{robustHD}
 \alias{robustHD-package}
 \title{\packageTitle{robustHD}}
 \description{
@@ -16,6 +17,14 @@ The DESCRIPTION file:
 Alfons (2021) \pkg{robustHD}: An \R package for robust regression with
 high-dimensional data. \emph{Journal of Open Source Software}, \bold{6}(67),
 3786. \doi{10.21105/joss.03786}.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/aalfons/robustHD}
+  \item Report bugs at \url{https://github.com/aalfons/robustHD/issues}
+}
+
 }
 \author{
 \packageAuthor{robustHD}
