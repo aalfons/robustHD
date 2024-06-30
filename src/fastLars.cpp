@@ -91,7 +91,7 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
   // STEP 1: find first ranked predictor
   // compute correlations with response
   vec corY(p);
-#pragma omp parallel for num_threads(ncores) schedule(dynamic)
+  #pragma omp parallel for num_threads(ncores) schedule(dynamic)
   for(uword j = 0; j < p; j++) {
     corY(j) = corControl.cor(x.unsafe_col(j), y);
   }
@@ -165,12 +165,7 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
       // -----
       // corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
       // -----
-      uword inactiveJ = inactive(j);
-      double corUj = 0;
-      for(uword l = 0; l < k; l++) {
-        corUj += signs(l) * R(inactiveJ, l) * w(l);
-      }
-      corU(j) = corUj;
+      corU(j) = sum(signs % trans(R(inactive(j), span(0, k-1))) % w);
       // -----
     }
     // compute step size in equiangular direction

@@ -1,3 +1,10 @@
+Changes in robustHD version 0.8.1
+
+    + Fix in C++ code for rlars() to avoid elementwise multiplication of row
+      and column vector due to new version of RcppArmadillo being stricter
+      regarding dimensions.
+
+
 Changes in robustHD version 0.8.0
 
     + Removed deprecated functions.

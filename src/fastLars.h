@@ -17,6 +17,6 @@
 
 // functions to export to R
 RcppExport SEXP R_fastLars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_robust, SEXP R_c,
-		SEXP R_prob, SEXP R_tol, SEXP scaleFun, SEXP R_ncores);
+                           SEXP R_prob, SEXP R_tol, SEXP scaleFun, SEXP R_ncores);
 
 #endif
