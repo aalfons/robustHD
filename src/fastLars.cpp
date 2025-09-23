@@ -99,8 +99,8 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
   // find predictor with maximum absolute correlation
   vec r(1);
   ivec signs(1);
-  uword whichMax;
-  r(0) = absCorY.max(whichMax);		// absolute correlation of active predictor
+  uword whichMax = absCorY.index_max();
+  r(0) = absCorY(whichMax);		// absolute correlation of active predictor
   signs(0) = sign(corY(whichMax));	// sign of correlation of active predictor
   // initialize active set
   uvec active(1);
@@ -175,10 +175,10 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
       if(gammaMinus(j) <= 0) gammaMinus(j) = R_PosInf;
       if(gammaPlus(j) <= 0) gammaPlus(j) = R_PosInf;
     }
-    uword whichMinus, whichPlus, whichMin;
+    uword whichMinus = gammaMinus.index_min(), whichPlus = gammaPlus.index_min(), whichMin;
     double minGammaMinus, minGammaPlus, gamma;
-    minGammaMinus = gammaMinus.min(whichMinus);
-    minGammaPlus = gammaPlus.min(whichPlus);
+    minGammaMinus = gammaMinus(whichMinus);
+    minGammaPlus = gammaPlus(whichPlus);
     signs.insert_rows(k, 1);
     if(minGammaMinus < minGammaPlus) {
       whichMin = whichMinus;

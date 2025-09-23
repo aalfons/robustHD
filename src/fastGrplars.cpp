@@ -3,7 +3,7 @@
  *         Erasmus Universiteit Rotterdam
  */
 
-#include <R.h>
+//#include <R.h>
 #include "fastGrplars.h"
 
 using namespace Rcpp;
@@ -154,8 +154,8 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 	}
 	// find predictor group with maximum correlation
 	vec r(1);
-	uword whichMax;
-	r(0) = corY.max(whichMax);	// find index of maximum correlation
+	uword whichMax = corY.index_max();// find index of maximum correlation
+	r(0) = corY(whichMax);	
 	// initialize active set
 	uvec active(1);
 	active(0) = whichMax;
@@ -235,8 +235,8 @@ uvec fastGrplars(const mat& x, const vec& y, const uword& sMax,
 		}
 		// compute the step size by solving the quadratic equation
 		vec gammas = computeStepSizes(r(k-1), a, corY, corU, tau);
-		uword whichMin;
-		double gamma = gammas.min(whichMin);
+		uword whichMin = gammas.index_min();
+		double gamma = gammas(whichMin);
         // the following computations are not necessary in the last iteration
 		if(k < (sMax-1)) {
     		// update the scale of the current response
