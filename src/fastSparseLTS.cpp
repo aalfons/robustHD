@@ -358,10 +358,8 @@ Subset fastSparseLTS(const mat& x, const vec& y, const double& lambda,
 		#pragma omp for schedule(dynamic)
 		for(int k = 0; k < nkeep; k++) {
 			Subset subsetK = subsets[k];
-			int i = 0;
 			while(subsetK.continueCSteps) {
 				subsetK.cStep(x, y, lambda, normalize, useIntercept, tol, eps, useGram);
-				i++;
 			}
 			subsets[k] = subsetK;
 		}

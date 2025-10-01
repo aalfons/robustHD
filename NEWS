@@ -1,5 +1,12 @@
 Changes in robustHD version 0.8.1
 
+    + Minor fixes in C++ code to avoid deprecated functions in Armadillo 15.0.
+
+    + Cleaned up unused variable in C++ code for sparseLTS().
+
+
+Changes in robustHD version 0.8.1
+
     + Fix in C++ code for rlars() to avoid elementwise multiplication of row
       and column vector due to new version of RcppArmadillo being stricter
       regarding dimensions.

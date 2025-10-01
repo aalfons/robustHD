@@ -1,8 +1,8 @@
 Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
-Version: 0.8.1
-Date: 2024-06-30
+Version: 0.8.2
+Date: 2025-10-01
 Depends: 
     R (>= 3.5.0), 
     ggplot2 (>= 0.9.2), 
@@ -40,4 +40,4 @@ Authors@R:
 Author: Andreas Alfons [aut, cre] (<https://orcid.org/0000-0002-2513-3788>), Dirk Eddelbuettel [ctb]
 Maintainer: Andreas Alfons <alfons@ese.eur.nl>
 Encoding: UTF-8
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3

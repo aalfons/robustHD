@@ -3,7 +3,6 @@
  *         Erasmus Universiteit Rotterdam
  */
 
-#include <R.h>
 #include "fastLars.h"
 
 using namespace Rcpp;
@@ -100,8 +99,8 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
   vec r(1);
   ivec signs(1);
   uword whichMax = absCorY.index_max();
-  r(0) = absCorY(whichMax);		// absolute correlation of active predictor
-  signs(0) = sign(corY(whichMax));	// sign of correlation of active predictor
+  r(0) = absCorY(whichMax);         // absolute correlation of active predictor
+  signs(0) = sign(corY(whichMax));  // sign of correlation of active predictor
   // initialize active set
   uvec active(1);
   active(0) = whichMax;
@@ -113,9 +112,9 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
 
   // STEP 2: update active set
   // further initializations
-  mat R = ones<mat>(p, sMax);	// correlation matrix of predictors with active set
-  double a = 1.0;				// correlations of active variables with equiangular vector
-  vec w = ones<vec>(1);		// coefficients of active variables for equiangular vector
+  mat R = ones<mat>(p, sMax); // correlation matrix of predictors with active set
+  double a = 1.0;             // correlations of active variables with equiangular vector
+  vec w = ones<vec>(1);       // coefficients of active variables for equiangular vector
   // start iterative computations
   for(uword k = 1; k < sMax; k++) {
     // compute correlations of inactive predictors with new active predictor
@@ -175,10 +174,12 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
       if(gammaMinus(j) <= 0) gammaMinus(j) = R_PosInf;
       if(gammaPlus(j) <= 0) gammaPlus(j) = R_PosInf;
     }
-    uword whichMinus = gammaMinus.index_min(), whichPlus = gammaPlus.index_min(), whichMin;
-    double minGammaMinus, minGammaPlus, gamma;
-    minGammaMinus = gammaMinus(whichMinus);
-    minGammaPlus = gammaPlus(whichPlus);
+    uword whichMinus = gammaMinus.index_min(),
+      whichPlus = gammaPlus.index_min(),
+      whichMin;
+    double minGammaMinus = gammaMinus(whichMinus),
+      minGammaPlus = gammaPlus(whichPlus),
+      gamma;
     signs.insert_rows(k, 1);
     if(minGammaMinus < minGammaPlus) {
       whichMin = whichMinus;
@@ -211,11 +212,11 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
 SEXP R_fastLars(SEXP R_x, SEXP R_y, SEXP R_sMax, SEXP R_robust, SEXP R_c,
                 SEXP R_prob, SEXP R_tol, SEXP scaleFun, SEXP R_ncores) {
   // data initializations
-  NumericMatrix Rcpp_x(R_x);						// predictor matrix
+  NumericMatrix Rcpp_x(R_x);           // predictor matrix
   const int n = Rcpp_x.nrow(), p = Rcpp_x.ncol();
-  mat x(Rcpp_x.begin(), n, p, false);				// reuse memory
-  NumericVector Rcpp_y(R_y);			// response
-  vec y(Rcpp_y.begin(), n, false);	// reuse memory
+  mat x(Rcpp_x.begin(), n, p, false);  // reuse memory
+  NumericVector Rcpp_y(R_y);           // response
+  vec y(Rcpp_y.begin(), n, false);     // reuse memory
   uword sMax = as<uword>(R_sMax);
   bool robust = as<bool>(R_robust);
   int ncores = as<int>(R_ncores);
