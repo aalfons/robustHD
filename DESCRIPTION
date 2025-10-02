@@ -2,7 +2,7 @@ Package: robustHD
 Type: Package
 Title: Robust Methods for High-Dimensional Data
 Version: 0.8.2
-Date: 2025-10-01
+Date: 2025-10-02
 Depends: 
     R (>= 3.5.0), 
     ggplot2 (>= 0.9.2), 
@@ -15,7 +15,7 @@ Imports:
     parallel, 
     stats, 
     utils
-LinkingTo: Rcpp (>= 0.9.10), RcppArmadillo (>= 0.3.0)
+LinkingTo: Rcpp (>= 0.9.10), RcppArmadillo (>= 0.7.200.1.0)
 Suggests: 
     lars,
     mvtnorm,
