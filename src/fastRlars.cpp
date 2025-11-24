@@ -4,7 +4,6 @@
  */
 
 /*
-#include <R.h>
 #include "fastRlars.h"
 
 using namespace Rcpp;
