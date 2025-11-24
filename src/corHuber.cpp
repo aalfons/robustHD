@@ -3,7 +3,6 @@
  *         Erasmus Universiteit Rotterdam
  */
 
-#include <R.h>
 #include "corHuber.h"
 
 using namespace Rcpp;
