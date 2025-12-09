@@ -2,7 +2,7 @@ Changes in robustHD version 0.8.3
 
     + C++ code no longer includes R.h when including RcppArmadillo.h.
 
-    + Replaced deprecated function aes_String() from package ggplot2 with
+    + Replaced deprecated function aes_string() from package ggplot2 with
       aes() and .data pronoun.
 
 
