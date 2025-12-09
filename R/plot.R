@@ -170,6 +170,7 @@ plot.perrySparseLTS <- function(x, method = c("crit", "diagnostic"), ...) {
 #' @keywords hplot
 #'
 #' @import ggplot2
+#' @importFrom rlang .data
 #' @importFrom utils head tail
 #' @export
 
@@ -232,15 +233,15 @@ coefPlot.setupCoefPlot <- function(object, abscissa = NULL,
                  df = "Degrees of freedom")
   ylab <- "Standardized coefficients"
   # define aesthetic mapping for plotting coefficients
-  coefMapping <- aes_string(x = abscissa, y = "coefficient",
-                            color = "variable")
+  coefMapping <- aes(x = .data[[abscissa]], y = .data$coefficient,
+                     color = .data$variable)
   # define aesthetic mapping for plotting x-axis grid and labels
   if (object$includeLabels) {
     offset <- paste(rep.int(" ", offset), collapse = "")  # whitespace
     labelData <- object$labels
     labelData$label <- paste(offset, labelData$label, sep = "")
-    labelMapping <- aes_string(x = abscissa, y = "coefficient",
-                               label = "label")
+    labelMapping <- aes(x = .data[[abscissa]], y = .data$coefficient,
+                        label = .data$label)
   }
   # create plot
   p <- ggplot() +
@@ -579,6 +580,7 @@ getLabelData <- function(data, which, id.n = NULL) {
 #' @import ggplot2
 #' @import robustbase
 #' @importFrom grDevices devAskNewPage
+#' @importFrom rlang .data
 #' @export
 
 diagnosticPlot <- function(object, ...) UseMethod("diagnosticPlot")
@@ -736,8 +738,8 @@ diagnosticPlot.setupDiagnosticPlot <- function(object,
 rqqPlot <- function(object, facets = object$facets, size = c(2, 4),
                     id.n = NULL, ..., mapping) {
   # define aesthetic mapping for Q-Q plot
-  mapping <- aes_string(x = "theoretical", y = "residual",
-                        color = "Diagnostics")
+  mapping <- aes(x = .data$theoretical, y = .data$residual,
+                 color = .data$Diagnostics)
   # extract data frame for reference line
   lineData <- object$qqLine
   # construct data frame for labels
@@ -750,14 +752,14 @@ rqqPlot <- function(object, facets = object$facets, size = c(2, 4),
   p <- ggplot(object$data)
   if (!is.null(lineData)) {
     # add reference line
-    lineMapping <- aes_string(intercept = "intercept", slope = "slope")
+    lineMapping <- aes(intercept = .data$intercept, slope = .data$slope)
     p <- p + geom_abline(lineMapping, lineData, alpha = 0.4)
   }
   p <- p + geom_point(mapping, size = size[1], ...)
   if(!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x = "theoretical", y = "residual",
-                               label = "index")
+    labelMapping <- aes(x = .data$theoretical, y = .data$residual,
+                        label = .data$index)
     p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
                        size = size[2], alpha = 0.4)
   }
@@ -798,7 +800,8 @@ residualPlot <- function(object, abscissa = c("index", "fitted"),
   ## initializations
   abscissa <- match.arg(abscissa)
   # define aesthetic mapping for residual plot
-  mapping <- aes_string(x = abscissa, y = "residual", color = "Diagnostics")
+  mapping <- aes(x = .data[[abscissa]], y = .data$residual,
+                 color = .data$Diagnostics)
   ## construct data frame for labels
   labelData <- getLabelData(object$data, which = "residual", id.n = id.n)
   # define default title and axis labels
@@ -815,7 +818,8 @@ residualPlot <- function(object, abscissa = c("index", "fitted"),
     geom_point(mapping, size = size[1], ...)
   if (!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x = abscissa, y = "residual", label = "index")
+    labelMapping <- aes(x = .data[[abscissa]], y = .data$residual,
+                        label = .data$index)
     p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
                        size = size[2], alpha = 0.4)
   }
@@ -858,7 +862,7 @@ rdiagPlot <- function(object, facets = object$facets, size = c(2, 4),
     if (onlyNA) stop(msg)
   }
   # define aesthetic mapping for regression diagnostic plot
-  mapping <- aes_string(x = "rd", y = "residual", color = "Diagnostics")
+  mapping <- aes(x = .data$rd, y = .data$residual, color = .data$Diagnostics)
   ## construct data frame for labels
   labelData <- getLabelData(data, which = "xyd", id.n = id.n)
   # define default title and axis labels
@@ -871,12 +875,12 @@ rdiagPlot <- function(object, facets = object$facets, size = c(2, 4),
     geom_hline(aes(yintercept = 2.5), alpha = 0.4)
   if(!is.null(lineData)) {
     # add reference line
-    p <- p + geom_vline(aes_string(xintercept = "q"), lineData, alpha = 0.4)
+    p <- p + geom_vline(aes(xintercept = .data$q), lineData, alpha = 0.4)
   }
   p <- p + geom_point(mapping, size = size[1], ...)
   if (!is.null(labelData)) {
     # add labels for observations with largest distances
-    labelMapping <- aes_string(x = "rd", y = "residual", label = "index")
+    labelMapping <- aes(x = .data$rd, y = .data$residual, label = .data$index)
     p <- p + geom_text(labelMapping, data = labelData, hjust = 0,
                        size = size[2], alpha = 0.4)
   }

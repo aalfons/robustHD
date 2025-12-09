@@ -146,6 +146,7 @@ setupCritPlot.sparseLTS <- function(object, which = c("line", "dot"),
 # tuning ... data frame containing additional information such as values of a
 #            tuning parameter
 # select ... indicates columns of a BIC matrix to keep
+#' @importFrom rlang .data
 #' @export
 
 setupCritPlot.bicSelect <- function(object, which = "line", s = NULL,
@@ -183,8 +184,8 @@ setupCritPlot.bicSelect <- function(object, which = "line", s = NULL,
   }
   # construct return object
   out <- list(data = bic, which = which, includeSE = FALSE,
-              mapping = aes_string(x = "Fit", y = "BIC",
-                                   ymin = "BIC", ymax = "BIC"))
+              mapping = aes(x = .data$Fit, y = .data$BIC,
+                            ymin = .data$BIC, ymax = .data$BIC))
   if (!is.null(facets)) out$facets <- facets
   if (!is.null(tuning)) out$tuning <- tuning
   class(out) <- c("setupBICPlot", "setupCritPlot")

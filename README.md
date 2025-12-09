@@ -39,23 +39,23 @@ reduce computing time.
 
 ## Main functionality
 
--   `sparseLTS()`: Sparse least trimmed squares regression.
+- `sparseLTS()`: Sparse least trimmed squares regression.
 
--   `rlars()`: Robust least angle regression.
+- `rlars()`: Robust least angle regression.
 
--   `grplars()` and `rgrplars()`: (Robust) groupwise least angle
-    regression.
+- `grplars()` and `rgrplars()`: (Robust) groupwise least angle
+  regression.
 
--   `tslars()` and `rtslars()`: (Robust) least angle regression for time
-    series data.
+- `tslars()` and `rtslars()`: (Robust) least angle regression for time
+  series data.
 
--   `corHuber()`: Robust correlation based on winsorization.
+- `corHuber()`: Robust correlation based on winsorization.
 
--   `winsorize()`: Winsorization of the data.
+- `winsorize()`: Winsorization of the data.
 
--   `robStandardize()`: Robust standardization of the data with given
-    functions for computing center and scale. By default, the median and
-    MAD are used.
+- `robStandardize()`: Robust standardization of the data with given
+  functions for computing center and scale. By default, the median and
+  MAD are used.
 
 ## Installation
 
