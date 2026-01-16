@@ -162,9 +162,9 @@ uvec fastLars(const mat& x, const vec& y, const uword& sMax,
       // new version of Armadillo complains about elementwise multiplication
       // of a column vector and a row vector
       // -----
-      // corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
+      // corU(j) = sum(signs % R(inactive(j), arma::span(0, k-1)) % w);
       // -----
-      corU(j) = sum(signs % trans(R(inactive(j), span(0, k-1))) % w);
+      corU(j) = sum(signs % trans(R(inactive(j), arma::span(0, k-1))) % w);
       // -----
     }
     // compute step size in equiangular direction

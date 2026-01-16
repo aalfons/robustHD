@@ -97,7 +97,7 @@ uvec fastRlars(const mat& x, const vec& y, const uword& sMax, const double& c,
         vec corU(m);
         #pragma omp parallel for num_threads(ncores) schedule(dynamic)
         for(uword j = 0; j < m; j++) {
-        	corU(j) = sum(signs % R(inactive(j), span(0, k-1)) % w);
+        	corU(j) = sum(signs % R(inactive(j), arma::span(0, k-1)) % w);
         }
         // compute step size in equiangular direction
         vec gammaMinus = (r(k-1) - corY) / (a - corU);

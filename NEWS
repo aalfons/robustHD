@@ -1,3 +1,9 @@
+Changes in robustHD version 0.8.4
+
+    + C++ code now uses arma::span() to avoid ambiguity (as std::span() now
+      exists as well).
+
+
 Changes in robustHD version 0.8.3
 
     + C++ code no longer includes R.h when including RcppArmadillo.h.
