@@ -3,6 +3,8 @@ Changes in robustHD version 0.8.4
     + C++ code now uses arma::span() to avoid ambiguity (as std::span() now
       exists as well).
 
+    + Cleaned up linker flags for C++ code.
+
 
 Changes in robustHD version 0.8.3
 
