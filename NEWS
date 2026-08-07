@@ -1,3 +1,8 @@
+Changes in robustHD version 0.8.5
+
+    + Function fastLasso() is now exported for use by other developers.
+
+
 Changes in robustHD version 0.8.4
 
     + C++ code now uses arma::span() to avoid ambiguity (as std::span() now

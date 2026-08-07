@@ -101,6 +101,7 @@ export(coefPlot)
 export(corHuber)
 export(critPlot)
 export(diagnosticPlot)
+export(fastLasso)
 export(getScale)
 export(grplars)
 export(lambda0)
@@ -128,6 +129,8 @@ import(stats)
 importFrom(Rcpp,evalCpp)
 importFrom(grDevices,devAskNewPage)
 importFrom(rlang,.data)
-importFrom(utils,head)
-importFrom(utils,tail)
+importFrom(utils,
+  head,
+  tail
+)
 useDynLib(robustHD, .registration = TRUE)

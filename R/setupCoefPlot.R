@@ -11,8 +11,7 @@
 #' least angle regression sequence, or sparse least trimmed squares regression
 #' models for a grid of values for the penalty parameter.
 #'
-#' @aliases setupCoefPlot.rlars setupCoefPlot.grplars
-#' setupCoefPlot.tslarsP
+#' @aliases setupCoefPlot.rlars setupCoefPlot.grplars setupCoefPlot.tslarsP
 #'
 #' @param object  the model fit from which to extract information.
 #' @param zeros  a logical indicating whether predictors that never enter the

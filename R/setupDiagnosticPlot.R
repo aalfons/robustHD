@@ -24,8 +24,7 @@
 #' is large compared to the number of observations, in which case a warning is
 #' given and \code{NA}s are returned for the robust Mahalanobis distances.
 #'
-#' @aliases setupDiagnosticPlot.rlars setupDiagnosticPlot.grplars
-#' setupDiagnosticPlot.tslarsP
+#' @aliases setupDiagnosticPlot.rlars setupDiagnosticPlot.grplars setupDiagnosticPlot.tslarsP
 #'
 #' @param object  the model fit from which to extract information.
 #' @param s  for the \code{"seqModel"} method, an integer vector giving the
